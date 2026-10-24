@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+{% set active_page = "my_events" %}
+
+{% block title %}Sự kiện đã đăng ký - NEU Events{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-7xl mx-auto">
+    <!-- BREADCRUMBS -->
+    <div class="flex items-center gap-2 text-xs text-slate-400">
+        <a href="{{ url_for('events') }}" class="hover:text-slate-600">NEU Events</a>
+        <span>/</span>
+        <span class="text-slate-700 font-medium">Sự kiện đã đăng ký</span>
+    </div>
+
+    <!-- PAGE HEADER -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight">Sự kiện đã đăng ký</h1>
+            <p class="text-sm text-slate-500 mt-1">Theo dõi lịch tham gia, vé đăng ký và kết quả điểm danh của bạn.</p>
+        </div>
+        <a href="{{ url_for('events') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs transition">
+            <span>Khám phá sự kiện</span>
+            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+        </a>
+    </div>
+
+    <!-- 4 KPI SUMMARY CARDS -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- CARD 1 -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-400">
+                <span class="text-xs font-semibold text-slate-600">Tổng lượt đăng ký</span>
+                <i class="fa-solid fa-ticket text-slate-400 text-sm"></i>
+            </div>
+            <div class="mt-4">
+                <div class="text-3xl font-extrabold text-slate-900">{{ stats.total }}</div>
+                <div class="text-[11px] text-slate-400 mt-1">Trong năm học {{ current_year }}–{{ current_year + 1 }}</div>
+            </div>
+        </div>
+
+        <!-- CARD 2 -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-400">
+                <span class="text-xs font-semibold text-slate-600">Sắp / đang diễn ra</span>
+                <i class="fa-regular fa-calendar-check text-slate-400 text-sm"></i>
+            </div>
+            <div class="mt-4">
+                <div class="text-3xl font-extrabold text-slate-900">{{ stats.upcoming }}</div>
+                <div class="text-[11px] text-emerald-600 font-medium mt-1">1 sự kiện đang mở điểm danh</div>
+            </div>
+        </div>
+
+        <!-- CARD 3 -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-400">
+                <span class="text-xs font-semibold text-slate-600">Đã tham dự</span>
+                <i class="fa-regular fa-circle-check text-emerald-500 text-sm"></i>
+            </div>
+            <div class="mt-4">
+                <div class="text-3xl font-extrabold text-slate-900">{{ stats.attended }}</div>
+                <div class="text-[11px] text-slate-400 mt-1">Đã ghi nhận hoạt động</div>
+            </div>
+        </div>
+
+        <!-- CARD 4 -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-400">
+                <span class="text-xs font-semibold text-slate-600">Vắng mặt</span>
+                <i class="fa-regular fa-circle-xmark text-rose-400 text-sm"></i>
+            </div>
+            <div class="mt-4">
+                <div class="text-3xl font-extrabold text-slate-900">{{ stats.absent }}</div>
+                <div class="text-[11px] text-slate-400 mt-1">1 sự kiện khác đã hủy</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HIGHLIGHT BANNER: EVENT TODAY OPEN FOR CHECK-IN -->
+    {% if live_registration %}
+    <div class="bg-neu-700 text-white p-6 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="space-y-1.5">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-blue-200">ĐANG DIỄN RA • HÔM NAY</div>
+            <h3 class="text-xl font-extrabold tracking-tight">{{ live_registration.event.title }}</h3>
+            <p class="text-xs text-blue-100 flex items-center gap-3">
+                <span>{{ live_registration.event.start_time.strftime('%H:%M') }}–{{ live_registration.event.end_time.strftime('%H:%M') }}</span>
+                <span>•</span>
+                <span>{{ live_registration.event.location }}</span>
+                <span>•</span>
+                <span>Mã đăng ký: <strong>{{ live_registration.ticket_code }}</strong></span>
+            </p>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+            <button type="button" onclick="showTicketModal('{{ live_registration.event.title }}', '{{ live_registration.ticket_code }}', '{{ live_registration.event.event_date.strftime('%d/%m/%Y') }}', '{{ live_registration.event.location }}', '{{ current_user.full_name }}', '{{ current_user.student_id or current_user.username }}', '{{ current_user.department or 'Đại học Kinh tế Quốc dân' }}', '{{ live_registration.event.start_time.strftime('%H:%M') }}–{{ live_registration.event.end_time.strftime('%H:%M') }}', '{{ live_registration.attendance_status }}')" class="inline-flex items-center gap-2 px-4 py-3 bg-white/15 hover:bg-white/25 text-white rounded-xl text-xs font-bold transition shadow-xs">
+                <i class="fa-solid fa-ticket"></i>
+                <span>Xem vé</span>
+            </button>
+            <a href="{{ url_for('checkin', reg_id=live_registration.id) }}" class="inline-flex items-center gap-2 px-5 py-3 bg-white text-neu-700 rounded-xl text-xs font-bold hover:bg-blue-50 transition shadow-sm">
+                <i class="fa-solid fa-qrcode text-base"></i>
+                <span>Điểm danh ngay</span>
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- REGISTERED EVENTS TABLE SECTION -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+        <div class="p-6 border-b border-slate-100 space-y-4">
+            <div>
+                <h3 class="font-bold text-base text-slate-900">Lịch tham gia của bạn</h3>
+                <p class="text-xs text-slate-400 mt-0.5">Trạng thái đăng ký và tham dự được cập nhật độc lập.</p>
+            </div>
+
+            <!-- TABS & SEARCH ROW -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <!-- TABS -->
+                <div class="flex items-center gap-1 overflow-x-auto text-xs font-medium no-scrollbar">
+                    <a href="{{ url_for('my_events', filter='all') }}" class="px-3 py-1.5 rounded-lg transition whitespace-nowrap {% if current_filter == 'all' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+                        Tất cả ({{ registrations|length }})
+                    </a>
+                    <a href="{{ url_for('my_events', filter='upcoming') }}" class="px-3 py-1.5 rounded-lg transition whitespace-nowrap {% if current_filter == 'upcoming' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+                        Sắp / đang diễn ra ({{ stats.upcoming }})
+                    </a>
+                    <a href="{{ url_for('my_events', filter='attended') }}" class="px-3 py-1.5 rounded-lg transition whitespace-nowrap {% if current_filter == 'attended' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+                        Đã tham dự ({{ stats.attended }})
+                    </a>
+                    <a href="{{ url_for('my_events', filter='absent') }}" class="px-3 py-1.5 rounded-lg transition whitespace-nowrap {% if current_filter == 'absent' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+                        Vắng mặt ({{ stats.absent }})
+                    </a>
+                    <a href="{{ url_for('my_events', filter='cancelled') }}" class="px-3 py-1.5 rounded-lg transition whitespace-nowrap {% if current_filter == 'cancelled' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+                        Đã hủy (1)
+                    </a>
+                </div>
+
+                <!-- SEARCH & SEMESTER -->
+                <div class="flex items-center gap-3">
+                    <div class="relative w-64">
+                        <input type="text" id="regSearchInput" onkeyup="filterMyEventsTable()" placeholder="Tìm tên sự kiện hoặc mã đăng ký" class="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-neu-700">
+                        <i class="fa-solid fa-magnifying-glass text-xs absolute left-2.5 top-2.5 text-slate-400"></i>
+                    </div>
+                    <select class="px-3 py-1.5 text-xs rounded-xl border border-slate-300 bg-white text-slate-600 focus:outline-none focus:ring-2 focus:ring-neu-700">
+                        <option>Học kỳ I, 2026–2027</option>
+                        <option>Học kỳ II, 2025–2026</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABLE -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs" id="myEventsTable">
+                <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 uppercase tracking-wider text-[11px]">
+                    <tr>
+                        <th class="py-3 px-6">Sự kiện</th>
+                        <th class="py-3 px-6">Thời gian</th>
+                        <th class="py-3 px-6">Đăng ký</th>
+                        <th class="py-3 px-6">Tham dự</th>
+                        <th class="py-3 px-6 text-right">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for reg in registrations %}
+                    <tr class="hover:bg-slate-50/80 transition group">
+                        <!-- EVENT TITLE & LOCATION -->
+                        <td class="py-4 px-6">
+                            <div class="font-bold text-slate-900 group-hover:text-neu-700">{{ reg.event.title }}</div>
+                            <div class="text-[11px] text-slate-400 mt-0.5">{{ reg.event.location }} • Mã vé: <span class="font-mono text-slate-600">{{ reg.ticket_code }}</span></div>
+                        </td>
+
+                        <!-- DATE & TIME -->
+                        <td class="py-4 px-6 text-slate-600 whitespace-nowrap">
+                            <div>{{ reg.event.event_date.strftime('%d/%m/%Y') }}</div>
+                            <div class="text-[11px] text-slate-400">{{ reg.event.start_time.strftime('%H:%M') }}–{{ reg.event.end_time.strftime('%H:%M') }}</div>
+                        </td>
+
+                        <!-- REGISTRATION STATUS -->
+                        <td class="py-4 px-6 whitespace-nowrap">
+                            {% if reg.event.status == 'CANCELLED' %}
+                            <span class="inline-block px-2.5 py-1 rounded-md text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-100">Sự kiện đã hủy</span>
+                            {% elif reg.registration_status == 'REGISTERED' %}
+                            <span class="inline-block px-2.5 py-1 rounded-md text-[11px] font-semibold bg-neu-50 text-neu-700 border border-neu-100">Đã đăng ký</span>
+                            {% else %}
+                            <span class="inline-block px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-600">Đã hủy đăng ký</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- ATTENDANCE STATUS -->
+                        <td class="py-4 px-6 whitespace-nowrap">
+                            {% if reg.event.status == 'CANCELLED' %}
+                            <span class="text-slate-400 text-xs">Không áp dụng</span>
+                            {% elif reg.attendance_status == 'ATTENDED' %}
+                            <span class="inline-block px-2.5 py-1 rounded-md text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">Đã tham dự</span>
+                            {% elif reg.attendance_status == 'ABSENT' %}
+                            <span class="inline-block px-2.5 py-1 rounded-md text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-100">Vắng mặt</span>
+                            {% elif reg.event.event_date == today and reg.event.status == 'APPROVED' %}
+                            <span class="inline-block px-2.5 py-1 rounded-md text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">Chưa điểm danh</span>
+                            {% else %}
+                            <span class="text-slate-400 text-xs">Chưa diễn ra</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- ACTIONS -->
+                        <td class="py-4 px-6 text-right whitespace-nowrap font-medium">
+                            {% if reg.event.status == 'CANCELLED' %}
+                            <button onclick="alert('Lý do hủy: {{ reg.event.cancel_reason }}')" class="text-neu-700 hover:underline">Xem thông báo</button>
+                            {% elif reg.attendance_status == 'ATTENDED' %}
+                                {% set reviewed = is_reviewed(reg.event_id) %}
+                                <div class="flex items-center justify-end gap-2 text-xs">
+                                    <button type="button" onclick="showTicketModal('{{ reg.event.title }}', '{{ reg.ticket_code }}', '{{ reg.event.event_date.strftime('%d/%m/%Y') }}', '{{ reg.event.location }}', '{{ current_user.full_name }}', '{{ current_user.student_id or current_user.username }}', '{{ current_user.department or 'Đại học Kinh tế Quốc dân' }}', '{{ reg.event.start_time.strftime('%H:%M') }}–{{ reg.event.end_time.strftime('%H:%M') }}', '{{ reg.attendance_status }}')" class="text-neu-700 hover:underline font-bold inline-flex items-center gap-1">
+                                        <i class="fa-solid fa-ticket"></i>
+                                        <span>Xem vé</span>
+                                    </button>
+                                    <span>•</span>
+                                    {% if reviewed %}
+                                    <span class="text-slate-400">Đã đánh giá</span>
+                                    {% else %}
+                                    <a href="{{ url_for('feedback', event_id=reg.event.id) }}" class="text-neu-700 hover:underline font-bold inline-flex items-center gap-1">
+                                        <span>Đánh giá</span>
+                                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            {% elif reg.event.status == 'COMPLETED' or reg.event.event_date < today %}
+                            <div class="flex items-center justify-end gap-2 text-xs">
+                                <button type="button" onclick="showTicketModal('{{ reg.event.title }}', '{{ reg.ticket_code }}', '{{ reg.event.event_date.strftime('%d/%m/%Y') }}', '{{ reg.event.location }}', '{{ current_user.full_name }}', '{{ current_user.student_id or current_user.username }}', '{{ current_user.department or 'Đại học Kinh tế Quốc dân' }}', '{{ reg.event.start_time.strftime('%H:%M') }}–{{ reg.event.end_time.strftime('%H:%M') }}', '{{ reg.attendance_status }}')" class="text-slate-600 hover:underline font-semibold flex items-center gap-1">
+                                    <i class="fa-solid fa-ticket"></i>
+                                    <span>Xem vé</span>
+                                </button>
+                                <span>•</span>
+                                <span class="text-slate-400 text-xs">Đã kết thúc</span>
+                            </div>
+                            {% elif reg.event.event_date == today and reg.event.status == 'APPROVED' %}
+                            <div class="flex items-center justify-end gap-2 text-xs">
+                                <a href="{{ url_for('checkin', reg_id=reg.id) }}" class="text-neu-700 hover:underline font-bold inline-flex items-center gap-1">
+                                    <span>Điểm danh</span>
+                                    <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                                </a>
+                                <span>•</span>
+                                <button type="button" onclick="showTicketModal('{{ reg.event.title }}', '{{ reg.ticket_code }}', '{{ reg.event.event_date.strftime('%d/%m/%Y') }}', '{{ reg.event.location }}', '{{ current_user.full_name }}', '{{ current_user.student_id or current_user.username }}', '{{ current_user.department or 'Đại học Kinh tế Quốc dân' }}', '{{ reg.event.start_time.strftime('%H:%M') }}–{{ reg.event.end_time.strftime('%H:%M') }}', '{{ reg.attendance_status }}')" class="text-slate-600 hover:underline flex items-center gap-1">
+                                    <i class="fa-solid fa-ticket"></i>
+                                    <span>Xem vé</span>
+                                </button>
+                            </div>
+                            {% else %}
+                            <div class="flex items-center justify-end gap-2 text-xs">
+                                <button type="button" onclick="showTicketModal('{{ reg.event.title }}', '{{ reg.ticket_code }}', '{{ reg.event.event_date.strftime('%d/%m/%Y') }}', '{{ reg.event.location }}', '{{ current_user.full_name }}', '{{ current_user.student_id or current_user.username }}', '{{ current_user.department or 'Đại học Kinh tế Quốc dân' }}', '{{ reg.event.start_time.strftime('%H:%M') }}–{{ reg.event.end_time.strftime('%H:%M') }}', '{{ reg.attendance_status }}')" class="text-neu-700 hover:underline font-bold flex items-center gap-1">
+                                    <i class="fa-solid fa-ticket"></i>
+                                    <span>Xem vé</span>
+                                </button>
+                                <span>•</span>
+                                <form method="POST" action="{{ url_for('cancel_registration', reg_id=reg.id) }}" onsubmit="return confirm('Hủy đăng ký sự kiện này?');" class="inline">
+                                    <button type="submit" class="text-slate-500 hover:text-rose-600 transition">Hủy đăng ký</button>
+                                </form>
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="p-4 border-t border-slate-100 text-xs text-slate-400">
+            Hiển thị tất cả {{ registrations|length }} sự kiện đã đăng ký
+        </div>
+    </div>
+
+    <!-- NOTICE BOX -->
+    <div class="p-4 rounded-xl bg-blue-50/70 border border-blue-100 text-xs text-blue-800 flex items-start gap-3">
+        <i class="fa-solid fa-circle-info text-neu-700 mt-0.5"></i>
+        <div>
+            <span class="font-bold">Lưu ý khi tham gia:</span>
+            <span> Bạn có thể hủy đăng ký trước hạn của sự kiện. Chỉ các sự kiện có trạng thái Đã tham dự mới được mở đánh giá; sự kiện bị hủy không tính là vắng mặt.</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    function filterMyEventsTable() {
+        const query = document.getElementById('regSearchInput').value.toLowerCase();
+        const rows = document.querySelectorAll('#myEventsTable tbody tr');
+        rows.forEach(r => {
+            const text = r.innerText.toLowerCase();
+            r.style.display = text.includes(query) ? '' : 'none';
+        });
+    }
+</script>
+{% endblock %}

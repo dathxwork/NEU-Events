@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - NEU Events</title>
+    <link rel="icon" type="image/webp" href="{{ url_for('static', filename='img/logo_neu.webp') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        neu: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            600: '#005bb5',
+                            700: '#0F4C81',
+                            800: '#0a365c',
+                            900: '#082a47',
+                            accent: '#e11d48'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="h-full flex overflow-hidden">
+
+    <!-- LEFT COLUMN: BRAND HERO BANNER -->
+    <div class="hidden lg:flex lg:w-1/2 relative bg-[#0a2540] text-white flex-col justify-between p-10 xl:p-14 overflow-hidden select-none">
+        <!-- BACKGROUND CAMPUS IMAGE (Iconic NEU Century Building) -->
+        <div class="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000 hover:scale-105" 
+             style="background-image: url('https://cdn-media.sforum.vn/storage/app/media/ngocmy/truong-dai-hoc-kinh-te-quoc-dan-neu/truong-dai-hoc-kinh-te-quoc-dan-neu-6.jpg');">
+        </div>
+
+        <!-- ATMOSPHERIC NEU BRAND BLUE WASH (Matches Đăng nhập.png mockup) -->
+        <div class="absolute inset-0 bg-[#0F4C81]/45 mix-blend-multiply"></div>
+
+        <!-- TOP VIGNETTE GRADIENT (Makes Logo Pop) -->
+        <div class="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/45 via-black/15 to-transparent"></div>
+
+        <!-- BOTTOM CONTRAST GRADIENT (Makes Typography Super Crisp & Readable) -->
+        <div class="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-[#061b30] via-[#092644]/80 via-40% to-transparent"></div>
+
+        <!-- TOP LOGO -->
+        <div class="relative z-10 flex items-center gap-5">
+            <img src="{{ url_for('static', filename='img/logo_neu.webp') }}" alt="Logo NEU" class="w-28 h-28 xl:w-32 xl:h-32 object-contain shrink-0 drop-shadow-2xl">
+            <div>
+                <div class="text-2xl xl:text-3xl font-extrabold leading-tight tracking-wide text-white drop-shadow-md">NEU Events</div>
+                <div class="text-xs xl:text-sm uppercase font-bold text-blue-200 tracking-wider mt-1">ĐẠI HỌC KINH TẾ QUỐC DÂN</div>
+            </div>
+        </div>
+
+        <!-- BOTTOM CONTENT: SLOGAN, TITLE, DESCRIPTION, STATS & FOOTER -->
+        <div class="relative z-10 space-y-6 max-w-lg mt-auto pt-16">
+            <div class="flex items-center gap-2.5">
+                <span class="w-6 h-0.5 bg-[#e11d48] rounded-full inline-block"></span>
+                <span class="text-[11px] font-bold tracking-widest uppercase text-white/95 drop-shadow-xs">KẾT NỐI • TRẢI NGHIỆM • TRƯỞNG THÀNH</span>
+            </div>
+            <h1 class="text-4xl xl:text-5xl font-black leading-[1.18] tracking-tight text-white drop-shadow-md">
+                Mỗi sự kiện,<br>một cơ hội mới.
+            </h1>
+            <p class="text-sm xl:text-base text-blue-100/90 leading-relaxed font-normal drop-shadow-xs">
+                Khám phá hoạt động học thuật, kết nối doanh nghiệp và lan tỏa những giá trị tốt đẹp cùng cộng đồng NEU.
+            </p>
+
+            <!-- STATS ROW -->
+            <div class="grid grid-cols-3 gap-6 pt-6 border-t border-white/20">
+                <div>
+                    <div class="text-3xl xl:text-4xl font-extrabold text-white tracking-tight drop-shadow-sm">120+</div>
+                    <div class="text-xs text-blue-200 mt-1 font-medium">Sự kiện mỗi năm</div>
+                </div>
+                <div>
+                    <div class="text-3xl xl:text-4xl font-extrabold text-white tracking-tight drop-shadow-sm">15.000+</div>
+                    <div class="text-xs text-blue-200 mt-1 font-medium">Lượt sinh viên tham gia</div>
+                </div>
+                <div>
+                    <div class="text-3xl xl:text-4xl font-extrabold text-white tracking-tight drop-shadow-sm">50+</div>
+                    <div class="text-xs text-blue-200 mt-1 font-medium">Đơn vị đồng hành</div>
+                </div>
+            </div>
+
+            <!-- BOTTOM ADDRESS -->
+            <div class="text-xs text-blue-200/80 pt-2 font-normal drop-shadow-xs">
+                Đại học Kinh tế Quốc dân • 207 Giải Phóng, Hà Nội
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT COLUMN: LOGIN FORM -->
+    <div class="w-full lg:w-1/2 flex flex-col justify-between p-8 sm:p-12 lg:p-16 bg-white overflow-y-auto">
+        <!-- TOP HELP -->
+        <div class="flex justify-end">
+            <button onclick="alert('Vui lòng liên hệ ban quản trị: events@neu.edu.vn hoặc Phòng QLSV NEU để được hỗ trợ tài khoản.')" class="text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5 transition">
+                <i class="fa-regular fa-circle-question"></i>
+                <span>Trợ giúp sinh viên</span>
+            </button>
+        </div>
+
+        <!-- FORM CONTAINER -->
+        <div class="max-w-md w-full mx-auto my-auto space-y-6">
+            <div class="lg:hidden flex items-center gap-3.5 pb-4 border-b border-slate-100">
+                <img src="{{ url_for('static', filename='img/logo_neu.webp') }}" alt="Logo NEU" class="w-12 h-12 object-contain shrink-0">
+                <div>
+                    <div class="text-xl font-extrabold text-slate-900 leading-tight">NEU Events</div>
+                    <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Đại học Kinh tế Quốc dân</div>
+                </div>
+            </div>
+            <div>
+                <div class="text-xs font-bold text-neu-700 uppercase tracking-wider mb-2">CHÀO MỪNG ĐẾN VỚI NEU EVENTS</div>
+                <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Đăng nhập</h2>
+                <p class="text-sm text-slate-500 mt-2">
+                    Sử dụng Mã sinh viên (MSSV) hoặc email cán bộ NEU để đăng nhập vào cổng sự kiện.
+                </p>
+            </div>
+
+            <!-- FLASH MESSAGE -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div class="space-y-2">
+                    {% for category, message in messages %}
+                    <div class="p-3.5 rounded-xl text-xs font-medium flex items-start gap-2.5 {% if category == 'danger' or category == 'error' %}bg-rose-50 text-rose-700 border border-rose-200{% else %}bg-emerald-50 text-emerald-800 border border-emerald-200{% endif %}">
+                        <i class="fa-solid {% if category == 'danger' or category == 'error' %}fa-circle-exclamation text-rose-500{% else %}fa-circle-check text-emerald-600{% endif %} mt-0.5"></i>
+                        <span>{{ message }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            {% endwith %}
+
+            <form id="mainLoginForm" method="POST" action="{{ url_for('login') }}" class="space-y-4" onsubmit="return handleMainLoginSubmit(event)" autocomplete="off">
+                <!-- ANTI BROWSER AUTOFILL DUMMIES -->
+                <input type="text" name="fake_user" style="display:none" tabindex="-1" autocomplete="off">
+                <input type="password" name="fake_pass" style="display:none" tabindex="-1" autocomplete="off">
+
+                <!-- MSSV / EMAIL -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Mã sinh viên (MSSV) hoặc email</label>
+                    <div class="relative">
+                        <input type="text" name="username" id="usernameInput" required value="{{ login_id or '' }}" autocomplete="off" placeholder="Nhập MSSV (VD: 11244035) hoặc email NEU" class="w-full px-4 py-3 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-neu-700 focus:border-transparent transition">
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                            <i class="fa-regular fa-user"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PASSWORD -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Mật khẩu</label>
+                    <div class="relative">
+                        <input type="password" name="password" id="passwordInput" required autocomplete="new-password" value="" readonly onfocus="this.removeAttribute('readonly')" placeholder="Nhập mật khẩu của bạn" class="w-full px-4 py-3 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-neu-700 focus:border-transparent transition">
+                        <button type="button" onclick="togglePassword('passwordInput', 'eyeIcon')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+                            <i id="eyeIcon" class="fa-regular fa-eye-slash"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- REMEMBER & FORGOT -->
+                <div class="flex items-center justify-between text-xs pt-1">
+                    <label class="flex items-center gap-2 text-slate-600 cursor-pointer select-none">
+                        <input type="checkbox" name="remember" id="rememberCheckbox" class="w-4 h-4 rounded text-neu-700 focus:ring-neu-700 border-slate-300">
+                        <span>Ghi nhớ đăng nhập</span>
+                    </label>
+                    <button type="button" onclick="openSetPasswordModal(true)" class="font-semibold text-neu-700 hover:text-neu-800 transition">
+                        Quên mật khẩu?
+                    </button>
+                </div>
+
+                <!-- SUBMIT BUTTON -->
+                <button type="submit" id="mainSubmitBtn" class="w-full py-3.5 bg-neu-700 hover:bg-neu-800 text-white font-semibold text-sm rounded-xl shadow-md flex items-center justify-center gap-2 transition transform active:scale-98">
+                    <span>Đăng nhập</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </form>
+
+            <!-- STUDENT SELF-SET PASSWORD BANNER -->
+            <div class="p-4 bg-gradient-to-r from-blue-50/90 to-neu-50/70 border border-blue-200/80 rounded-2xl flex items-center justify-between gap-3 text-xs">
+                <div class="flex items-center gap-3 text-blue-900">
+                    <div class="w-9 h-9 rounded-xl bg-white border border-blue-200 text-neu-700 flex items-center justify-center shrink-0 text-base shadow-2xs">
+                        <i class="fa-solid fa-key"></i>
+                    </div>
+                    <div>
+                        <div class="font-bold text-slate-900">Lần đầu đăng nhập hoặc chưa có mật khẩu?</div>
+                        <div class="text-[11px] text-slate-500">Xác thực bằng MSSV NEU và tự đặt mật khẩu riêng</div>
+                    </div>
+                </div>
+                <button type="button" onclick="openSetPasswordModal(false)" class="px-3.5 py-2 bg-neu-700 hover:bg-neu-800 text-white rounded-xl font-bold text-xs transition shrink-0 shadow-xs">
+                    Tự đặt mật khẩu
+                </button>
+            </div>
+
+            <!-- QUICK DEMO ACCOUNTS CARD -->
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                        <i class="fa-solid fa-users text-neu-700"></i>
+                        <span>Tài khoản trải nghiệm mẫu (Mật khẩu: <span class="font-mono text-neu-700 font-extrabold">123</span>)</span>
+                    </span>
+                </div>
+                <div class="grid grid-cols-1 gap-2 text-[11px]">
+                    <div class="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200">
+                        <div>
+                            <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 mr-1.5">Quản lý</span>
+                            <span class="font-mono font-bold text-slate-800">quanly@neu.edu.vn</span>
+                            <span class="text-slate-400 block text-[10px]">Kiểm duyệt sự kiện & KPI toàn trường</span>
+                        </div>
+                        <button type="button" onclick="fillDemo('quanly@neu.edu.vn', '123')" class="px-2.5 py-1 bg-slate-100 hover:bg-neu-700 hover:text-white rounded-lg font-semibold text-slate-600 transition text-[11px]">Chọn</button>
+                    </div>
+                    <div class="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200">
+                        <div>
+                            <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 mr-1.5">BTC 1</span>
+                            <span class="font-mono font-bold text-slate-800">vieclam@neu.edu.vn</span>
+                            <span class="text-slate-400 block text-[10px]">TT Hướng nghiệp (Quản lý Ngày hội việc làm)</span>
+                        </div>
+                        <button type="button" onclick="fillDemo('vieclam@neu.edu.vn', '123')" class="px-2.5 py-1 bg-slate-100 hover:bg-neu-700 hover:text-white rounded-lg font-semibold text-slate-600 transition text-[11px]">Chọn</button>
+                    </div>
+                    <div class="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200">
+                        <div>
+                            <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 mr-1.5">BTC 2</span>
+                            <span class="font-mono font-bold text-slate-800">it@neu.edu.vn</span>
+                            <span class="text-slate-400 block text-[10px]">Viện CNTT (Sự kiện AI & Hackathon)</span>
+                        </div>
+                        <button type="button" onclick="fillDemo('it@neu.edu.vn', '123')" class="px-2.5 py-1 bg-slate-100 hover:bg-neu-700 hover:text-white rounded-lg font-semibold text-slate-600 transition text-[11px]">Chọn</button>
+                    </div>
+                    <div class="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200">
+                        <div>
+                            <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 mr-1.5">Sinh viên</span>
+                            <span class="font-mono font-bold text-slate-800">11244035</span>
+                            <span class="text-slate-400 block text-[10px]">Nguyễn Thị Thu (Xem vé & quét QR điểm danh)</span>
+                        </div>
+                        <button type="button" onclick="fillDemo('11244035', '123')" class="px-2.5 py-1 bg-slate-100 hover:bg-neu-700 hover:text-white rounded-lg font-semibold text-slate-600 transition text-[11px]">Chọn</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NOTICE BOX -->
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-1">
+                <div class="font-bold text-slate-800">Một tài khoản, đúng không gian của bạn</div>
+                <p>Sinh viên, ban tổ chức và đơn vị quản lý được cấp quyền theo tài khoản NEU.</p>
+            </div>
+
+            <div class="text-center text-xs text-slate-400">
+                Không thể truy cập? Liên hệ <a href="mailto:events@neu.edu.vn" class="text-neu-700 font-semibold hover:underline">events@neu.edu.vn</a>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="text-center text-[11px] text-slate-400 pt-6">
+            <div>© 2026 Đại học Kinh tế Quốc dân</div>
+            <div class="flex items-center justify-center gap-4 mt-1">
+                <a href="#" class="hover:text-slate-600">Điều khoản sử dụng</a>
+                <span>•</span>
+                <a href="#" class="hover:text-slate-600">Chính sách bảo mật</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 1: CONFIRM SAVE LOGIN CHOICE ("HỆ THỐNG HỎI CÓ MUỐN LƯU KHÔNG") -->
+    <div id="saveLoginConfirmModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl border border-slate-100">
+            <div class="w-14 h-14 bg-neu-50 text-neu-700 rounded-2xl flex items-center justify-center mx-auto text-2xl border border-neu-100 shadow-xs">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div class="space-y-1">
+                <h3 class="text-base font-bold text-slate-900">Lưu thông tin đăng nhập?</h3>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                    Bạn có muốn duy trì trạng thái đăng nhập cho các lần truy cập tiếp theo trên thiết bị này không?
+                </p>
+            </div>
+            <div class="space-y-2.5">
+                <button type="button" onclick="confirmLoginWithChoice(true)" class="w-full py-3 px-4 bg-neu-700 hover:bg-neu-800 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs">
+                    <i class="fa-solid fa-laptop"></i>
+                    <span>Có, lưu đăng nhập (Thiết bị cá nhân)</span>
+                </button>
+                <button type="button" onclick="confirmLoginWithChoice(false)" class="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-desktop"></i>
+                    <span>Không lưu (Máy tính dùng chung / Thư viện)</span>
+                </button>
+            </div>
+            <button type="button" onclick="closeSaveLoginModal()" class="text-xs text-slate-400 hover:text-slate-600 font-medium">
+                Quay lại
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL 2: STUDENT SELF-SET PASSWORD -->
+    <div id="setPasswordModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-neu-50 text-neu-700 flex items-center justify-center text-lg border border-neu-100">
+                        <i class="fa-solid fa-user-lock"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900" id="setPasswordModalTitle">Thiết lập mật khẩu sinh viên</h3>
+                        <p class="text-xs text-slate-400">Dành riêng cho sinh viên Đại học Kinh tế Quốc dân</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeSetPasswordModal()" class="text-slate-400 hover:text-slate-600 text-sm">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form method="POST" action="{{ url_for('set_password') }}" id="setPasswordForm" class="space-y-4">
+                <!-- STEP 1: MSSV INPUT & VERIFY -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Mã sinh viên (MSSV) *</label>
+                    <div class="flex gap-2">
+                        <input type="text" name="student_id" id="modalStudentId" required placeholder="Ví dụ: 11244035" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-neu-700">
+                        <button type="button" onclick="verifyStudentMssv()" id="btnVerifyMssv" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition shrink-0">
+                            Kiểm tra
+                        </button>
+                    </div>
+                    <div id="mssvFeedback" class="text-[11px] mt-1.5 hidden"></div>
+                </div>
+
+                <!-- VERIFIED STUDENT BADGE -->
+                <div id="verifiedStudentCard" class="hidden p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs space-y-1">
+                    <div class="flex items-center gap-1.5 font-bold text-emerald-900">
+                        <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                        <span>Xác thực thành công sinh viên NEU</span>
+                    </div>
+                    <div class="text-slate-800 font-bold" id="cardFullName"></div>
+                    <div class="text-slate-500 text-[11px]" id="cardDept"></div>
+                </div>
+
+                <!-- STEP 2: ENTER NEW PASSWORD -->
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Mật khẩu mới tự chọn *</label>
+                        <div class="relative">
+                            <input type="password" name="new_password" id="modalNewPassword" required minlength="6" autocomplete="new-password" placeholder="Tối thiểu 6 ký tự" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-neu-700">
+                            <button type="button" onclick="togglePassword('modalNewPassword', 'modalEyeIcon1')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+                                <i id="modalEyeIcon1" class="fa-regular fa-eye-slash"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Xác nhận lại mật khẩu *</label>
+                        <div class="relative">
+                            <input type="password" name="confirm_password" id="modalConfirmPassword" required minlength="6" autocomplete="new-password" placeholder="Nhập lại mật khẩu mới" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-neu-700">
+                            <button type="button" onclick="togglePassword('modalConfirmPassword', 'modalEyeIcon2')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+                                <i id="modalEyeIcon2" class="fa-regular fa-eye-slash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 3: REMEMBER CHECKBOX -->
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <label class="flex items-center gap-2.5 text-xs text-slate-700 cursor-pointer select-none">
+                        <input type="checkbox" name="remember" id="modalRememberCheckbox" checked class="w-4 h-4 rounded text-neu-700 focus:ring-neu-700 border-slate-300">
+                        <div>
+                            <span class="font-semibold">Lưu mật khẩu trên thiết bị này</span>
+                            <div class="text-[11px] text-slate-400">Bỏ chọn nếu bạn đang dùng máy tính công cộng</div>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- SUBMIT BUTTON -->
+                <div class="flex items-center justify-end gap-3 pt-2">
+                    <button type="button" onclick="closeSetPasswordModal()" class="px-4 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-50 transition">
+                        Hủy
+                    </button>
+                    <button type="submit" class="px-5 py-2.5 bg-neu-700 hover:bg-neu-800 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-2">
+                        <i class="fa-solid fa-check"></i>
+                        <span>Lưu mật khẩu & Đăng nhập</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let pendingFormToSubmit = null;
+
+        function fillDemo(username, password) {
+            document.getElementById('usernameInput').value = username;
+            document.getElementById('passwordInput').value = password;
+        }
+
+        function togglePassword(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            }
+        }
+
+        // Ensure password field stays strictly blank on page load and clear any delayed browser autofill
+        function ensurePasswordEmpty() {
+            const pwd = document.getElementById('passwordInput');
+            if (pwd) {
+                pwd.value = '';
+            }
+        }
+        window.addEventListener('DOMContentLoaded', ensurePasswordEmpty);
+        window.addEventListener('pageshow', ensurePasswordEmpty);
+        window.addEventListener('load', function() {
+            ensurePasswordEmpty();
+            setTimeout(ensurePasswordEmpty, 80);
+            setTimeout(ensurePasswordEmpty, 250);
+        });
+
+        // Handle Main Form Submission & Check Remember Preference
+        function handleMainLoginSubmit(e) {
+            const rememberChecked = document.getElementById('rememberCheckbox').checked;
+            // If the user already ticked remember, submit directly
+            if (rememberChecked) {
+                return true;
+            }
+
+            // Otherwise, prompt user asking if they want to remember on this device
+            e.preventDefault();
+            pendingFormToSubmit = document.getElementById('mainLoginForm');
+            document.getElementById('saveLoginConfirmModal').classList.remove('hidden');
+            return false;
+        }
+
+        function confirmLoginWithChoice(saveChoice) {
+            if (pendingFormToSubmit) {
+                const rem = pendingFormToSubmit.querySelector('input[name="remember"]');
+                if (rem) {
+                    rem.checked = saveChoice;
+                }
+                document.getElementById('saveLoginConfirmModal').classList.add('hidden');
+                pendingFormToSubmit.submit();
+            }
+        }
+
+        function closeSaveLoginModal() {
+            document.getElementById('saveLoginConfirmModal').classList.add('hidden');
+            pendingFormToSubmit = null;
+        }
+
+        // Set Password Modal Logic
+        function openSetPasswordModal(isReset = false) {
+            document.getElementById('setPasswordModal').classList.remove('hidden');
+            const currentMssv = document.getElementById('usernameInput').value.trim();
+            if (currentMssv) {
+                document.getElementById('modalStudentId').value = currentMssv;
+                verifyStudentMssv();
+            }
+            if (isReset) {
+                document.getElementById('setPasswordModalTitle').innerText = 'Đặt lại mật khẩu sinh viên';
+            } else {
+                document.getElementById('setPasswordModalTitle').innerText = 'Thiết lập mật khẩu sinh viên';
+            }
+        }
+
+        function closeSetPasswordModal() {
+            document.getElementById('setPasswordModal').classList.add('hidden');
+            document.getElementById('mssvFeedback').classList.add('hidden');
+            document.getElementById('verifiedStudentCard').classList.add('hidden');
+        }
+
+        async function verifyStudentMssv() {
+            const studentId = document.getElementById('modalStudentId').value.trim();
+            const feedback = document.getElementById('mssvFeedback');
+            const verifiedCard = document.getElementById('verifiedStudentCard');
+            const btn = document.getElementById('btnVerifyMssv');
+
+            if (!studentId) {
+                feedback.className = 'text-[11px] mt-1.5 text-rose-600 block';
+                feedback.innerText = 'Vui lòng nhập Mã sinh viên.';
+                verifiedCard.classList.add('hidden');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = 'Đang kiểm tra...';
+
+            try {
+                const res = await fetch('/api/check-student?student_id=' + encodeURIComponent(studentId));
+                const data = await res.json();
+
+                if (data.exists) {
+                    feedback.className = 'text-[11px] mt-1.5 text-emerald-600 hidden';
+                    verifiedCard.classList.remove('hidden');
+                    document.getElementById('cardFullName').innerText = data.full_name + ' • MSSV: ' + data.student_id;
+                    document.getElementById('cardDept').innerText = data.department + ' • ' + data.email;
+                } else {
+                    verifiedCard.classList.add('hidden');
+                    feedback.className = 'text-[11px] mt-1.5 text-rose-600 block font-medium';
+                    feedback.innerText = data.message;
+                }
+            } catch (err) {
+                feedback.className = 'text-[11px] mt-1.5 text-amber-600 block';
+                feedback.innerText = 'Không thể kết nối đến máy chủ. Vui lòng thử lại sau.';
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Kiểm tra';
+            }
+        }
+
+        // Auto verify on input change if length looks like MSSV (8 digits)
+        document.getElementById('modalStudentId').addEventListener('input', function(e) {
+            if (e.target.value.trim().length === 8 && /^\d+$/.test(e.target.value.trim())) {
+                verifyStudentMssv();
+            }
+        });
+    </script>
+</body>
+</html>

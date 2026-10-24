@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+{% set active_page = "events" %}
+
+{% block title %}Khám phá sự kiện - NEU Events{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-7xl mx-auto">
+    <!-- BREADCRUMBS -->
+    <div class="flex items-center gap-2 text-xs text-slate-400">
+        <a href="{{ url_for('events') }}" class="hover:text-slate-600">NEU Events</a>
+        <span>/</span>
+        <span class="text-slate-700 font-medium">Khám phá sự kiện</span>
+    </div>
+
+    <!-- PAGE HEADER -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight">Khám phá sự kiện</h1>
+            <p class="text-sm text-slate-500 mt-1">Tìm trải nghiệm mới, kết nối cộng đồng và phát triển bản thân tại NEU.</p>
+        </div>
+        <button onclick="toggleCalendarView()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs transition">
+            <i class="fa-regular fa-calendar text-neu-700"></i>
+            <span id="calendarToggleText">Lịch sự kiện</span>
+        </button>
+    </div>
+
+    <!-- HERO BANNER (FEATURED EVENT) -->
+    {% if featured_event %}
+    <div class="relative bg-neu-700 rounded-2xl overflow-hidden shadow-sm flex flex-col md:flex-row">
+        <!-- LEFT CONTENT -->
+        <div class="p-8 md:p-10 text-white flex-1 flex flex-col justify-between z-10 space-y-6">
+            <div class="space-y-3">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-blue-200">SỰ KIỆN NỔI BẬT • THÁNG {{ current_month_year }}</div>
+                <h2 class="text-2xl md:text-3xl font-extrabold leading-tight">{{ featured_event.subtitle or featured_event.title }}</h2>
+                <p class="text-sm text-blue-100 max-w-xl">{{ featured_event.title }} • {{ featured_event.organizer_name }}</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-4 pt-2">
+                <a href="{{ url_for('event_detail', event_id=featured_event.id) }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-neu-700 rounded-xl text-sm font-bold hover:bg-blue-50 transition shadow-sm">
+                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                    <span>Khám phá ngay</span>
+                </a>
+                <div class="text-xs text-blue-100 font-medium flex items-center gap-2">
+                    <i class="fa-regular fa-clock"></i>
+                    <span>{{ featured_event.event_date.strftime('%d/%m') }} • {{ featured_event.location }}</span>
+                </div>
+            </div>
+        </div>
+        <!-- RIGHT IMAGE -->
+        <div class="md:w-5/12 h-56 md:h-auto relative overflow-hidden">
+            <img src="{{ featured_event.cover_image_url or 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800' }}" alt="Featured Event" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-neu-700 via-transparent to-transparent"></div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- SEARCH & FILTER BAR -->
+    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs">
+        <form method="GET" action="{{ url_for('events') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
+            <!-- KEYWORD SEARCH -->
+            <div class="lg:col-span-4">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Tìm kiếm sự kiện</label>
+                <div class="relative">
+                    <input type="text" name="q" value="{{ request.args.get('q', '') }}" placeholder="Tên sự kiện, đơn vị tổ chức..." class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-neu-700">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TIME FILTER -->
+            <div class="lg:col-span-2">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Thời gian</label>
+                <select name="time_filter" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-neu-700">
+                    <option value="">Tất cả thời gian</option>
+                    <option value="{{ current_month_year }}" {% if request.args.get('time_filter') == current_month_year %}selected{% endif %}>Tháng {{ current_month_year }}</option>
+                </select>
+            </div>
+
+            <!-- VENUE FILTER -->
+            <div class="lg:col-span-3">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Địa điểm</label>
+                <select name="location" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-neu-700">
+                    <option value="">Tất cả địa điểm</option>
+                    <option value="Hội trường A2" {% if 'A2' in request.args.get('location', '') %}selected{% endif %}>Hội trường A2</option>
+                    <option value="Phòng B101" {% if 'B101' in request.args.get('location', '') %}selected{% endif %}>Phòng B101, nhà A2</option>
+                    <option value="Khuôn viên" {% if 'Khuôn viên' in request.args.get('location', '') %}selected{% endif %}>Khuôn viên NEU</option>
+                    <option value="Sân quảng trường" {% if 'quảng trường' in request.args.get('location', '') %}selected{% endif %}>Sân quảng trường NEU</option>
+                </select>
+            </div>
+
+            <!-- CATEGORY FILTER -->
+            <div class="lg:col-span-2">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Loại sự kiện</label>
+                <select name="category" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-neu-700">
+                    <option value="">Tất cả loại</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if request.args.get('category')|int == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- SUBMIT BUTTON -->
+            <div class="lg:col-span-1 flex items-end">
+                <button type="submit" class="w-full py-2 px-3 bg-neu-700 hover:bg-neu-800 text-white font-semibold text-xs rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 h-[34px]">
+                    <i class="fa-solid fa-sliders text-xs"></i>
+                    <span>Lọc</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- STATUS TABS & SORT -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-3">
+        <!-- STATUS TABS -->
+        <div class="flex items-center gap-1 overflow-x-auto text-xs font-medium no-scrollbar">
+            <a href="{{ url_for('events', tab='all') }}" class="px-3 py-2 rounded-lg transition whitespace-nowrap {% if current_tab == 'all' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+                Tất cả sự kiện ({{ counts.all }})
+            </a>
+            <a href="{{ url_for('events', tab='upcoming') }}" class="px-3 py-2 rounded-lg transition whitespace-nowrap {% if current_tab == 'upcoming' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+                Sắp diễn ra ({{ counts.upcoming }})
+            </a>
+            <a href="{{ url_for('events', tab='active') }}" class="px-3 py-2 rounded-lg transition whitespace-nowrap {% if current_tab == 'active' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+                Đang diễn ra ({{ counts.active }})
+            </a>
+            <a href="{{ url_for('events', tab='completed') }}" class="px-3 py-2 rounded-lg transition whitespace-nowrap {% if current_tab == 'completed' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+                Đã kết thúc ({{ counts.completed }})
+            </a>
+            <a href="{{ url_for('events', tab='cancelled') }}" class="px-3 py-2 rounded-lg transition whitespace-nowrap {% if current_tab == 'cancelled' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+                Đã hủy ({{ counts.cancelled }})
+            </a>
+        </div>
+
+        <!-- RESULT COUNT & SORT -->
+        <div class="flex items-center gap-3 text-xs text-slate-500 justify-between sm:justify-end">
+            <span class="font-semibold text-slate-700">{{ events|length }} sự kiện phù hợp</span>
+            <div class="flex items-center gap-1.5 cursor-pointer hover:text-slate-800">
+                <span>Sắp xếp: <strong>Nổi bật nhất</strong></span>
+                <i class="fa-solid fa-arrow-down-wide-short text-xs"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- CALENDAR VIEW (HIDDEN BY DEFAULT) -->
+    <div id="calendarView" class="hidden bg-white p-6 rounded-2xl border border-slate-200">
+        <h3 class="font-bold text-slate-800 mb-4">Lịch sự kiện NEU - Tháng 10/2026</h3>
+        <div class="grid grid-cols-7 gap-2 text-center text-xs">
+            <div class="font-bold text-slate-400 py-2">T2</div>
+            <div class="font-bold text-slate-400 py-2">T3</div>
+            <div class="font-bold text-slate-400 py-2">T4</div>
+            <div class="font-bold text-slate-400 py-2">T5</div>
+            <div class="font-bold text-slate-400 py-2">T6</div>
+            <div class="font-bold text-slate-400 py-2 text-blue-600">T7</div>
+            <div class="font-bold text-slate-400 py-2 text-rose-600">CN</div>
+            <!-- CALENDAR DAYS -->
+            {% for day in range(1, 32) %}
+            <div class="border rounded-xl p-2 min-h-[70px] flex flex-col justify-between text-left {% if day == 12 or day == 24 %}bg-neu-50 border-neu-200{% else %}border-slate-100{% endif %}">
+                <span class="font-bold text-slate-700">{{ day }}</span>
+                {% if day == 12 %}
+                <span class="text-[10px] bg-emerald-500 text-white px-1 py-0.5 rounded truncate">Ứng dụng AI</span>
+                {% elif day == 24 %}
+                <span class="text-[10px] bg-neu-700 text-white px-1 py-0.5 rounded truncate">Ngày hội việc làm</span>
+                {% elif day == 28 %}
+                <span class="text-[10px] bg-cyan-600 text-white px-1 py-0.5 rounded truncate">Diễn đàn Tài chính</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- EVENTS GRID (MATCHING Danh sách sự kiện.jpg) -->
+    <div id="eventsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for e in events %}
+        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs hover:shadow-md transition flex flex-col justify-between group">
+            <div>
+                <!-- THUMBNAIL WITH DATE BADGE OVERLAY -->
+                <div class="relative h-48 w-full overflow-hidden bg-slate-100">
+                    <img src="{{ e.cover_image_url or 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600' }}" alt="{{ e.title }}" class="w-full h-full object-cover group-hover:scale-103 transition duration-300">
+                    <!-- DATE BADGE -->
+                    <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-xs text-neu-700 font-black text-xs px-2.5 py-1.5 rounded-lg shadow-sm border border-slate-100">
+                        {{ e.event_date.strftime('%d TH%m') }}
+                    </div>
+                </div>
+
+                <!-- CARD BODY -->
+                <div class="p-5 space-y-3">
+                    <!-- TAGS ROW -->
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-semibold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-md">
+                            {{ e.category.name }}
+                        </span>
+                        {% if e.status == 'APPROVED' %}
+                            {% if e.event_date == today %}
+                            <span class="font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-100">
+                                Đang diễn ra
+                            </span>
+                            {% else %}
+                            <span class="font-semibold text-neu-700 bg-neu-50 px-2.5 py-0.5 rounded-md border border-neu-100">
+                                Đang mở đăng ký
+                            </span>
+                            {% endif %}
+                        {% elif e.status == 'COMPLETED' %}
+                            <span class="font-semibold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-md">
+                                Đã kết thúc
+                            </span>
+                        {% elif e.status == 'CANCELLED' %}
+                            <span class="font-semibold text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-md border border-rose-100">
+                                Đã hủy
+                            </span>
+                        {% else %}
+                            <span class="font-semibold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-md border border-amber-100">
+                                Chờ duyệt
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- TITLE -->
+                    <h3 class="font-bold text-base text-slate-900 group-hover:text-neu-700 transition line-clamp-1">
+                        {{ e.title }}
+                    </h3>
+
+                    <!-- DETAILS -->
+                    <div class="space-y-1.5 text-xs text-slate-500">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-regular fa-clock w-4 text-slate-400"></i>
+                            <span>{{ e.event_date.strftime('%d/%m/%Y') }} • {{ e.start_time.strftime('%H:%M') }}–{{ e.end_time.strftime('%H:%M') }}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-location-dot w-4 text-slate-400"></i>
+                            <span class="truncate">{{ e.location }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FOOTER WITH SEATS PROGRESS & LINK -->
+            <div class="px-5 pb-5 pt-2 border-t border-slate-100 space-y-2">
+                <div class="text-[11px] text-slate-500 flex items-center justify-between">
+                    {% if e.status == 'COMPLETED' %}
+                        <span>{{ e.attended_seats }} sinh viên đã tham dự</span>
+                    {% elif e.status == 'CANCELLED' %}
+                        <span class="text-rose-600 font-medium">Đã thông báo tới {{ e.registered_seats }} người</span>
+                    {% else %}
+                        <span>{{ e.registered_seats }}/{{ e.max_seats }} chỗ đã đăng ký</span>
+                        <span class="font-semibold text-neu-700">Còn {{ e.remaining_seats }} chỗ</span>
+                    {% endif %}
+                </div>
+
+                <!-- PROGRESS BAR -->
+                {% if e.status != 'CANCELLED' %}
+                <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                    {% set pct = (e.registered_seats / e.max_seats * 100) if e.max_seats > 0 else 0 %}
+                    <div class="bg-neu-700 h-full rounded-full" style="width: {{ [pct, 100]|min }}%"></div>
+                </div>
+                {% endif %}
+
+                <!-- ACTION BUTTON -->
+                <div class="pt-2">
+                    <a href="{{ url_for('event_detail', event_id=e.id) }}" class="inline-flex items-center gap-1.5 text-xs font-bold text-neu-700 hover:text-neu-800 transition">
+                        {% if e.status == 'COMPLETED' %}
+                            <span>Xem tổng kết</span>
+                        {% elif e.status == 'CANCELLED' %}
+                            <span class="text-rose-600">Xem thông báo</span>
+                        {% else %}
+                            <span>Xem chi tiết</span>
+                        {% endif %}
+                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-slate-200 text-xs text-slate-500">
+        <div>Hiển thị 1–{{ events|length }} trong tổng số 24 sự kiện</div>
+        <div class="flex items-center gap-1.5">
+            <button class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 font-medium">Trước</button>
+            <button class="px-3 py-1.5 rounded-lg bg-neu-700 text-white font-bold">1</button>
+            <button class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 font-medium">2</button>
+            <button class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 font-medium">3</button>
+            <button class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 font-medium">Sau</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleCalendarView() {
+        const grid = document.getElementById('eventsGrid');
+        const cal = document.getElementById('calendarView');
+        const text = document.getElementById('calendarToggleText');
+        if (cal.classList.contains('hidden')) {
+            cal.classList.remove('hidden');
+            grid.classList.add('hidden');
+            text.innerText = "Dạng lưới thẻ";
+        } else {
+            cal.classList.add('hidden');
+            grid.classList.remove('hidden');
+            text.innerText = "Lịch sự kiện";
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,341 @@
+{% extends "base.html" %}
+{% set active_page = "events" %}
+
+{% block title %}{{ event.title }} - NEU Events{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-7xl mx-auto">
+    <!-- BREADCRUMBS -->
+    <div class="flex items-center gap-2 text-xs text-slate-400">
+        <a href="{{ url_for('events') }}" class="hover:text-slate-600">NEU Events</a>
+        <span>/</span>
+        <a href="{{ url_for('events') }}" class="hover:text-slate-600">Sự kiện</a>
+        <span>/</span>
+        <span class="text-slate-700 font-medium truncate max-w-xs">{{ event.title }}</span>
+    </div>
+
+    <!-- PAGE HEADER -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight">Chi tiết sự kiện</h1>
+            <p class="text-sm text-slate-500 mt-1">{{ event.subtitle or 'Thông tin chương trình và đăng ký tham gia.' }}</p>
+        </div>
+        <button onclick="copyShareLink()" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs transition">
+            <i class="fa-solid fa-share-nodes text-slate-500"></i>
+            <span id="shareBtnText">Chia sẻ</span>
+        </button>
+    </div>
+
+    <!-- HERO COVER BANNER -->
+    <div class="relative rounded-2xl overflow-hidden h-72 md:h-80 w-full shadow-sm bg-slate-900">
+        <img src="{{ event.cover_image_url or 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200' }}" alt="{{ event.title }}" class="w-full h-full object-cover opacity-60">
+        <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/40 to-transparent"></div>
+        <div class="absolute bottom-8 left-8 right-8 text-white space-y-2">
+            <div class="flex items-center gap-2">
+                <span class="bg-white/20 backdrop-blur-xs text-white text-xs font-bold px-3 py-1 rounded-md">{{ event.category.name }}</span>
+                <span class="bg-emerald-500/80 backdrop-blur-xs text-white text-xs font-bold px-3 py-1 rounded-md">Đã duyệt</span>
+            </div>
+            <h2 class="text-2xl md:text-4xl font-black tracking-tight text-white">{{ event.title }}</h2>
+            <p class="text-xs md:text-sm text-slate-200 max-w-2xl font-light">{{ event.subtitle or event.description[:120] }}</p>
+        </div>
+    </div>
+
+    <!-- MAIN TWO-COLUMN LAYOUT -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- LEFT COLUMN: EVENT DETAILS & AGENDA -->
+        <div class="lg:col-span-8 space-y-6">
+            <!-- ABOUT EVENT -->
+            <div class="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-2xs space-y-6">
+                <h3 class="text-lg font-bold text-slate-900">Về sự kiện</h3>
+                <p class="text-sm text-slate-600 leading-relaxed">
+                    {{ event.description }}
+                </p>
+
+                <!-- 3 METRIC PILLS -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-neu-100 text-neu-700 flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-briefcase text-base"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-slate-800">50+ doanh nghiệp</div>
+                            <div class="text-[11px] text-slate-400">Tham gia tuyển dụng</div>
+                        </div>
+                    </div>
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-neu-100 text-neu-700 flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-users text-base"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-slate-800">{{ event.max_seats }} chỗ tham gia</div>
+                            <div class="text-[11px] text-slate-400">Giới hạn số lượng</div>
+                        </div>
+                    </div>
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-neu-100 text-neu-700 flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-graduation-cap text-base"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-slate-800">Tư vấn nghề nghiệp</div>
+                            <div class="text-[11px] text-slate-400">CV & Phỏng vấn</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EVENT AGENDA (TIMELINE) -->
+            <div class="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 class="text-lg font-bold text-slate-900">Chương trình sự kiện</h3>
+                    <div class="text-xs text-slate-500 font-medium">{{ event.event_date.strftime('Ngày %d tháng %m năm %Y') }}</div>
+                </div>
+
+                <div class="divide-y divide-slate-100">
+                    <div class="py-3 flex flex-col sm:flex-row sm:items-start gap-4">
+                        <div class="w-32 shrink-0 font-bold text-xs text-neu-700">08:00–08:30</div>
+                        <div class="flex-1">
+                            <div class="text-xs font-bold text-slate-800">Đón tiếp và điểm danh</div>
+                            <div class="text-[11px] text-slate-500">Sảnh nhà A1</div>
+                        </div>
+                    </div>
+                    <div class="py-3 flex flex-col sm:flex-row sm:items-start gap-4">
+                        <div class="w-32 shrink-0 font-bold text-xs text-neu-700">08:30–09:30</div>
+                        <div class="flex-1">
+                            <div class="text-xs font-bold text-slate-800">Khai mạc & đối thoại nghề nghiệp</div>
+                            <div class="text-[11px] text-slate-500">Hội trường A2</div>
+                        </div>
+                    </div>
+                    <div class="py-3 flex flex-col sm:flex-row sm:items-start gap-4">
+                        <div class="w-32 shrink-0 font-bold text-xs text-neu-700">09:30–15:30</div>
+                        <div class="flex-1">
+                            <div class="text-xs font-bold text-slate-800">Kết nối tuyển dụng và tư vấn hồ sơ</div>
+                            <div class="text-[11px] text-slate-500">Các gian hàng doanh nghiệp tại sảnh A1 & A2</div>
+                        </div>
+                    </div>
+                    <div class="py-3 flex flex-col sm:flex-row sm:items-start gap-4">
+                        <div class="w-32 shrink-0 font-bold text-xs text-neu-700">15:30–16:30</div>
+                        <div class="flex-1">
+                            <div class="text-xs font-bold text-slate-800">Chia sẻ kinh nghiệm & tổng kết</div>
+                            <div class="text-[11px] text-slate-500">Hội trường A2</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PREPARATION & HANDBOOK -->
+            <div class="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
+                <h3 class="text-lg font-bold text-slate-900">Chuẩn bị trước khi tham gia</h3>
+                <ul class="space-y-2 text-xs text-slate-600 list-disc list-inside">
+                    <li>Mang theo thẻ sinh viên và mã đăng ký để điểm danh.</li>
+                    <li>Chuẩn bị hồ sơ ứng tuyển; trang phục lịch sự.</li>
+                    <li>Có mặt trước giờ khai mạc ít nhất 15 phút.</li>
+                </ul>
+
+                <!-- PDF DOWNLOAD CARD -->
+                <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+                            <i class="fa-regular fa-file-pdf text-lg"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-slate-800">{{ event.handbook_name }}</div>
+                            <div class="text-[11px] text-slate-400">Tài liệu PDF • 2.4 MB</div>
+                        </div>
+                    </div>
+                    <a href="#" onclick="alert('Đang tải cẩm nang sự kiện...'); return false;" class="w-9 h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 flex items-center justify-center text-slate-600 transition">
+                        <i class="fa-solid fa-arrow-down text-xs"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: REGISTRATION WIDGET -->
+        <div class="lg:col-span-4 space-y-6">
+            <!-- REGISTRATION CARD -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-5 sticky top-20">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-base text-slate-900">Tham gia sự kiện</h3>
+                    {% if event.is_registration_open %}
+                    <span class="text-xs font-semibold text-neu-700 bg-neu-50 px-2.5 py-0.5 rounded-full border border-neu-100">Đang mở đăng ký</span>
+                    {% else %}
+                    <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">Đã đóng đăng ký</span>
+                    {% endif %}
+                </div>
+
+                <!-- EVENT META LIST -->
+                <div class="space-y-3 text-xs text-slate-600 border-t border-slate-100 pt-4">
+                    <div class="flex items-start gap-3">
+                        <i class="fa-regular fa-calendar text-slate-400 mt-0.5"></i>
+                        <div>
+                            <div class="font-medium text-slate-400 text-[11px]">Thời gian</div>
+                            <div class="font-bold text-slate-800">{{ event.event_date.strftime('%d/%m/%Y') }} • {{ event.start_time.strftime('%H:%M') }}–{{ event.end_time.strftime('%H:%M') }}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <i class="fa-solid fa-location-dot text-slate-400 mt-0.5"></i>
+                        <div>
+                            <div class="font-medium text-slate-400 text-[11px]">Địa điểm</div>
+                            <div class="font-bold text-slate-800">{{ event.location }}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <i class="fa-regular fa-user text-slate-400 mt-0.5"></i>
+                        <div>
+                            <div class="font-medium text-slate-400 text-[11px]">Đối tượng</div>
+                            <div class="font-bold text-slate-800">{{ event.target_audience }}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <i class="fa-solid fa-tag text-slate-400 mt-0.5"></i>
+                        <div>
+                            <div class="font-medium text-slate-400 text-[11px]">Phí tham gia</div>
+                            <div class="font-bold text-emerald-600">{{ event.fee }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SEATS PROGRESS -->
+                <div class="space-y-2 border-t border-slate-100 pt-4">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-bold text-slate-700">{{ event.registered_seats }} / {{ event.max_seats }} đã đăng ký</span>
+                        <span class="font-bold text-neu-700">Còn {{ event.remaining_seats }} chỗ</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                        {% set pct = (event.registered_seats / event.max_seats * 100) if event.max_seats > 0 else 0 %}
+                        <div class="bg-neu-700 h-full rounded-full transition-all duration-500" style="width: {{ [pct, 100]|min }}%"></div>
+                    </div>
+                </div>
+
+                <!-- ACTION BUTTONS -->
+                <div class="pt-2 space-y-2">
+                    {% if current_user.role == 'STUDENT' %}
+                        {% if existing_registration %}
+                            <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 space-y-2">
+                                <div class="font-bold flex items-center gap-2">
+                                    <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                                    <span>Bạn đã đăng ký sự kiện này!</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span>Mã vé tham dự:</span>
+                                    <span class="font-mono font-black text-neu-700 bg-white px-2 py-0.5 rounded border border-emerald-200 tracking-wider">{{ existing_registration.ticket_code }}</span>
+                                </div>
+                            </div>
+                            <button type="button" onclick="showTicketModal('{{ event.title }}', '{{ existing_registration.ticket_code }}', '{{ event.event_date.strftime('%d/%m/%Y') }}', '{{ event.location }}', '{{ current_user.full_name }}', '{{ current_user.student_id or current_user.username }}', '{{ current_user.department or 'Đại học Kinh tế Quốc dân' }}', '{{ event.start_time.strftime('%H:%M') }}–{{ event.end_time.strftime('%H:%M') }}', '{{ existing_registration.attendance_status }}')" class="w-full py-3 bg-neu-700 hover:bg-neu-800 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition shadow-xs">
+                                <i class="fa-solid fa-qrcode text-sm"></i>
+                                <span>Xem vé & Mã QR cá nhân</span>
+                            </button>
+                            <a href="{{ url_for('my_events') }}" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl flex items-center justify-center gap-2 transition">
+                                <span>Tất cả sự kiện đã đăng ký</span>
+                                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                            </a>
+                            {% if existing_registration.attendance_status == 'ATTENDED' %}
+                                <div class="p-2.5 rounded-xl bg-emerald-50 text-emerald-800 text-xs text-center font-semibold border border-emerald-200">
+                                    <i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i> Bạn đã điểm danh tham dự sự kiện này (Không thể hủy).
+                                </div>
+                            {% elif event.status == 'COMPLETED' or event.event_date < today %}
+                                <div class="p-2.5 rounded-xl bg-slate-100 text-slate-600 text-xs text-center font-medium border border-slate-200">
+                                    Sự kiện đã kết thúc (Không thể hủy).
+                                </div>
+                            {% else %}
+                            <form method="POST" action="{{ url_for('cancel_registration', reg_id=existing_registration.id) }}" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đăng ký sự kiện này?');">
+                                <button type="submit" class="w-full py-2 text-rose-600 hover:text-rose-800 text-xs font-semibold transition">
+                                    Hủy đăng ký
+                                </button>
+                            </form>
+                            {% endif %}
+                        {% else %}
+                            {% if event.is_registration_open %}
+                            <form method="POST" action="{{ url_for('register_event', event_id=event.id) }}">
+                                <button type="submit" class="w-full py-3.5 bg-neu-700 hover:bg-neu-800 text-white font-bold text-sm rounded-xl shadow-md transition flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-ticket"></i>
+                                    <span>Đăng ký tham gia</span>
+                                </button>
+                            </form>
+                            <div class="text-[11px] text-slate-400 text-center">
+                                Hạn đăng ký: {{ event.registration_deadline.strftime('%H:%M ngày %d/%m/%Y') }}.
+                            </div>
+                            {% else %}
+                            <button disabled class="w-full py-3.5 bg-slate-200 text-slate-400 font-bold text-sm rounded-xl cursor-not-allowed">
+                                Hết hạn đăng ký hoặc đã hết chỗ
+                            </button>
+                            {% endif %}
+                        {% endif %}
+                    {% else %}
+                        <!-- KHÔNG PHẢI SINH VIÊN (BAN TỔ CHỨC / ĐƠN VỊ QUẢN LÝ) -->
+                        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-2">
+                            <div class="font-bold text-slate-800 flex items-center gap-1.5">
+                                <i class="fa-solid fa-circle-info text-neu-700"></i>
+                                <span>Tài khoản {{ 'Ban tổ chức' if current_user.role == 'ORGANIZER' else 'Đơn vị Quản lý' }}</span>
+                            </div>
+                            <p class="text-[11px] text-slate-500">
+                                Ban tổ chức và cán bộ quản lý không đăng ký tham gia sự kiện của sinh viên.
+                            </p>
+                        </div>
+                        {% if current_user.role == 'ORGANIZER' %}
+                            {% if event.organizer_id == current_user.id or event.organizer_email == current_user.email %}
+                            <a href="{{ url_for('organizer_events', edit_id=event.id) }}" class="w-full py-3 bg-neu-700 hover:bg-neu-800 text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 transition">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                                <span>Quản lý sự kiện này</span>
+                            </a>
+                            <a href="{{ url_for('checkin', event_id=event.id) }}" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition border border-slate-200">
+                                <i class="fa-solid fa-qrcode"></i>
+                                <span>Điểm danh sự kiện</span>
+                            </a>
+                            {% else %}
+                            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center text-[11px] text-slate-500 font-medium">
+                                Sự kiện do <strong>{{ event.organizer_name }}</strong> phụ trách
+                            </div>
+                            {% endif %}
+                        {% elif current_user.role == 'MANAGER' %}
+                            {% if event.status == 'PENDING' %}
+                            <a href="{{ url_for('moderation') }}" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition">
+                                <i class="fa-solid fa-shield-halved"></i>
+                                <span>Phê duyệt sự kiện này</span>
+                            </a>
+                            {% else %}
+                            <a href="{{ url_for('moderation') }}" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl flex items-center justify-center gap-1.5 transition border border-slate-200">
+                                <i class="fa-solid fa-shield-halved"></i>
+                                <span>Xem phân hệ Kiểm duyệt</span>
+                            </a>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                </div>
+
+                <!-- ORGANIZER INFO -->
+                <div class="border-t border-slate-100 pt-4 space-y-3">
+                    <div class="text-xs font-bold text-slate-700">Đơn vị tổ chức</div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-neu-50 text-neu-700 flex items-center justify-center font-black text-sm">
+                            <i class="fa-solid fa-building-columns"></i>
+                        </div>
+                        <div class="text-xs">
+                            <div class="font-bold text-slate-800">{{ event.organizer_name }}</div>
+                            <div class="text-slate-400 text-[11px]">{{ event.organizer_email }}</div>
+                            <div class="text-slate-400 text-[11px]">{{ event.organizer_phone }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ATTENDANCE NOTICE BOX -->
+                <div class="p-3.5 rounded-xl bg-blue-50/70 border border-blue-100 text-[11px] text-blue-800 space-y-1">
+                    <div class="font-bold flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-info text-neu-700"></i>
+                        <span>Ghi nhận tham gia</span>
+                    </div>
+                    <p class="leading-relaxed">Điểm danh đúng thời gian để được ghi nhận hoạt động. Đăng ký không đồng nghĩa với đã tham dự.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function copyShareLink() {
+        navigator.clipboard.writeText(window.location.href);
+        const btn = document.getElementById('shareBtnText');
+        btn.innerText = "Đã sao chép!";
+        setTimeout(() => { btn.innerText = "Chia sẻ"; }, 2500);
+    }
+</script>
+{% endblock %}

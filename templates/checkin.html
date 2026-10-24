@@ -1,0 +1,579 @@
+{% extends "base.html" %}
+{% set active_page = "checkin" %}
+
+{% block title %}Điểm danh sự kiện - NEU Events{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-7xl mx-auto">
+    <!-- BREADCRUMBS -->
+    <div class="flex items-center gap-2 text-xs text-slate-400">
+        <a href="{{ url_for('events') }}" class="hover:text-slate-600">NEU Events</a>
+        <span>/</span>
+        <span class="text-slate-700 font-medium">Điểm danh sự kiện</span>
+    </div>
+
+    <!-- PAGE HEADER -->
+    <div>
+        <h1 class="text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight">Điểm danh sự kiện</h1>
+        <p class="text-sm text-slate-500 mt-1">
+            {% if current_user.role == 'STUDENT' %}
+            Tự điểm danh tham gia sự kiện thông qua việc quét mã QR Code tại hội trường.
+            {% else %}
+            Quản lý phiên điểm danh, trình chiếu mã QR và theo dõi sĩ số trực tiếp.
+            {% endif %}
+        </p>
+    </div>
+
+    {% if not active_event %}
+    <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-4 max-w-xl mx-auto shadow-2xs">
+        <div class="w-16 h-16 rounded-full bg-blue-50 text-neu-700 flex items-center justify-center mx-auto text-2xl border border-blue-100 shadow-xs">
+            <i class="fa-regular fa-calendar-xmark"></i>
+        </div>
+        <div class="space-y-1">
+            <h3 class="text-lg font-bold text-slate-900">Không có sự kiện diễn ra hôm nay</h3>
+            <p class="text-xs text-slate-500 leading-relaxed">
+                {% if current_user.role == 'STUDENT' %}
+                Hôm nay bạn không có lịch tham gia sự kiện nào đã đăng ký. Bạn chỉ có thể điểm danh các sự kiện mình đã đăng ký và diễn ra trong ngày hôm nay theo thời gian thực.
+                {% else %}
+                Đơn vị của bạn hiện chưa có sự kiện nào diễn ra trong ngày hôm nay.
+                {% endif %}
+            </p>
+        </div>
+        <div class="pt-2 flex justify-center gap-3">
+            <a href="{{ url_for('events') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-neu-700 hover:bg-neu-800 text-white rounded-xl text-xs font-bold transition shadow-xs">
+                <i class="fa-regular fa-calendar-check text-xs"></i>
+                <span>Khám phá sự kiện</span>
+            </a>
+            {% if current_user.role == 'STUDENT' %}
+            <a href="{{ url_for('my_events') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition">
+                <i class="fa-solid fa-ticket text-xs"></i>
+                <span>Xem vé đã đăng ký</span>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <!-- ACTIVE EVENT HERO BANNER -->
+    <div class="bg-neu-700 text-white p-6 rounded-2xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="space-y-1">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-blue-200">SỰ KIỆN ĐANG DIỄN RA • {{ active_event.code }}</div>
+            <h2 class="text-xl md:text-2xl font-black tracking-tight">{{ active_event.title }}</h2>
+            <div class="text-xs text-blue-100 flex items-center gap-3">
+                <span>{{ active_event.event_date.strftime('%d/%m/%Y') }}</span>
+                <span>•</span>
+                <span>{{ active_event.start_time.strftime('%H:%M') }}–{{ active_event.end_time.strftime('%H:%M') }}</span>
+                <span>•</span>
+                <span>{{ active_event.location }}</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="bg-white/15 backdrop-blur-xs text-white text-xs font-semibold px-3 py-1.5 rounded-lg border border-white/20">
+                Đang mở điểm danh
+            </span>
+            {% if all_events|length > 0 %}
+            <div class="relative">
+                <button onclick="document.getElementById('switchEventDropdown').classList.toggle('hidden')" class="px-3 py-1.5 bg-white text-neu-700 hover:bg-blue-50 text-xs font-bold rounded-lg flex items-center gap-1.5 transition">
+                    <span>Đổi sự kiện ({{ all_events|length }})</span>
+                    <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                </button>
+                <div id="switchEventDropdown" class="hidden absolute right-0 mt-2 w-72 bg-white text-slate-800 rounded-xl shadow-xl border border-slate-200 py-2 z-20">
+                    <div class="px-3 py-1 text-[11px] font-bold text-slate-400 uppercase">
+                        {% if current_user.role == 'STUDENT' %}
+                        Sự kiện hôm nay bạn đã đăng ký:
+                        {% else %}
+                        Sự kiện đơn vị tổ chức:
+                        {% endif %}
+                    </div>
+                    {% for ev in all_events %}
+                    <a href="{{ url_for('checkin', event_id=ev.id) }}" class="block px-3 py-2 text-xs hover:bg-slate-50 transition {% if ev.id == active_event.id %}font-bold text-neu-700 bg-neu-50{% endif %}">
+                        <div class="truncate">{{ ev.title }}</div>
+                        <div class="text-[10px] text-slate-400">{{ ev.code }} • {{ ev.event_date.strftime('%d/%m') }}</div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ROLE SPECIFIC NOTICE BANNER -->
+    {% if current_user.role == 'STUDENT' %}
+    <div class="p-4 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-900 flex items-start gap-3">
+        <i class="fa-solid fa-qrcode text-neu-700 text-base mt-0.5"></i>
+        <div>
+            <div class="font-bold text-sm text-neu-800">Quy định điểm danh dành cho Sinh viên</div>
+            <div class="text-blue-700/90 mt-0.5 leading-relaxed">
+                Tài khoản sinh viên <strong>chỉ được tự điểm danh cho bản thân bằng cách quét mã QR Code</strong> tại hội trường diễn ra sự kiện. Sinh viên không có quyền xác nhận điểm danh cho sinh viên khác.
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="p-4 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-900 flex items-start gap-3">
+        <i class="fa-solid fa-shield-halved text-neu-700 text-base mt-0.5"></i>
+        <div>
+            <div class="font-bold text-sm text-neu-800">Không gian quản trị dành cho Ban tổ chức</div>
+            <div class="text-blue-700/90 mt-0.5 leading-relaxed">
+                Ban tổ chức có toàn quyền quản lý phiên, trình chiếu mã QR điểm danh lên màn hình hội trường, theo dõi số lượng tham dự realtime và hỗ trợ xác nhận điểm danh thủ công khi sinh viên gặp sự cố thiết bị.
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {# ========================================================================= #}
+    {# 1. GIAO DIỆN DÀNH CHO TÀI KHOẢN SINH VIÊN (STUDENT)                     #}
+    {# ========================================================================= #}
+    {% if current_user.role == 'STUDENT' %}
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- LEFT COLUMN: QUÉT MÃ QR ĐIỂM DANH (7 CỘT) -->
+        <div class="lg:col-span-7 space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-6">
+                <!-- HEADER -->
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <div>
+                        <h3 class="font-bold text-base text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-camera text-neu-700"></i>
+                            <span>Sinh viên • Tự điểm danh bằng QR Code</span>
+                        </h3>
+                        <div class="text-xs text-slate-500 mt-0.5">
+                            {{ current_user.full_name }} • MSSV: <span class="font-mono font-semibold">{{ current_user.student_id or current_user.username }}</span>
+                        </div>
+                    </div>
+                    <span class="text-xs font-semibold text-neu-700 bg-neu-50 px-3 py-1 rounded-full border border-neu-100 flex items-center gap-1.5">
+                        <i class="fa-solid fa-id-badge text-[11px]"></i>
+                        <span>{{ 'Đã đăng ký' if active_registration else 'Chưa đăng ký' }}</span>
+                    </span>
+                </div>
+
+                <!-- ATTENDANCE STATUS -->
+                {% if user_attendance_record %}
+                <div class="p-6 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-2">
+                    <div class="w-14 h-14 rounded-full bg-emerald-500 text-white flex items-center justify-center mx-auto text-2xl shadow-sm">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                    <div class="text-lg font-extrabold text-emerald-800">Đã điểm danh thành công!</div>
+                    <div class="text-xs text-emerald-700">
+                        Thời gian ghi nhận: <strong class="font-mono">{{ user_attendance_record.checked_in_at.strftime('%H:%M • %d/%m/%Y') }}</strong>
+                    </div>
+                    <div class="inline-flex items-center gap-2 bg-emerald-100/70 text-emerald-800 px-3 py-1 rounded-lg text-xs font-medium mt-1">
+                        <i class="fa-solid fa-qrcode"></i>
+                        <span>Phương thức: Quét mã QR Code chính chủ</span>
+                    </div>
+                    <div class="text-[11px] text-slate-500 mt-2">
+                        Mã vé điện tử: <span class="font-mono font-bold text-slate-700">{{ active_registration.ticket_code if active_registration else 'NEU-AI-0123' }}</span>
+                    </div>
+                </div>
+                {% else %}
+                <div class="p-5 rounded-2xl bg-amber-50/70 border border-amber-200 text-center space-y-2">
+                    <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto text-xl">
+                        <i class="fa-regular fa-clock"></i>
+                    </div>
+                    <div class="text-base font-bold text-amber-900">Bạn chưa điểm danh sự kiện này</div>
+                    <div class="text-xs text-amber-700">
+                        Mã vé của bạn: <strong class="font-mono">{{ active_registration.ticket_code if active_registration else 'NEU-AI-0123' }}</strong>
+                    </div>
+                    <p class="text-xs text-slate-600 max-w-md mx-auto pt-1">
+                        Vui lòng hướng camera điện thoại về phía <strong>Mã QR Code</strong> trên màn chiếu hội trường hoặc bàn tiếp đón để hoàn tất điểm danh.
+                    </p>
+                </div>
+
+                <!-- LIVE SCANNER CONTAINER (TOGGLED) -->
+                <div id="inlineScannerBox" class="hidden p-4 rounded-2xl bg-slate-900 text-white space-y-3">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-bold flex items-center gap-2 text-emerald-400">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span>Đang quét camera trực tiếp</span>
+                        </span>
+                        <button type="button" onclick="stopInlineScanner()" class="text-slate-400 hover:text-white text-xs underline">
+                            Đóng camera
+                        </button>
+                    </div>
+                    <div id="inline-qr-reader" class="overflow-hidden rounded-xl bg-black mx-auto max-w-sm"></div>
+                    <div class="text-[11px] text-center text-slate-400">
+                        Căn chỉnh mã QR của hội trường vào giữa khung hình vuông.
+                    </div>
+                </div>
+
+                <!-- QR CHECK-IN ACTION BUTTONS -->
+                <div class="space-y-3 pt-2">
+                    <button type="button" onclick="startInlineScanner()" class="w-full py-3.5 bg-neu-700 hover:bg-neu-800 text-white font-bold text-sm rounded-xl shadow-sm transition flex items-center justify-center gap-3">
+                        <i class="fa-solid fa-camera text-base"></i>
+                        <span>Quét mã QR Code bằng Camera</span>
+                    </button>
+
+                    <!-- QUICK SIMULATION FOR TEST / DESKTOP USE -->
+                    <form method="POST" action="{{ url_for('submit_checkin') }}">
+                        <input type="hidden" name="event_id" value="{{ active_event.id }}">
+                        <input type="hidden" name="qr_code" value="{{ active_session.qr_token if active_session else ('NEU:CHECKIN:' ~ active_event.code) }}">
+                        <button type="submit" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl border border-slate-200 transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-bolt text-amber-500"></i>
+                            <span>Mô phỏng quét mã QR của "{{ active_event.title }}" (Mã {{ active_session.session_pin if active_session else active_event.code }})</span>
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+
+                <!-- VALID TIME NOTICE -->
+                <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 flex items-start gap-2.5">
+                    <i class="fa-solid fa-circle-info text-slate-400 mt-0.5"></i>
+                    <div>
+                        <div class="font-bold text-slate-800">Thời gian & Địa điểm có hiệu lực</div>
+                        <div class="text-[11px] text-slate-500 mt-0.5">
+                            {{ active_event.start_time.strftime('%H:%M') }}–{{ active_event.end_time.strftime('%H:%M') }}, ngày {{ active_event.event_date.strftime('%d/%m/%Y') }} tại <strong>{{ active_event.location }}</strong>.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: STUDENT TICKET DETAILS & REGULATIONS (5 CỘT) -->
+        <div class="lg:col-span-5 space-y-6">
+            <!-- TICKET CARD -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 class="font-bold text-sm text-slate-900 uppercase tracking-wider">Thông tin vé tham gia</h3>
+                    <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Hợp lệ</span>
+                </div>
+                <div class="space-y-3 text-xs">
+                    <div class="flex justify-between py-1 border-b border-slate-50">
+                        <span class="text-slate-400">Họ và tên:</span>
+                        <span class="font-bold text-slate-800">{{ current_user.full_name }}</span>
+                    </div>
+                    <div class="flex justify-between py-1 border-b border-slate-50">
+                        <span class="text-slate-400">Mã sinh viên (MSSV):</span>
+                        <span class="font-mono font-bold text-slate-800">{{ current_user.student_id or current_user.username }}</span>
+                    </div>
+                    <div class="flex justify-between py-1 border-b border-slate-50">
+                        <span class="text-slate-400">Khoa / Viện:</span>
+                        <span class="font-medium text-slate-800">{{ current_user.department or 'Đại học Kinh tế Quốc dân' }}</span>
+                    </div>
+                    <div class="flex justify-between py-1 border-b border-slate-50">
+                        <span class="text-slate-400">Mã vé điện tử:</span>
+                        <span class="font-mono font-bold text-neu-700">{{ active_registration.ticket_code if active_registration else 'NEU-AI-0123' }}</span>
+                    </div>
+                    <div class="flex justify-between py-1">
+                        <span class="text-slate-400">Trạng thái tham dự:</span>
+                        {% if user_attendance_record %}
+                        <span class="font-bold text-emerald-600">ĐÃ CÓ MẶT</span>
+                        {% else %}
+                        <span class="font-bold text-amber-600">CHƯA ĐIỂM DANH</span>
+                        {% endif %}
+                    </div>
+                    {% if active_registration %}
+                    <div class="pt-3 border-t border-slate-100">
+                        <button type="button" onclick="showTicketModal('{{ active_event.title }}', '{{ active_registration.ticket_code }}', '{{ active_event.event_date.strftime('%d/%m/%Y') }}', '{{ active_event.location }}', '{{ current_user.full_name }}', '{{ current_user.student_id or current_user.username }}', '{{ current_user.department or 'Đại học Kinh tế Quốc dân' }}', '{{ active_event.start_time.strftime('%H:%M') }}–{{ active_event.end_time.strftime('%H:%M') }}', '{{ active_registration.attendance_status }}')" class="w-full py-2.5 bg-slate-50 hover:bg-neu-50 text-neu-700 font-bold text-xs rounded-xl border border-slate-200 hover:border-neu-200 transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-qrcode text-sm"></i>
+                            <span>Xem vé & Mã QR cá nhân</span>
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- SECURITY & RULES NOTICE (STRICTLY NO MANUAL CHECKIN FOR OTHERS) -->
+            <div class="bg-gradient-to-br from-slate-50 to-blue-50/40 p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
+                <div class="flex items-center gap-2 text-slate-800 font-bold text-sm">
+                    <i class="fa-solid fa-shield-cat text-neu-700 text-base"></i>
+                    <span>Chính sách kiểm soát điểm danh NEU</span>
+                </div>
+                <ul class="space-y-3 text-xs text-slate-600">
+                    <li class="flex items-start gap-2.5">
+                        <i class="fa-solid fa-check text-emerald-500 mt-0.5"></i>
+                        <span><strong>Tự quét mã chính chủ:</strong> Mỗi sinh viên chỉ dùng camera trên thiết bị của mình quét mã QR tại sự kiện để ghi nhận điểm danh.</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                        <i class="fa-solid fa-ban text-rose-500 mt-0.5"></i>
+                        <span><strong>Không điểm danh hộ:</strong> Sinh viên không có thẩm quyền xác nhận hay can thiệp điểm danh cho sinh viên khác.</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                        <i class="fa-solid fa-headset text-neu-700 mt-0.5"></i>
+                        <span><strong>Hỗ trợ kỹ thuật:</strong> Nếu camera điện thoại bị lỗi hoặc không thể quét mã, vui lòng liên hệ trực tiếp <strong>Bàn đón tiếp Ban tổ chức</strong> để được hỗ trợ xác nhận điểm danh thủ công.</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    {# ========================================================================= #}
+    {# 2. GIAO DIỆN DÀNH CHO BAN TỔ CHỨC & ĐƠN VỊ QUẢN LÝ (ORGANIZER / MANAGER) #}
+    {# ========================================================================= #}
+    {% else %}
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- LEFT COLUMN: MÃ QR HỘI TRƯỜNG & THÔNG TIN PHIÊN (5 CỘT) -->
+        <div class="lg:col-span-5 space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-5">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                        <h3 class="font-bold text-base text-slate-900">Mã QR Điểm danh Hội trường</h3>
+                        <div class="text-xs text-slate-400">Trình chiếu cho sinh viên quét camera</div>
+                    </div>
+                    <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span>Đang mở phiên</span>
+                    </span>
+                </div>
+
+                <!-- DYNAMIC QR CODE DISPLAY -->
+                <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 text-center space-y-3">
+                    {% set pin_code = active_session.session_pin if active_session else active_event.code %}
+                    {% set qr_token = active_session.qr_token if active_session else ('NEU:CHECKIN:' ~ active_event.code) %}
+                    <div class="bg-white p-3 rounded-2xl inline-block shadow-xs border border-slate-200">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data={{ qr_token|urlencode }}" alt="Mã QR Sự kiện {{ active_event.code }}" class="w-48 h-48 mx-auto object-contain">
+                    </div>
+                    <div class="space-y-1">
+                        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Mã sự kiện: <span class="font-mono text-neu-700 font-bold">{{ active_event.code }}</span></div>
+                        <div class="text-2xl font-mono font-black text-slate-900 tracking-widest">{{ pin_code }}</div>
+                        <div class="text-[11px] text-slate-500">Mã QR điểm danh riêng biệt dành cho sự kiện: <strong class="text-slate-700">{{ active_event.title }}</strong></div>
+                        <div class="text-[10px] font-mono text-slate-400 truncate max-w-xs mx-auto">Token: {{ qr_token }}</div>
+                    </div>
+
+                    <!-- FULLSCREEN PROJECTOR BUTTON -->
+                    <div class="pt-2">
+                        <button type="button" onclick="openFullscreenQr('{{ qr_token }}', '{{ pin_code }}', '{{ active_event.title }}', '{{ active_event.location }}')" class="w-full py-2.5 bg-neu-700 hover:bg-neu-800 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-expand"></i>
+                            <span>Phóng to toàn màn hình để trình chiếu</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ACTIONS -->
+                <div class="pt-1">
+                    <button onclick="alert('Đã đóng phiên điểm danh! Các sinh viên chưa điểm danh sẽ được chuyển trạng thái Vắng mặt.');" class="w-full py-2.5 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold transition">
+                        <i class="fa-solid fa-lock mr-1.5"></i>
+                        <span>Đóng phiên điểm danh</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- EVENT TIME LIMIT -->
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 flex items-start gap-2.5">
+                <i class="fa-solid fa-clock text-slate-400 mt-0.5"></i>
+                <div>
+                    <div class="font-bold text-slate-800">Khung giờ phiên</div>
+                    <div class="text-[11px] text-slate-500 mt-0.5">
+                        {{ active_event.start_time.strftime('%H:%M') }}–{{ active_event.end_time.strftime('%H:%M') }} • {{ active_event.event_date.strftime('%d/%m/%Y') }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: THEO DÕI SĨ SỐ & DANH SÁCH XÁC NHẬN (7 CỘT) -->
+        <div class="lg:col-span-7 space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-5">
+                <!-- HEADER & REFRESH TIME -->
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                        <h3 class="font-bold text-base text-slate-900">Ban tổ chức • Theo dõi & Xác nhận</h3>
+                        <div class="text-xs text-slate-400">Quản lý sinh viên tham dự và giải quyết điểm danh thủ công</div>
+                    </div>
+                    <div class="text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span>Trực tiếp</span>
+                    </div>
+                </div>
+
+                <!-- 3 LIVE COUNTERS -->
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-100 text-center">
+                        <div class="text-2xl font-black text-slate-800">{{ live_stats.registered }}</div>
+                        <div class="text-[11px] text-slate-400 mt-1">Đã đăng ký</div>
+                    </div>
+                    <div class="p-4 rounded-xl bg-emerald-50/60 border border-emerald-100 text-center">
+                        <div class="text-2xl font-black text-emerald-600">{{ live_stats.attended }}</div>
+                        <div class="text-[11px] text-slate-500 mt-1">Đã tham dự</div>
+                    </div>
+                    <div class="p-4 rounded-xl bg-amber-50/60 border border-amber-100 text-center">
+                        <div class="text-2xl font-black text-amber-600">{{ live_stats.not_yet }}</div>
+                        <div class="text-[11px] text-slate-500 mt-1">Chưa điểm danh</div>
+                    </div>
+                </div>
+
+                <!-- SEARCH & FILTER ATTENDEES -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="relative flex-1">
+                        <input type="text" id="attendeeSearch" onkeyup="filterAttendees()" placeholder="Tìm MSSV hoặc họ tên sinh viên" class="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-neu-700">
+                        <i class="fa-solid fa-magnifying-glass text-xs absolute left-2.5 top-2.5 text-slate-400"></i>
+                    </div>
+                    <select id="attendeeStatusFilter" onchange="filterAttendees()" class="px-3 py-1.5 text-xs rounded-xl border border-slate-300 bg-white text-slate-600 focus:outline-none focus:ring-2 focus:ring-neu-700">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="Đã tham dự">Đã tham dự</option>
+                        <option value="Chưa điểm danh">Chưa điểm danh</option>
+                    </select>
+                </div>
+
+                <!-- ATTENDEES TABLE WITH MANUAL CONFIRMATION -->
+                <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                    <table class="w-full text-left text-xs" id="attendeesTable">
+                        <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 text-[11px]">
+                            <tr>
+                                <th class="py-2.5 px-4">Sinh viên</th>
+                                <th class="py-2.5 px-4">MSSV</th>
+                                <th class="py-2.5 px-4">Trạng thái</th>
+                                <th class="py-2.5 px-4">Giờ ghi nhận</th>
+                                <th class="py-2.5 px-4 text-right">Xác nhận BTC</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            {% for att in attendees_list %}
+                            <tr class="hover:bg-slate-50/70 transition">
+                                <td class="py-3 px-4 font-bold text-slate-900">{{ att.user.full_name }}</td>
+                                <td class="py-3 px-4 text-slate-500 font-mono">{{ att.user.student_id or att.user.username }}</td>
+                                <td class="py-3 px-4">
+                                    {% if att.attendance_status == 'ATTENDED' %}
+                                    <span class="inline-block px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">Đã tham dự</span>
+                                    {% else %}
+                                    <span class="inline-block px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Chưa điểm danh</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 px-4 text-slate-500 font-mono text-[11px]">
+                                    {% if att.attendance_record %}
+                                        {{ att.attendance_record.checked_in_at.strftime('%H:%M') }}
+                                        <span class="text-[9px] text-slate-400">({{ att.attendance_record.checkin_method }})</span>
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 px-4 text-right">
+                                    {% if att.attendance_status != 'ATTENDED' %}
+                                    <form method="POST" action="{{ url_for('manual_checkin', reg_id=att.id) }}" class="inline">
+                                        <button type="submit" class="px-2.5 py-1 bg-neu-700 hover:bg-neu-800 text-white text-[11px] font-bold rounded-lg transition shadow-2xs">
+                                            Xác nhận
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                    <span class="text-emerald-600 font-semibold text-xs flex items-center justify-end gap-1">
+                                        <i class="fa-solid fa-check text-[10px]"></i>
+                                        <span>Đã duyệt</span>
+                                    </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- FOOTER ACTIONS & EXPORT -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+                    <div class="text-xs text-slate-400">Hiển thị 1–{{ attendees_list|length }} / {{ live_stats.registered }} sinh viên đăng ký</div>
+                    <a href="{{ url_for('export_attendance', event_id=active_event.id) }}" class="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs">
+                        <i class="fa-solid fa-arrow-down-to-bracket text-slate-400"></i>
+                        <span>Xuất file Excel/CSV</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+</div>
+
+{# ========================================================================= #}
+{# 3. FULLSCREEN QR MODAL CHO BAN TỔ CHỨC TRÌNH CHIẾU                      #}
+{# ========================================================================= #}
+<div id="fullscreenQrModal" class="hidden fixed inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center z-50 p-6 text-white text-center">
+    <button type="button" onclick="closeFullscreenQr()" class="absolute top-6 right-6 text-white/70 hover:text-white text-2xl transition">
+        <i class="fa-solid fa-xmark"></i>
+    </button>
+    <div class="max-w-md w-full space-y-5">
+        <div class="text-xs font-bold uppercase tracking-widest text-emerald-400">ĐẠI HỌC KINH TẾ QUỐC DÂN • NEU EVENTS</div>
+        <h2 id="fsEventTitle" class="text-xl md:text-2xl font-black text-white leading-tight"></h2>
+        <p id="fsEventLocation" class="text-xs text-slate-300"></p>
+
+        <!-- BIG QR CODE -->
+        <div class="bg-white p-5 rounded-3xl inline-block shadow-2xl">
+            <img id="fsQrImage" src="" alt="Mã QR Trình Chiếu" class="w-64 h-64 md:w-80 md:h-80 mx-auto object-contain">
+        </div>
+
+        <div class="space-y-1">
+            <div class="text-xs text-slate-400">Mã điểm danh dự phòng</div>
+            <div id="fsPinCode" class="text-3xl font-mono font-black text-emerald-400 tracking-widest"></div>
+        </div>
+        <div class="text-xs text-slate-400 pt-2">
+            Sinh viên mở tính năng <strong>"Điểm danh"</strong> trên NEU Events để quét camera trực tiếp.
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<script>
+    let inlineHtml5Qr = null;
+
+    function startInlineScanner() {
+        const box = document.getElementById('inlineScannerBox');
+        if (!box) return;
+        box.classList.remove('hidden');
+
+        if (typeof Html5Qrcode !== 'undefined') {
+            if (!inlineHtml5Qr) {
+                inlineHtml5Qr = new Html5Qrcode("inline-qr-reader");
+            }
+            inlineHtml5Qr.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 220, height: 220 } },
+                (decodedText) => {
+                    let code = decodedText.trim();
+                    if (code.includes(':')) code = code.split(':').pop();
+                    
+                    // Create and submit checkin form dynamically
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = "{{ url_for('submit_checkin') }}";
+
+                    const eventInput = document.createElement('input');
+                    eventInput.type = 'hidden';
+                    eventInput.name = 'event_id';
+                    eventInput.value = "{{ active_event.id }}";
+                    form.appendChild(eventInput);
+
+                    const qrInput = document.createElement('input');
+                    qrInput.type = 'hidden';
+                    qrInput.name = 'qr_code';
+                    qrInput.value = code;
+                    form.appendChild(qrInput);
+
+                    document.body.appendChild(form);
+                    stopInlineScanner();
+                    form.submit();
+                },
+                (error) => {}
+            ).catch(err => {
+                console.warn("Camera cannot be started:", err);
+                alert("Không thể khởi động camera trực tiếp trên trình duyệt. Vui lòng cấp quyền truy cập camera hoặc bấm 'Mô phỏng quét mã QR' để tiếp tục!");
+            });
+        }
+    }
+
+    function stopInlineScanner() {
+        const box = document.getElementById('inlineScannerBox');
+        if (box) box.classList.add('hidden');
+        if (inlineHtml5Qr && inlineHtml5Qr.isScanning) {
+            inlineHtml5Qr.stop().catch(console.error);
+        }
+    }
+
+    function openFullscreenQr(qrToken, pin, title, location) {
+        document.getElementById('fsEventTitle').innerText = title;
+        document.getElementById('fsEventLocation').innerText = location;
+        document.getElementById('fsPinCode').innerText = pin;
+        document.getElementById('fsQrImage').src = 'https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=' + encodeURIComponent(qrToken);
+        document.getElementById('fullscreenQrModal').classList.remove('hidden');
+    }
+
+    function closeFullscreenQr() {
+        document.getElementById('fullscreenQrModal').classList.add('hidden');
+    }
+
+    function filterAttendees() {
+        const query = document.getElementById('attendeeSearch').value.toLowerCase();
+        const status = document.getElementById('attendeeStatusFilter').value;
+        const rows = document.querySelectorAll('#attendeesTable tbody tr');
+
+        rows.forEach(r => {
+            const text = r.innerText.toLowerCase();
+            const matchesQuery = text.includes(query);
+            const matchesStatus = !status || text.includes(status.toLowerCase());
+            r.style.display = (matchesQuery && matchesStatus) ? '' : 'none';
+        });
+    }
+</script>
+{% endblock %}

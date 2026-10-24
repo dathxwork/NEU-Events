@@ -1,0 +1,432 @@
+{% extends "base.html" %}
+{% set active_page = "feedback" %}
+
+{% block title %}Đánh giá sự kiện - NEU Events{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-7xl mx-auto">
+    <!-- BREADCRUMBS -->
+    <div class="flex items-center gap-2 text-xs text-slate-400">
+        <a href="{{ url_for('events') }}" class="hover:text-slate-600">NEU Events</a>
+        <span>/</span>
+        <span class="text-slate-700 font-medium">Đánh giá sự kiện</span>
+    </div>
+
+    <!-- PAGE HEADER -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight">Đánh giá sự kiện</h1>
+            <p class="text-sm text-slate-500 mt-1">
+                {% if current_user.role == 'ORGANIZER' %}
+                Theo dõi và phân tích đánh giá, nhận xét của sinh viên theo từng sự kiện của Ban tổ chức.
+                {% else %}
+                Gửi nhận xét và chấm điểm các sự kiện bạn đã tham dự để giúp Ban tổ chức nâng cao chất lượng.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    {# ========================================================================= #}
+    {# 1. GIAO DIỆN DÀNH CHO BAN TỔ CHỨC (ORGANIZER)                            #}
+    {# ========================================================================= #}
+    {% if current_user.role == 'ORGANIZER' %}
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- CỘT TRÁI (4 CỘT): DANH SÁCH SỰ KIỆN CỦA BAN TỔ CHỨC -->
+        <div class="lg:col-span-4 space-y-4">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                        <h3 class="font-bold text-sm text-slate-900 uppercase tracking-wider">Sự kiện của đơn vị</h3>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Chọn sự kiện để xem chi tiết nhận xét</p>
+                    </div>
+                    <span class="text-xs bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-full">
+                        {{ org_events|length }}
+                    </span>
+                </div>
+
+                <!-- SEARCH EVENT INPUT -->
+                <div class="relative">
+                    <input type="text" id="feedbackEventSearch" onkeyup="filterFeedbackEvents()" placeholder="Tìm tên hoặc mã sự kiện..." class="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-neu-700">
+                    <i class="fa-solid fa-magnifying-glass text-xs absolute left-2.5 top-3 text-slate-400"></i>
+                </div>
+
+                <!-- EVENT LIST PILLS -->
+                <div class="space-y-2 max-h-[620px] overflow-y-auto pr-1" id="feedbackEventsList">
+                    {% for ev in org_events %}
+                    {% set is_active = (selected_event and selected_event.id == ev.id) %}
+                    <a href="{{ url_for('feedback', event_id=ev.id) }}" class="feedback-event-item block p-3.5 rounded-xl border transition {% if is_active %}bg-neu-50/80 border-neu-700 shadow-xs{% else %}bg-white border-slate-200 hover:bg-slate-50 hover:border-slate-300{% endif %}">
+                        <div class="flex items-start justify-between gap-2">
+                            <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md {% if is_active %}bg-neu-700 text-white{% else %}bg-slate-100 text-slate-600{% endif %}">
+                                {{ ev.code }}
+                            </span>
+                            <div class="flex items-center text-amber-500 text-xs font-bold shrink-0">
+                                <i class="fa-solid fa-star text-[10px] mr-1"></i>
+                                <span>{{ ev.average_rating if ev.average_rating else 'Chưa có' }}</span>
+                            </div>
+                        </div>
+                        <div class="event-title font-bold text-xs mt-2 {% if is_active %}text-neu-900{% else %}text-slate-800{% endif %} line-clamp-2">
+                            {{ ev.title }}
+                        </div>
+                        <div class="flex items-center justify-between text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100">
+                            <span>{{ ev.event_date.strftime('%d/%m/%Y') }}</span>
+                            <span class="font-medium text-slate-500">
+                                {{ ev.feedbacks|length }} lượt đánh giá
+                            </span>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- CỘT PHẢI (8 CỘT): CHI TIẾT ĐÁNH GIÁ & PHẢN HỒI CỦA SỰ KIỆN ĐƯỢC CHỌN -->
+        <div class="lg:col-span-8 space-y-6">
+            {% if selected_event %}
+            <!-- SUMMARY KPI CARD -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-6">
+                <!-- EVENT HEADER IN DETAIL -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-neu-700 bg-neu-50 px-2 py-0.5 rounded border border-neu-100">{{ selected_event.code }}</span>
+                            <span class="text-xs text-slate-400">•</span>
+                            <span class="text-xs text-slate-500">{{ selected_event.organizer_name }}</span>
+                        </div>
+                        <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">{{ selected_event.title }}</h2>
+                        <div class="text-xs text-slate-500 flex items-center gap-3">
+                            <span><i class="fa-regular fa-calendar mr-1"></i>{{ selected_event.event_date.strftime('%d/%m/%Y') }}</span>
+                            <span>•</span>
+                            <span><i class="fa-solid fa-location-dot mr-1"></i>{{ selected_event.location }}</span>
+                        </div>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <a href="{{ url_for('event_detail', event_id=selected_event.id) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                            <span>Xem trang sự kiện</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 3 MAIN METRICS ROW -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-100 text-center">
+                        <div class="text-3xl font-black text-slate-900 flex items-center justify-center gap-1.5">
+                            <span class="text-amber-500"><i class="fa-solid fa-star"></i></span>
+                            <span>{{ feedback_stats.avg_rating }}</span>
+                            <span class="text-xs text-slate-400 font-normal">/ 5.0</span>
+                        </div>
+                        <div class="text-[11px] text-slate-500 mt-1 font-medium">Điểm đánh giá trung bình</div>
+                    </div>
+
+                    <div class="p-4 rounded-xl bg-emerald-50/60 border border-emerald-100 text-center">
+                        <div class="text-3xl font-black text-emerald-600">{{ feedback_stats.satisfaction_rate }}%</div>
+                        <div class="text-[11px] text-emerald-700 mt-1 font-medium">Tỷ lệ hài lòng (≥ 4 sao)</div>
+                    </div>
+
+                    <div class="p-4 rounded-xl bg-blue-50/60 border border-blue-100 text-center">
+                        <div class="text-3xl font-black text-neu-700">{{ feedback_stats.total }}</div>
+                        <div class="text-[11px] text-blue-700 mt-1 font-medium">Tổng số lượt đánh giá</div>
+                    </div>
+                </div>
+
+                <!-- CRITERIA BREAKDOWN -->
+                {% if feedback_stats.total > 0 %}
+                <div class="space-y-3 pt-2 border-t border-slate-100">
+                    <div class="text-xs font-bold text-slate-800 uppercase tracking-wider">Điểm chi tiết theo tiêu chí</div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/70">
+                            <div class="text-[11px] text-slate-500">Nội dung</div>
+                            <div class="text-base font-bold text-slate-900 mt-1">{{ feedback_stats.avg_content }} ⭐</div>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/70">
+                            <div class="text-[11px] text-slate-500">Tổ chức & đón tiếp</div>
+                            <div class="text-base font-bold text-slate-900 mt-1">{{ feedback_stats.avg_org }} ⭐</div>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/70">
+                            <div class="text-[11px] text-slate-500">Diễn giả / Khách mời</div>
+                            <div class="text-base font-bold text-slate-900 mt-1">{{ feedback_stats.avg_speaker }} ⭐</div>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/70">
+                            <div class="text-[11px] text-slate-500">Cơ sở vật chất</div>
+                            <div class="text-base font-bold text-slate-900 mt-1">{{ feedback_stats.avg_venue }} ⭐</div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- REVIEWS FEED -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 class="font-bold text-base text-slate-900">
+                        Ý kiến nhận xét từ sinh viên ({{ selected_feedbacks|length }})
+                    </h3>
+                    <span class="text-xs text-slate-400">Hiển thị mới nhất</span>
+                </div>
+
+                {% if selected_feedbacks %}
+                <div class="space-y-4 divide-y divide-slate-100">
+                    {% for fb in selected_feedbacks %}
+                    <div class="pt-4 first:pt-0 space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-full bg-neu-50 text-neu-700 font-bold text-xs flex items-center justify-center border border-neu-100 shadow-2xs">
+                                    {% if fb.is_anonymous %}
+                                        <i class="fa-solid fa-user-secret"></i>
+                                    {% else %}
+                                        {{ fb.user.avatar_initials or 'SV' }}
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <div class="text-xs font-bold text-slate-900 flex items-center gap-2">
+                                        <span>
+                                            {% if fb.is_anonymous %}
+                                                Sinh viên NEU (Ẩn danh)
+                                            {% else %}
+                                                {{ fb.user.full_name }}
+                                            {% endif %}
+                                        </span>
+                                        {% if not fb.is_anonymous and fb.user.student_id %}
+                                        <span class="font-mono text-[10px] text-slate-400">({{ fb.user.student_id }})</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-[10px] text-slate-400">
+                                        {{ fb.created_at.strftime('%H:%M • %d/%m/%Y') }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- STARS -->
+                            <div class="flex items-center text-amber-400 text-xs">
+                                {% for s in range(fb.rating_stars) %}
+                                <i class="fa-solid fa-star"></i>
+                                {% endfor %}
+                                {% for s in range(5 - fb.rating_stars) %}
+                                <i class="fa-regular fa-star text-slate-200"></i>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- COMMENT TEXT -->
+                        {% if fb.comment %}
+                        <p class="text-xs text-slate-700 leading-relaxed bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
+                            {{ fb.comment }}
+                        </p>
+                        {% endif %}
+
+                        <!-- CRITERIA PILLS -->
+                        <div class="flex flex-wrap items-center gap-2 text-[10px] text-slate-500 pt-1">
+                            <span class="bg-slate-100 px-2 py-0.5 rounded">Nội dung: <strong>{{ fb.rating_content or 5 }}/5</strong></span>
+                            <span class="bg-slate-100 px-2 py-0.5 rounded">Tổ chức: <strong>{{ fb.rating_organization or 5 }}/5</strong></span>
+                            <span class="bg-slate-100 px-2 py-0.5 rounded">Diễn giả: <strong>{{ fb.rating_speaker or 5 }}/5</strong></span>
+                            <span class="bg-slate-100 px-2 py-0.5 rounded">Địa điểm: <strong>{{ fb.rating_venue or 5 }}/5</strong></span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="p-10 text-center text-slate-400 space-y-2">
+                    <i class="fa-regular fa-comments text-3xl text-slate-300"></i>
+                    <p class="text-xs font-medium text-slate-500">Chưa có sinh viên nào gửi đánh giá cho sự kiện này.</p>
+                    <p class="text-[11px] text-slate-400">Sau khi sinh viên điểm danh và hoàn tất sự kiện, các nhận xét sẽ được tự động tổng hợp tại đây.</p>
+                </div>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="bg-white p-12 rounded-2xl border border-slate-200 text-center text-slate-400 space-y-2">
+                <i class="fa-regular fa-calendar-xmark text-4xl text-slate-300"></i>
+                <p class="text-sm font-semibold text-slate-600">Đơn vị chưa có sự kiện nào trong danh sách.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ========================================================================= #}
+    {# 2. GIAO DIỆN DÀNH CHO TÀI KHOẢN SINH VIÊN (STUDENT)                     #}
+    {# ========================================================================= #}
+    {% else %}
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- CỘT TRÁI (6 CỘT): FORM GỬI ĐÁNH GIÁ -->
+        <div class="lg:col-span-6 space-y-6">
+            <div class="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-2xs space-y-5">
+                <div class="border-b border-slate-100 pb-3">
+                    <h3 class="font-bold text-base text-slate-900">Sinh viên • Gửi đánh giá sự kiện</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Chỉ áp dụng cho các sự kiện bạn đã tham dự và điểm danh thành công.</p>
+                </div>
+
+                {% if attended_events %}
+                <form method="POST" action="{{ url_for('submit_feedback') }}" class="space-y-5">
+                    <!-- SELECT ATTENDED EVENT -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Chọn sự kiện đã tham dự *</label>
+                        <select name="event_id" required class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-neu-700 font-medium">
+                            {% for e in attended_events %}
+                            <option value="{{ e.id }}" {% if selected_event_id == e.id %}selected{% endif %}>
+                                {{ e.title }} ({{ e.event_date.strftime('%d/%m/%Y') }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- OVERALL STAR RATING -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Đánh giá chung về sự kiện *</label>
+                        <div class="flex items-center gap-2 text-2xl text-amber-400 cursor-pointer" id="starContainer">
+                            <i class="fa-solid fa-star star-btn" data-value="1" onclick="setRating(1)"></i>
+                            <i class="fa-solid fa-star star-btn" data-value="2" onclick="setRating(2)"></i>
+                            <i class="fa-solid fa-star star-btn" data-value="3" onclick="setRating(3)"></i>
+                            <i class="fa-solid fa-star star-btn" data-value="4" onclick="setRating(4)"></i>
+                            <i class="fa-solid fa-star star-btn" data-value="5" onclick="setRating(5)"></i>
+                            <span id="ratingValueText" class="text-xs font-bold text-slate-600 ml-2">5 / 5 sao (Rất hài lòng)</span>
+                        </div>
+                        <input type="hidden" name="rating_stars" id="ratingInput" value="5">
+                    </div>
+
+                    <!-- CRITERIA RATINGS -->
+                    <div class="space-y-3 pt-2 border-t border-slate-100">
+                        <div class="text-xs font-bold text-slate-700">Đánh giá theo tiêu chí:</div>
+                        <div class="grid grid-cols-2 gap-3 text-xs">
+                            <div>
+                                <label class="block text-slate-500 mb-1">Nội dung chương trình</label>
+                                <select name="rating_content" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs">
+                                    <option value="5">5 ⭐ Tuyệt vời</option>
+                                    <option value="4">4 ⭐ Tốt</option>
+                                    <option value="3">3 ⭐ Trung bình</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-slate-500 mb-1">Khâu tổ chức & đón tiếp</label>
+                                <select name="rating_organization" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs">
+                                    <option value="5">5 ⭐ Chu đáo</option>
+                                    <option value="4">4 ⭐ Khá tốt</option>
+                                    <option value="3">3 ⭐ Cần cải thiện</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-slate-500 mb-1">Diễn giả / Khách mời</label>
+                                <select name="rating_speaker" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs">
+                                    <option value="5">5 ⭐ Rất truyền cảm hứng</option>
+                                    <option value="4">4 ⭐ Hữu ích</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-slate-500 mb-1">Cơ sở vật chất</label>
+                                <select name="rating_venue" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs">
+                                    <option value="5">5 ⭐ Rất tốt</option>
+                                    <option value="4">4 ⭐ Đạt yêu cầu</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- COMMENT -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Ý kiến nhận xét & đóng góp của bạn</label>
+                        <textarea name="comment" rows="3" placeholder="Chia sẻ cảm nhận, điểm bạn thích hoặc những điều BTC cần cải thiện..." class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-neu-700"></textarea>
+                    </div>
+
+                    <!-- ANONYMOUS CHECKBOX -->
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" name="is_anonymous" id="anonCheck" class="w-4 h-4 rounded text-neu-700 focus:ring-neu-700 border-slate-300">
+                        <label for="anonCheck" class="text-xs text-slate-600 cursor-pointer">Gửi phản hồi ẩn danh (không hiện MSSV và họ tên với BTC)</label>
+                    </div>
+
+                    <button type="submit" class="w-full py-3 bg-neu-700 hover:bg-neu-800 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center justify-center gap-2">
+                        <i class="fa-regular fa-paper-plane"></i>
+                        <span>Gửi đánh giá</span>
+                    </button>
+                </form>
+                {% else %}
+                <div class="p-8 text-center text-slate-400 space-y-2">
+                    <i class="fa-regular fa-calendar-xmark text-3xl"></i>
+                    <p class="text-xs">Bạn chưa có sự kiện nào ở trạng thái "Đã tham dự" cần đánh giá.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- CỘT PHẢI (6 CỘT): LỊCH SỬ ĐÁNH GIÁ CỦA BẠN -->
+        <div class="lg:col-span-6 space-y-6">
+            <div class="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-2xs space-y-5">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                        <h3 class="font-bold text-base text-slate-900">Đánh giá bạn đã gửi</h3>
+                        <p class="text-xs text-slate-400 mt-0.5">Lịch sử nhận xét của tài khoản sinh viên.</p>
+                    </div>
+                    <span class="text-xs bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-full">
+                        {{ my_feedbacks|length }}
+                    </span>
+                </div>
+
+                {% if my_feedbacks %}
+                <div class="space-y-4 max-h-[520px] overflow-y-auto pr-2 divide-y divide-slate-100">
+                    {% for fb in my_feedbacks %}
+                    <div class="pt-4 first:pt-0 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <div class="text-xs font-bold text-slate-900">
+                                {{ fb.event.title }}
+                            </div>
+                            <div class="flex items-center text-amber-400 text-xs">
+                                {% for s in range(fb.rating_stars) %}
+                                <i class="fa-solid fa-star"></i>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            {{ fb.comment }}
+                        </p>
+                        <div class="flex items-center justify-between text-[10px] text-slate-400 pt-1">
+                            <span>
+                                {% if fb.is_anonymous %}
+                                    <i class="fa-solid fa-user-secret mr-1"></i>Đã gửi ẩn danh
+                                {% else %}
+                                    <i class="fa-regular fa-user mr-1"></i>Công khai tên
+                                {% endif %}
+                            </span>
+                            <span>{{ fb.created_at.strftime('%d/%m/%Y • %H:%M') }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="p-8 text-center text-slate-400 space-y-2">
+                    <i class="fa-regular fa-message text-3xl text-slate-300"></i>
+                    <p class="text-xs">Bạn chưa gửi đánh giá nào.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    function filterFeedbackEvents() {
+        const query = document.getElementById('feedbackEventSearch').value.toLowerCase();
+        const items = document.querySelectorAll('.feedback-event-item');
+        items.forEach(item => {
+            const text = item.innerText.toLowerCase();
+            item.style.display = text.includes(query) ? '' : 'none';
+        });
+    }
+
+    function setRating(val) {
+        const ratingInput = document.getElementById('ratingInput');
+        if (!ratingInput) return;
+        ratingInput.value = val;
+        const stars = document.querySelectorAll('.star-btn');
+        stars.forEach((s, idx) => {
+            if (idx < val) {
+                s.classList.remove('fa-regular');
+                s.classList.add('fa-solid');
+            } else {
+                s.classList.remove('fa-solid');
+                s.classList.add('fa-regular');
+            }
+        });
+        const labels = ["", "1 / 5 sao (Chưa hài lòng)", "2 / 5 sao (Cần cải thiện)", "3 / 5 sao (Bình thường)", "4 / 5 sao (Hài lòng)", "5 / 5 sao (Rất hài lòng)"];
+        const labelEl = document.getElementById('ratingValueText');
+        if (labelEl) labelEl.innerText = labels[val];
+    }
+</script>
+{% endblock %}
