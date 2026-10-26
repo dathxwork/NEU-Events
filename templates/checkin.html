@@ -455,9 +455,9 @@
                 <!-- FOOTER ACTIONS & EXPORT -->
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
                     <div class="text-xs text-slate-400">Hiển thị 1–{{ attendees_list|length }} / {{ live_stats.registered }} sinh viên đăng ký</div>
-                    <a href="{{ url_for('export_attendance', event_id=active_event.id) }}" class="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs">
-                        <i class="fa-solid fa-arrow-down-to-bracket text-slate-400"></i>
-                        <span>Xuất file Excel/CSV</span>
+                    <a href="{{ url_for('export_attendance', event_id=active_event.id) }}" class="inline-flex items-center gap-2 px-4 py-2 border border-emerald-300 bg-emerald-50 text-emerald-800 rounded-xl text-xs font-semibold hover:bg-emerald-100 transition shadow-2xs" title="Tải xuống file Excel (.xlsx)">
+                        <i class="fa-solid fa-file-excel text-emerald-600"></i>
+                        <span>Xuất danh sách Excel (.xlsx)</span>
                     </a>
                 </div>
             </div>

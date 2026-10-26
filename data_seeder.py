@@ -44,25 +44,25 @@ def seed_database(app):
         )
         org_career.set_password('123')
 
-        # 1.3 Organizer 2 (Viện CNTT & Kinh tế số)
+        # 1.3 Organizer 2 (Khoa Công nghệ thông tin)
         org_it = User(
-            username='it@neu.edu.vn',
-            email='it@neu.edu.vn',
-            full_name='Viện CNTT & Kinh tế số',
+            username='fit@neu.edu.vn',
+            email='fit@neu.edu.vn',
+            full_name='Khoa Công nghệ thông tin',
             role='ORGANIZER',
-            department='Viện Công nghệ thông tin & Kinh tế số',
+            department='Khoa Công nghệ thông tin',
             phone='024 3628 0280 • 8011',
-            avatar_initials='IT'
+            avatar_initials='FIT'
         )
         org_it.set_password('123')
 
-        # 1.4 Student 1 (Nguyễn Thị Thu - Viện CNTT & Kinh tế số)
+        # 1.4 Student 1 (Nguyễn Thị Thu - Khoa Công nghệ thông tin)
         student_thu = User(
             username='11244035',
-            email='thunguyen@st.neu.edu.vn',
+            email='11244035@st.neu.edu.vn',
             full_name='Nguyễn Thị Thu',
             role='STUDENT',
-            department='Viện CNTT & Kinh tế số',
+            department='Khoa Công nghệ thông tin',
             student_id='11244035',
             phone='0987123456',
             avatar_initials='TT'
@@ -72,7 +72,7 @@ def seed_database(app):
         # 1.5 Student 2 (Nguyễn Minh Anh - Khoa Marketing)
         student_anh = User(
             username='11240123',
-            email='minhanh@st.neu.edu.vn',
+            email='11240123@st.neu.edu.vn',
             full_name='Nguyễn Minh Anh',
             role='STUDENT',
             department='Khoa Marketing',
@@ -131,6 +131,12 @@ def seed_database(app):
                 "Trang phục lịch sự, chỉnh tề"
             ]),
             handbook_name=f'Cam_nang_Ngay_hoi_viec_lam_NEU_{year}.pdf',
+            sponsor_benefits="""- Bộ quà tặng Welcome Kit NEU (Tote bag NEU + Sổ tay NEU + Bút ký)
+- Voucher giảm giá 50% khóa học Luyện thi chứng chỉ quốc tế CFA/ACCA từ Smart Train
+- Cơ hội nhận học bổng thực tập tài năng trị giá 5.000.000 VNĐ từ MB Bank & BIDV
+- Fast-track phỏng vấn đặc cách vòng sơ loại tại hơn 10 tập đoàn đối tác""",
+            union_points_plus=10,
+            union_points_minus=2,
             status='APPROVED',
             is_featured=True
         )
@@ -142,7 +148,7 @@ def seed_database(app):
             subtitle='Tiếp cận xu hướng Generative AI và chuyển đổi số thực tiễn',
             category_id=cat_tech.id,
             organizer_id=org_it.id,
-            organizer_name='Viện Công nghệ thông tin & Kinh tế số',
+            organizer_name='Khoa Công nghệ thông tin',
             organizer_email=org_it.email,
             organizer_phone='024 3628 0280',
             location='Hội trường B1, Nhà B',
@@ -155,12 +161,15 @@ def seed_database(app):
             max_seats=150,
             registered_seats=0,
             attended_seats=0,
-            description="""Hội thảo do Viện CNTT & Kinh tế số tổ chức nhằm giúp sinh viên cập nhật các đột phá công nghệ mới nhất về Trí tuệ nhân tạo, ứng dụng AI trong phân tích dữ liệu kinh doanh và định hướng nghề nghiệp thời đại số.""",
+            description="""Hội thảo do Khoa Công nghệ thông tin tổ chức nhằm giúp sinh viên cập nhật các đột phá công nghệ mới nhất về Trí tuệ nhân tạo, ứng dụng AI trong phân tích dữ liệu kinh doanh và định hướng nghề nghiệp thời đại số.""",
             agenda_json=json.dumps([
                 {"time": "09:00–09:20", "title": "Khai mạc hội thảo", "venue": "Hội trường B1"},
                 {"time": "09:20–10:30", "title": "Chuyên đề: Generative AI trong quản trị doanh nghiệp", "venue": "Hội trường B1"},
                 {"time": "10:30–11:30", "title": "Hỏi đáp (Q&A) cùng chuyên gia", "venue": "Hội trường B1"}
             ]),
+            handbook_name=f'Tai_lieu_Hoi_thao_AI_{year}.pdf',
+            union_points_plus=5,
+            union_points_minus=0,
             status='PENDING', # Requires Manager approval at /moderation
             is_featured=False
         )
@@ -191,6 +200,9 @@ def seed_database(app):
                 {"time": "14:30–15:30", "title": "Cấu trúc một bản CV chuẩn quốc tế", "venue": "Phòng Hội thảo G"},
                 {"time": "15:30–16:30", "title": "Thực hành phỏng vấn thử tại chỗ", "venue": "Phòng Hội thảo G"}
             ]),
+            handbook_name=f'Cam_nang_Viet_CV_Neu_{year}.pdf',
+            union_points_plus=5,
+            union_points_minus=1,
             status='COMPLETED',
             is_featured=False
         )
@@ -202,7 +214,7 @@ def seed_database(app):
             subtitle='Sân chơi đổi mới sáng tạo và lập trình giải pháp số cho sinh viên',
             category_id=cat_tech.id,
             organizer_id=org_it.id,
-            organizer_name='Viện Công nghệ thông tin & Kinh tế số',
+            organizer_name='Khoa Công nghệ thông tin',
             organizer_email=org_it.email,
             organizer_phone='024 3628 0280',
             location='Không gian Khởi nghiệp Tầng 3, Thư viện Phạm Văn Đồng',
@@ -216,11 +228,273 @@ def seed_database(app):
             registered_seats=0,
             attended_seats=0,
             description="""Cuộc thi thường niên nhằm thúc đẩy tinh thần khởi nghiệp, sáng tạo giải pháp công nghệ số giải quyết các bài toán kinh tế - xã hội dành cho sinh viên NEU.""",
+            handbook_name=f'The_le_NEU_Hackathon_{year}.pdf',
+            sponsor_benefits="""- Áo thun NEU Hackathon bản giới hạn & Bộ sticker lập trình viên
+- Tài khoản AWS Cloud Credits trị giá $100 / bạn do Amazon Web Services tài trợ
+- Học bổng 100% khóa học Lập trình Full-stack / AI trị giá 12.000.000 VNĐ cho top thí sinh
+- Cơ hội được các quỹ đầu tư mạo hiểm cố vấn phát triển sản phẩm thực tế""",
+            union_points_plus=15,
+            union_points_minus=5,
             status='APPROVED',
             is_featured=True
         )
 
-        db.session.add_all([e_job, e_ai, e_skill, e_hack])
+        # EVENT 5: Đại nhạc hội Chào Xuân & NEU Youth Festival 2027 (Năm học 2026-2027, Học kỳ Xuân 2027)
+        e_spring_fest = Event(
+            code='NEU-SPRING-2027',
+            title='Đại nhạc hội Chào Xuân & NEU Youth Festival 2027',
+            subtitle='Bùng nổ đam mê tuổi trẻ, kết nối sinh viên toàn trường chào đón năm mới',
+            category_id=cat_culture.id,
+            organizer_id=org_career.id,
+            organizer_name='Trung tâm Tư vấn hướng nghiệp & Việc làm NEU',
+            organizer_email=org_career.email,
+            organizer_phone='024 3628 0280',
+            location='Sân quảng trường NEU',
+            target_audience='Toàn thể sinh viên và cựu sinh viên NEU',
+            fee='Miễn phí',
+            event_date=date(2027, 3, 20),
+            start_time=time(18, 30),
+            end_time=time(22, 30),
+            registration_deadline=datetime(2027, 3, 19, 23, 59),
+            max_seats=500,
+            registered_seats=1,
+            attended_seats=0,
+            description="""Đại nhạc hội NEU Youth Festival 2027 là đêm hội âm nhạc và nghệ thuật thường niên lớn nhất trường, quy tụ các câu lạc bộ nghệ thuật sinh viên và nghệ sĩ khách mời nổi tiếng.""",
+            handbook_name='So_tay_NEU_Youth_Festival_2027.pdf',
+            sponsor_benefits="""- Vòng tay dạ quang VIP & bộ quà tặng độc quyền NEU Youth Festival 2027
+- Voucher đồ uống & ẩm thực miễn phí từ Highlands Coffee & Phúc Long
+- Cơ hội trúng tai nghe không dây Sony và loa Bluetooth trong phần bốc thăm may mắn""",
+            union_points_plus=10,
+            union_points_minus=2,
+            status='APPROVED',
+            is_featured=False
+        )
+
+        # EVENT 6: Tọa đàm Fintech 2027 (Năm học 2026-2027, Học kỳ Xuân 2027)
+        e_fintech = Event(
+            code='NEU-FINTECH-2027',
+            title='Tọa đàm Công nghệ Tài chính Fintech & Cơ hội Nghề nghiệp 2027',
+            subtitle='Xu hướng ngân hàng số, thanh toán thông minh và kỹ năng tài chính thời kỳ 4.0',
+            category_id=cat_tech.id,
+            organizer_id=org_it.id,
+            organizer_name='Khoa Công nghệ thông tin',
+            organizer_email=org_it.email,
+            organizer_phone='024 3628 0280',
+            location='Hội trường A2',
+            target_audience='Sinh viên Khoa CNTT và Viện Ngân hàng - Tài chính',
+            fee='Miễn phí',
+            event_date=date(2027, 4, 15),
+            start_time=time(8, 30),
+            end_time=time(11, 30),
+            registration_deadline=datetime(2027, 4, 14, 23, 59),
+            max_seats=200,
+            registered_seats=0,
+            attended_seats=0,
+            description="""Tọa đàm chuyên sâu về hệ sinh thái Fintech, xu hướng ngân hàng mở và nhu cầu nhân lực công nghệ số trong ngành tài chính.""",
+            handbook_name='Cam_nang_Fintech_NEU_2027.pdf',
+            union_points_plus=8,
+            union_points_minus=0,
+            status='APPROVED',
+            is_featured=False
+        )
+
+        # EVENT 6B: Workshop Digital Marketing & Xây dựng Thương hiệu cá nhân (Năm học 2026-2027)
+        e_marketing = Event(
+            code=f'NEU-MKT-{year}',
+            title=f'Workshop Digital Marketing & Xây dựng Thương hiệu cá nhân {year}',
+            subtitle='Thực chiến xây dựng kênh nội dung số và kỹ năng định vị bản thân',
+            category_id=cat_career.id,
+            organizer_id=org_career.id,
+            organizer_name='Trung tâm Tư vấn hướng nghiệp & Việc làm NEU',
+            organizer_email=org_career.email,
+            organizer_phone='024 3628 0280',
+            location='Phòng Hội thảo G, Tòa nhà Thế kỷ',
+            target_audience='Sinh viên toàn trường đam mê Marketing và Truyền thông',
+            fee='Miễn phí',
+            event_date=today + timedelta(days=25),
+            start_time=time(14, 0),
+            end_time=time(17, 0),
+            registration_deadline=datetime.combine(today + timedelta(days=24), time(23, 59)),
+            max_seats=150,
+            registered_seats=0,
+            attended_seats=0,
+            description="""Workshop hướng dẫn sinh viên các công cụ sáng tạo nội dung số, chiến lược xây dựng thương hiệu cá nhân trên LinkedIn và TikTok từ các chuyên gia Marketing đầu ngành.""",
+            handbook_name=f'Cam_nang_Marketing_NEU_{year}.pdf',
+            union_points_plus=6,
+            union_points_minus=1,
+            status='APPROVED',
+            is_featured=False
+        )
+
+        # EVENT 6C: Cuộc thi Giải quyết Tình huống Kinh doanh NEU Case Competition (Năm học 2026-2027)
+        e_case = Event(
+            code=f'NEU-CASE-{year}',
+            title=f'Cuộc thi Giải quyết Tình huống Kinh doanh NEU Case Competition {year}',
+            subtitle='Thử thách tư duy chiến lược và phân tích bài toán kinh doanh thực tế',
+            category_id=cat_academic.id,
+            organizer_id=org_career.id,
+            organizer_name='Trung tâm Tư vấn hướng nghiệp & Việc làm NEU',
+            organizer_email=org_career.email,
+            organizer_phone='024 3628 0280',
+            location='Hội trường A2',
+            target_audience='Sinh viên khối ngành kinh tế và kinh doanh',
+            fee='Miễn phí',
+            event_date=today + timedelta(days=35),
+            start_time=time(8, 0),
+            end_time=time(12, 0),
+            registration_deadline=datetime.combine(today + timedelta(days=32), time(23, 59)),
+            max_seats=250,
+            registered_seats=0,
+            attended_seats=0,
+            description="""Sân chơi học thuật đỉnh cao mô phỏng các bài toán tái cấu trúc và tăng trưởng của các tập đoàn đa quốc gia dành cho sinh viên NEU.""",
+            handbook_name=f'The_le_Case_Competition_{year}.pdf',
+            union_points_plus=12,
+            union_points_minus=3,
+            status='APPROVED',
+            is_featured=False
+        )
+
+        # EVENT 6D: Chiến dịch Tình nguyện Đông Ấm NEU (Năm học 2026-2027)
+        e_volunteer = Event(
+            code=f'NEU-VOL-{year}',
+            title=f'Chiến dịch Tình nguyện Đông Ấm - Đoàn Thanh niên NEU {year}',
+            subtitle='Lan tỏa yêu thương, chung tay sẻ chia cùng trẻ em vùng cao',
+            category_id=cat_culture.id,
+            organizer_id=org_career.id,
+            organizer_name='Trung tâm Tư vấn hướng nghiệp & Việc làm NEU',
+            organizer_email=org_career.email,
+            organizer_phone='024 3628 0280',
+            location='Sân nhà A1 & Các điểm tình nguyện',
+            target_audience='Đoàn viên, sinh viên Đại học Kinh tế Quốc dân',
+            fee='Miễn phí',
+            event_date=today + timedelta(days=45),
+            start_time=time(7, 30),
+            end_time=time(17, 30),
+            registration_deadline=datetime.combine(today + timedelta(days=40), time(23, 59)),
+            max_seats=300,
+            registered_seats=0,
+            attended_seats=0,
+            description="""Chiến dịch thường niên do Đoàn Đại học phát động nhằm quyên góp chăn ấm, sách vở và tổ chức các hoạt động an sinh xã hội ý nghĩa.""",
+            handbook_name=f'Ke_hoach_Dong_Am_{year}.pdf',
+            union_points_plus=15,
+            union_points_minus=0,
+            status='APPROVED',
+            is_featured=False
+        )
+
+        # EVENT 7: Ngày hội Văn hóa Sinh viên Quốc tế NEU 2025 (Năm học 2025-2026, Học kỳ Thu 2025)
+        e_2025_cult = Event(
+            code='NEU-CULT-2025',
+            title='Ngày hội Văn hóa Sinh viên Quốc tế NEU 2025',
+            subtitle='Giao lưu văn hóa đa quốc gia, ẩm thực và âm nhạc sinh viên',
+            category_id=cat_culture.id,
+            organizer_id=org_career.id,
+            organizer_name='Trung tâm Tư vấn hướng nghiệp & Việc làm NEU',
+            organizer_email=org_career.email,
+            organizer_phone='024 3628 0280',
+            location='Hội trường A2 & Khuôn viên NEU',
+            target_audience='Sinh viên trong nước và lưu học sinh quốc tế',
+            fee='Miễn phí',
+            event_date=date(2025, 11, 14),
+            start_time=time(8, 0),
+            end_time=time(17, 0),
+            registration_deadline=datetime(2025, 11, 13, 23, 59),
+            max_seats=350,
+            registered_seats=1,
+            attended_seats=1,
+            description="""Ngày hội kết nối văn hóa, trưng bày gian hàng truyền thống các quốc gia có lưu học sinh học tập tại NEU, tôn vinh tinh thần hội nhập quốc tế.""",
+            handbook_name='Cam_nang_Van_hoa_NEU_2025.pdf',
+            union_points_plus=5,
+            union_points_minus=0,
+            status='COMPLETED',
+            is_featured=False
+        )
+
+        # EVENT 8: Hội nghị Nghiên cứu Khoa học Sinh viên Khoa CNTT 2026 (Năm học 2025-2026, Học kỳ Xuân 2026)
+        e_2026_sci = Event(
+            code='NEU-SCI-2026',
+            title='Hội nghị Nghiên cứu Khoa học Sinh viên Khoa CNTT 2026',
+            subtitle='Báo cáo công trình khoa học xuất sắc và giải pháp công nghệ ứng dụng thực tiễn',
+            category_id=cat_academic.id,
+            organizer_id=org_it.id,
+            organizer_name='Khoa Công nghệ thông tin',
+            organizer_email=org_it.email,
+            organizer_phone='024 3628 0280',
+            location='Phòng B101, Nhà A2',
+            target_audience='Sinh viên nghiên cứu khoa học NEU',
+            fee='Miễn phí',
+            event_date=date(2026, 4, 10),
+            start_time=time(8, 0),
+            end_time=time(12, 0),
+            registration_deadline=datetime(2026, 4, 9, 23, 59),
+            max_seats=180,
+            registered_seats=0,
+            attended_seats=0,
+            description="""Hội nghị thường niên vinh danh các đề tài nghiên cứu khoa học sinh viên xuất sắc về Trí tuệ nhân tạo, Phân tích dữ liệu lớn và Khoa học máy tính.""",
+            handbook_name='Ky_yeu_NCKH_CNTT_2026.pdf',
+            union_points_plus=10,
+            union_points_minus=0,
+            status='COMPLETED',
+            is_featured=False
+        )
+
+        # EVENT 9: Lễ Khai giảng & Chào Tân sinh viên Khóa 66 NEU (Năm học 2024-2025, Học kỳ Thu 2024)
+        e_2024_welcome = Event(
+            code='NEU-K66-2024',
+            title='Lễ Khai giảng & Chào Tân sinh viên Khóa 66 NEU',
+            subtitle='Khởi đầu hành trình thanh xuân rực rỡ tại Đại học Kinh tế Quốc dân',
+            category_id=cat_culture.id,
+            organizer_id=org_career.id,
+            organizer_name='Trung tâm Tư vấn hướng nghiệp & Việc làm NEU',
+            organizer_email=org_career.email,
+            organizer_phone='024 3628 0280',
+            location='Hội trường A2',
+            target_audience='Tân sinh viên Khóa 66 NEU',
+            fee='Miễn phí',
+            event_date=date(2024, 9, 20),
+            start_time=time(7, 30),
+            end_time=time(11, 30),
+            registration_deadline=datetime(2024, 9, 19, 23, 59),
+            max_seats=600,
+            registered_seats=1,
+            attended_seats=1,
+            description="""Chương trình chào đón tân sinh viên Khóa 66 nhập học tại NEU với các hoạt động giao lưu thầy cô, giới thiệu các câu lạc bộ và hướng dẫn hòa nhập môi trường đại học.""",
+            handbook_name='So_tay_Tan_sinh_vien_K66.pdf',
+            union_points_plus=10,
+            union_points_minus=0,
+            status='COMPLETED',
+            is_featured=False
+        )
+
+        # EVENT 10: NEU Junior Code Camp 2025 (Năm học 2024-2025, Học kỳ Xuân 2025)
+        e_2025_codecamp = Event(
+            code='NEU-CODECAMP-2025',
+            title='NEU Junior Code Camp & Web Dev Workshop 2025',
+            subtitle='Khóa đào tạo kỹ năng lập trình web và tư duy thuật toán cho sinh viên',
+            category_id=cat_tech.id,
+            organizer_id=org_it.id,
+            organizer_name='Khoa Công nghệ thông tin',
+            organizer_email=org_it.email,
+            organizer_phone='024 3628 0280',
+            location='Phòng B101, Nhà A2',
+            target_audience='Sinh viên năm nhất và năm hai yêu thích lập trình',
+            fee='Miễn phí',
+            event_date=date(2025, 3, 15),
+            start_time=time(13, 30),
+            end_time=time(17, 30),
+            registration_deadline=datetime(2025, 3, 14, 23, 59),
+            max_seats=100,
+            registered_seats=0,
+            attended_seats=0,
+            description="""Workshop thực hành xây dựng ứng dụng web cơ bản với HTML/CSS/JavaScript và Python Flask do giảng viên Khoa CNTT trực tiếp hướng dẫn.""",
+            handbook_name='Tai_lieu_Code_Camp_2025.pdf',
+            union_points_plus=5,
+            union_points_minus=0,
+            status='COMPLETED',
+            is_featured=False
+        )
+
+        db.session.add_all([e_job, e_ai, e_skill, e_hack, e_spring_fest, e_fintech, e_marketing, e_case, e_volunteer, e_2025_cult, e_2026_sci, e_2024_welcome, e_2025_codecamp])
         db.session.commit()
 
         print("4. Creating Attendance Sessions & Registrations...")
@@ -324,6 +598,34 @@ def seed_database(app):
         )
         db.session.add(att_anh_skill)
 
+        # Student Thu registrations across academic periods
+        reg_thu_spring = Registration(
+            ticket_code='NEU-SPRING-2027-0112',
+            user_id=student_thu.id,
+            event_id=e_spring_fest.id,
+            registration_status='REGISTERED',
+            attendance_status='NOT_YET',
+            registered_at=datetime(2027, 2, 1, 9, 0)
+        )
+        reg_thu_cult = Registration(
+            ticket_code='NEU-CULT-2025-0112',
+            user_id=student_thu.id,
+            event_id=e_2025_cult.id,
+            registration_status='REGISTERED',
+            attendance_status='ATTENDED',
+            registered_at=datetime(2025, 11, 1, 8, 30)
+        )
+        reg_thu_welcome = Registration(
+            ticket_code='NEU-K66-2024-0112',
+            user_id=student_thu.id,
+            event_id=e_2024_welcome.id,
+            registration_status='REGISTERED',
+            attendance_status='ATTENDED',
+            registered_at=datetime(2024, 9, 10, 14, 0)
+        )
+        db.session.add_all([reg_thu_spring, reg_thu_cult, reg_thu_welcome])
+        db.session.commit()
+
         print("5. Creating Sample Feedback...")
         # Feedback submitted by Student Thu for NEU-SKILL
         fb_thu = Feedback(
@@ -336,7 +638,7 @@ def seed_database(app):
             rating_venue=4,
             comment="Buổi tọa đàm vô cùng thiết thực! Diễn giả hướng dẫn tận tình từng đề mục trong CV và chia sẻ các lỗi sai sinh viên thường mắc phải.",
             is_anonymous=False,
-            created_at=datetime.combine(e_skill.event_date, time(17, 15))
+            created_at=datetime.now() - timedelta(hours=1, minutes=20)
         )
         db.session.add(fb_thu)
 
@@ -351,7 +653,7 @@ def seed_database(app):
         db.session.add(approval_job)
 
         db.session.commit()
-        print("[SUCCESS] Data seeding completed successfully! Database is ready with 5 users and 4 events.")
+        print("[SUCCESS] Data seeding completed successfully! Database is ready with 5 users and 10 events across academic periods.")
 
 if __name__ == '__main__':
     from app import app

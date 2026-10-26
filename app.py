@@ -4,12 +4,16 @@ Main Flask Web Application
 """
 import os
 import random
-from datetime import datetime, date, time
-from io import StringIO
+from datetime import datetime, date, time, timedelta
+import calendar
+from io import StringIO, BytesIO
 import csv
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
 from flask import (
     Flask, render_template, request, redirect, url_for,
-    flash, jsonify, Response
+    flash, jsonify, Response, session
 )
 from flask_login import (
     LoginManager, login_user, logout_user,
@@ -25,6 +29,8 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'neu-events-super-secret-key-2026'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///neu_events.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads', 'publications')
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 db.init_app(app)
 
@@ -38,7 +44,264 @@ login_manager.login_message_category = 'warning'
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+@app.after_request
+def add_cache_control_headers(response):
+    if 'text/html' in response.headers.get('Content-Type', ''):
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+    return response
+
 # Context Processors for Templates
+def get_period_date_range(academic_year, semester=None):
+    """
+    Returns (start_date, end_date) for a given academic year and optional semester.
+    academic_year: '2026-2027', '2025-2026', 'ALL', etc.
+    semester: 'Học kỳ Thu 2026', 'Học kỳ Xuân 2027', 'Học kỳ Hè 2027', 'ALL', etc.
+    """
+    start_date = None
+    end_date = None
+
+    if academic_year and academic_year != 'ALL':
+        try:
+            parts = str(academic_year).strip().split('-')
+            if len(parts) == 2:
+                y1, y2 = int(parts[0]), int(parts[1])
+                start_date = date(y1, 8, 1)
+                end_date = date(y2, 7, 31)
+        except Exception:
+            pass
+
+    if semester and semester not in ['ALL', 'Tất cả học kỳ']:
+        import re
+        m = re.search(r'(\d{4})', str(semester))
+        if m:
+            sem_year = int(m.group(1))
+            if 'Thu' in semester:
+                return date(sem_year, 8, 1), date(sem_year, 12, 31)
+            elif 'Xuân' in semester:
+                return date(sem_year, 1, 1), date(sem_year, 5, 31)
+            elif 'Hè' in semester:
+                return date(sem_year, 6, 1), date(sem_year, 7, 31)
+
+    return start_date, end_date
+
+def get_user_notifications(user):
+    if not user or not getattr(user, 'is_authenticated', False):
+        return []
+
+    notifications = []
+    now_dt = datetime.now()
+    now_time_str = now_dt.strftime('%H:%M %d/%m/%Y')
+
+    def format_event_time(ev):
+        if not ev:
+            return ""
+        date_str = ev.event_date.strftime("%d/%m/%Y") if ev.event_date else ""
+        if ev.start_time and ev.end_time:
+            time_str = f"{ev.start_time.strftime('%H:%M')} - {ev.end_time.strftime('%H:%M')}"
+        elif ev.start_time:
+            time_str = ev.start_time.strftime('%H:%M')
+        else:
+            time_str = ""
+        
+        if time_str and date_str:
+            return f"{time_str}, {date_str}"
+        return time_str or date_str or "Sắp diễn ra"
+    
+    if user.role == 'STUDENT':
+        # 1. Registered events & tickets
+        regs = Registration.query.filter_by(user_id=user.id, registration_status='REGISTERED')\
+                                 .order_by(Registration.registered_at.desc()).limit(3).all()
+        for reg in regs:
+            ev = reg.event
+            if not ev:
+                continue
+            points = ev.union_points_plus or 5
+            ev_time = format_event_time(ev)
+            reg_time = reg.registered_at.strftime('%H:%M %d/%m/%Y') if reg.registered_at else now_time_str
+
+            if reg.attendance_status == 'ATTENDED':
+                checkin_time = reg_time
+                if hasattr(reg, 'attendance_record') and reg.attendance_record and reg.attendance_record.checked_in_at:
+                    checkin_time = reg.attendance_record.checked_in_at.strftime('%H:%M %d/%m/%Y')
+                notifications.append({
+                    'id': f'notif_checkin_{reg.id}',
+                    'title': 'Điểm danh & Nhận Điểm Đoàn thành công',
+                    'message': f'Bạn đã được ghi nhận tham dự sự kiện <strong>{ev.title}</strong> vào lúc <strong>{checkin_time}</strong>.<br><span class="inline-flex items-center gap-1 mt-1 text-[11px] text-slate-600"><i class="fa-regular fa-calendar-check text-[10px] text-emerald-600"></i>Thời gian sự kiện: <strong>{ev_time}</strong></span><br><span class="inline-flex items-center gap-1 text-[11px] text-emerald-600 font-semibold mt-0.5"><i class="fa-solid fa-award text-[10px]"></i>Cộng +{points} Điểm Đoàn</span>',
+                    'time': checkin_time,
+                    'icon': 'fa-solid fa-award',
+                    'icon_color': 'text-emerald-600',
+                    'icon_bg': 'bg-emerald-50 border-emerald-100',
+                    'link': f'/events/{ev.id}',
+                    'unread': True,
+                    'tag': 'Điểm Đoàn'
+                })
+            else:
+                notifications.append({
+                    'id': f'notif_reg_{reg.id}',
+                    'title': 'Vé tham gia sự kiện đã sẵn sàng',
+                    'message': f'Vé điện tử sự kiện <strong>{ev.title}</strong> đã sẵn sàng.<br><span class="inline-flex items-center gap-1 mt-1 text-[11px] text-slate-700 font-medium"><i class="fa-regular fa-clock text-[10px] text-blue-600"></i>Thời gian: <strong>{ev_time}</strong></span><br><span class="inline-flex items-center gap-1 text-[11px] text-slate-700 font-medium"><i class="fa-solid fa-location-dot text-[10px] text-rose-500"></i>Địa điểm: {ev.location}</span><br><span class="inline-flex items-center gap-1 mt-0.5 text-[11px] text-slate-600">Mã vé: <code class="bg-slate-100 text-neu-700 font-mono font-bold px-1.5 py-0.2 rounded text-[11px]">{reg.ticket_code}</code></span>',
+                    'time': reg_time,
+                    'icon': 'fa-solid fa-ticket',
+                    'icon_color': 'text-blue-600',
+                    'icon_bg': 'bg-blue-50 border-blue-100',
+                    'link': f'/events/{ev.id}',
+                    'unread': True,
+                    'tag': 'Vé điện tử'
+                })
+        
+        # 2. Upcoming events open for registration
+        open_events = Event.query.filter_by(status='APPROVED').order_by(Event.id.desc()).limit(2).all()
+        for ev in open_events:
+            is_reg = any(r.user_id == user.id for r in ev.registrations if r.registration_status == 'REGISTERED')
+            if not is_reg:
+                ev_time = format_event_time(ev)
+                ev_created = ev.created_at.strftime('%H:%M %d/%m/%Y') if ev.created_at else now_time_str
+                deadline_str = ev.registration_deadline.strftime('%H:%M %d/%m/%Y') if ev.registration_deadline else ''
+                deadline_html = f'<br><span class="inline-flex items-center gap-1 text-[11px] text-rose-600 font-medium"><i class="fa-solid fa-hourglass-half text-[10px]"></i>Hạn đăng ký: <strong>{deadline_str}</strong></span>' if deadline_str else ''
+                notifications.append({
+                    'id': f'notif_open_ev_{ev.id}',
+                    'title': 'Sự kiện mới mở cổng đăng ký',
+                    'message': f'Sự kiện <strong>{ev.title}</strong> vừa mở đăng ký.<br><span class="inline-flex items-center gap-1 mt-1 text-[11px] text-slate-700 font-medium"><i class="fa-regular fa-clock text-[10px] text-amber-600"></i>Thời gian: <strong>{ev_time}</strong></span><br><span class="inline-flex items-center gap-1 text-[11px] text-slate-700 font-medium"><i class="fa-solid fa-location-dot text-[10px] text-rose-500"></i>Địa điểm: {ev.location}</span>{deadline_html}',
+                    'time': ev_created,
+                    'icon': 'fa-solid fa-calendar-plus',
+                    'icon_color': 'text-amber-600',
+                    'icon_bg': 'bg-amber-50 border-amber-100',
+                    'link': f'/events/{ev.id}',
+                    'unread': True,
+                    'tag': 'Đăng ký mới'
+                })
+                break
+        
+        # 3. Always include general student system update
+        notifications.append({
+            'id': 'notif_system_welcome',
+            'title': 'Cổng thông tin sự kiện NEU Events',
+            'message': f'Đại học Kinh tế Quốc dân đồng hành cùng sinh viên trong mọi hoạt động học thuật, kỹ năng và kết nối doanh nghiệp.<br><span class="inline-flex items-center gap-1 mt-1 text-[11px] text-slate-500"><i class="fa-regular fa-clock text-[10px] text-neu-600"></i>Thời gian cập nhật: <strong>{now_time_str}</strong></span>',
+            'time': now_time_str,
+            'icon': 'fa-solid fa-bell',
+            'icon_color': 'text-neu-700',
+            'icon_bg': 'bg-neu-50 border-neu-100',
+            'link': '/events',
+            'unread': False,
+            'tag': 'Hệ thống'
+        })
+
+    elif user.role == 'ORGANIZER':
+        # Organizer notifications
+        org_events = Event.query.filter_by(organizer_id=user.id).order_by(Event.id.desc()).limit(3).all()
+        for ev in org_events:
+            ev_time = format_event_time(ev)
+            ev_created = ev.created_at.strftime('%H:%M %d/%m/%Y') if ev.created_at else now_time_str
+            if ev.status == 'APPROVED':
+                notifications.append({
+                    'id': f'notif_org_approved_{ev.id}',
+                    'title': 'Sự kiện đã được phê duyệt',
+                    'message': f'Sự kiện <strong>{ev.title}</strong> đã được Đơn vị Quản lý phê duyệt mở đăng ký chính thức ra toàn trường.<br><span class="inline-flex items-center gap-1 mt-1 text-[11px] text-slate-700 font-medium"><i class="fa-regular fa-clock text-[10px] text-emerald-600"></i>Thời gian tổ chức: <strong>{ev_time}</strong></span><br><span class="inline-flex items-center gap-1 text-[11px] text-slate-700 font-medium"><i class="fa-solid fa-location-dot text-[10px] text-rose-500"></i>Địa điểm: {ev.location}</span>',
+                    'time': ev_created,
+                    'icon': 'fa-solid fa-circle-check',
+                    'icon_color': 'text-emerald-600',
+                    'icon_bg': 'bg-emerald-50 border-emerald-100',
+                    'link': f'/events/{ev.id}',
+                    'unread': True,
+                    'tag': 'Phê duyệt'
+                })
+            elif ev.status == 'PENDING':
+                notifications.append({
+                    'id': f'notif_org_pending_{ev.id}',
+                    'title': 'Hồ sơ sự kiện đang chờ xét duyệt',
+                    'message': f'Hồ sơ sự kiện <strong>{ev.title}</strong> đang trong quá trình thẩm định nội dung và định mức Điểm Đoàn.<br><span class="inline-flex items-center gap-1 mt-1 text-[11px] text-slate-700 font-medium"><i class="fa-regular fa-clock text-[10px] text-amber-600"></i>Thời gian dự kiến: <strong>{ev_time}</strong></span>',
+                    'time': ev_created,
+                    'icon': 'fa-solid fa-clock-rotate-left',
+                    'icon_color': 'text-amber-600',
+                    'icon_bg': 'bg-amber-50 border-amber-100',
+                    'link': f'/events/{ev.id}',
+                    'unread': True,
+                    'tag': 'Đang thẩm định'
+                })
+            
+            # Registration progress
+            max_s = ev.max_seats or 100
+            reg_s = ev.registered_seats or len([r for r in ev.registrations if r.registration_status == 'REGISTERED'])
+            pct = int((reg_s / max_s) * 100) if max_s else 0
+            notifications.append({
+                'id': f'notif_org_prog_{ev.id}',
+                'title': f'Tiến độ đăng ký ({reg_s}/{max_s} chỗ)',
+                'message': f'Sự kiện <strong>{ev.title}</strong> hiện đã đạt {pct}% tỷ lệ lấp đầy hội trường.<br><span class="inline-flex items-center gap-1 mt-1 text-[11px] text-slate-700 font-medium"><i class="fa-regular fa-clock text-[10px] text-blue-600"></i>Thời gian sự kiện: <strong>{ev_time}</strong></span>',
+                'time': now_time_str,
+                'icon': 'fa-solid fa-chart-line',
+                'icon_color': 'text-blue-600',
+                'icon_bg': 'bg-blue-50 border-blue-100',
+                'link': f'/events/{ev.id}',
+                'unread': False,
+                'tag': 'Thống kê'
+            })
+        
+        notifications.append({
+            'id': 'notif_org_checkin_guide',
+            'title': 'Sẵn sàng mở phiên điểm danh QR & PIN',
+            'message': f'Sử dụng công cụ Điểm danh tại sự kiện để quét mã QR vé sinh viên và cấp phát Điểm Đoàn công bằng, tự động.<br><span class="inline-flex items-center gap-1 mt-1 text-[11px] text-slate-500"><i class="fa-regular fa-clock text-[10px] text-indigo-600"></i>Thời gian hệ thống: <strong>{now_time_str}</strong></span>',
+            'time': now_time_str,
+            'icon': 'fa-solid fa-qrcode',
+            'icon_color': 'text-indigo-600',
+            'icon_bg': 'bg-indigo-50 border-indigo-100',
+            'link': '/checkin',
+            'unread': False,
+            'tag': 'Điểm danh'
+        })
+
+    elif user.role == 'MANAGER':
+        # Manager notifications
+        pending_list = Event.query.filter_by(status='PENDING').all()
+        if pending_list:
+            notifications.append({
+                'id': 'notif_mgr_pending_alert',
+                'title': f'Có {len(pending_list)} sự kiện chờ phê duyệt',
+                'message': f'Các Câu lạc bộ và Ban tổ chức đã nộp <strong>{len(pending_list)} hồ sơ sự kiện mới</strong> cần thẩm định.<br><span class="inline-flex items-center gap-1 mt-1 text-[11px] text-purple-700 font-medium"><i class="fa-regular fa-clock text-[10px]"></i>Thời gian ghi nhận: <strong>{now_time_str}</strong></span>',
+                'time': now_time_str,
+                'icon': 'fa-solid fa-file-circle-exclamation',
+                'icon_color': 'text-purple-600',
+                'icon_bg': 'bg-purple-50 border-purple-100',
+                'link': '/moderation',
+                'unread': True,
+                'tag': 'Kiểm duyệt'
+            })
+        
+        recent_approved = Event.query.filter_by(status='APPROVED').order_by(Event.id.desc()).limit(2).all()
+        for ev in recent_approved:
+            ev_time = format_event_time(ev)
+            ev_created = ev.created_at.strftime('%H:%M %d/%m/%Y') if ev.created_at else now_time_str
+            notifications.append({
+                'id': f'notif_mgr_app_{ev.id}',
+                'title': 'Sự kiện phong trào toàn trường',
+                'message': f'Chương trình <strong>{ev.title}</strong> do {ev.organizer_name or "BTC"} điều phối đang mở công khai.<br><span class="inline-flex items-center gap-1 mt-1 text-[11px] text-slate-700 font-medium"><i class="fa-regular fa-clock text-[10px] text-blue-600"></i>Thời gian diễn ra: <strong>{ev_time}</strong> tại {ev.location}</span>',
+                'time': ev_created,
+                'icon': 'fa-solid fa-shield-check',
+                'icon_color': 'text-blue-600',
+                'icon_bg': 'bg-blue-50 border-blue-100',
+                'link': f'/events/{ev.id}',
+                'unread': False,
+                'tag': 'Cấp trường'
+            })
+            break
+        
+        notifications.append({
+            'id': 'notif_mgr_analytics_ready',
+            'title': 'Báo cáo KPI hoạt động toàn trường',
+            'message': f'Dữ liệu phân tích thống kê lượt sinh viên tham dự và định mức Điểm Đoàn toàn học kỳ đã được cập nhật.<br><span class="inline-flex items-center gap-1 mt-1 text-[11px] text-slate-500"><i class="fa-regular fa-clock text-[10px] text-emerald-600"></i>Thời gian cập nhật: <strong>{now_time_str}</strong></span>',
+            'time': now_time_str,
+            'icon': 'fa-solid fa-chart-pie',
+            'icon_color': 'text-emerald-600',
+            'icon_bg': 'bg-emerald-50 border-emerald-100',
+            'link': '/analytics',
+            'unread': False,
+            'tag': 'Báo cáo'
+        })
+        
+    return notifications
+
+
 @app.context_processor
 def inject_global_data():
     today = date.today()
@@ -51,6 +314,13 @@ def inject_global_data():
             return False
         return Feedback.query.filter_by(event_id=event_id, user_id=current_user.id).first() is not None
 
+    default_year = f"{today.year}-{today.year + 1}" if today.month >= 8 else f"{today.year - 1}-{today.year}"
+    current_academic_year = request.args.get('academic_year') or session.get('academic_year') or default_year
+    current_semester = request.args.get('semester') or session.get('semester') or 'ALL'
+
+    user_notifs = get_user_notifications(current_user)
+    user_unread_notif_count = sum(1 for n in user_notifs if n.get('unread'))
+
     return dict(
         today=today,
         now=now,
@@ -58,8 +328,48 @@ def inject_global_data():
         current_month_year=today.strftime('%m/%Y'),
         current_date_str=today.strftime('%d/%m/%Y'),
         get_pending_count=get_pending_count,
-        is_reviewed=is_reviewed
+        is_reviewed=is_reviewed,
+        current_academic_year=current_academic_year,
+        current_semester=current_semester,
+        user_notifications=user_notifs,
+        unread_notif_count=user_unread_notif_count
     )
+
+@app.route('/api/set-period', methods=['POST'])
+def api_set_period():
+    data = request.get_json() or {}
+    year = data.get('academic_year')
+    sem = data.get('semester')
+    if year:
+        session['academic_year'] = year
+    if sem:
+        session['semester'] = sem
+    return jsonify({
+        'success': True,
+        'academic_year': session.get('academic_year'),
+        'semester': session.get('semester')
+    })
+
+@app.route('/api/notifications', methods=['GET'])
+@login_required
+def api_notifications():
+    notifs = get_user_notifications(current_user)
+    unread_count = sum(1 for n in notifs if n.get('unread'))
+    return jsonify({
+        'success': True,
+        'notifications': notifs,
+        'unread_count': unread_count
+    })
+
+@app.route('/api/notifications/read-all', methods=['POST'])
+@login_required
+def api_notifications_read_all():
+    return jsonify({'success': True, 'unread_count': 0})
+
+@app.route('/api/notifications/clear', methods=['POST'])
+@login_required
+def api_notifications_clear():
+    return jsonify({'success': True, 'notifications': [], 'unread_count': 0})
 
 # ----------------- AUTHENTICATION -----------------
 
@@ -246,10 +556,19 @@ def events():
     category_id = request.args.get('category', '')
     tab = request.args.get('tab', 'all')
 
+    today = date.today()
+    default_year = f"{today.year}-{today.year + 1}" if today.month >= 8 else f"{today.year - 1}-{today.year}"
+    academic_year = request.args.get('academic_year') or session.get('academic_year') or default_year
+    semester = request.args.get('semester') or session.get('semester') or 'ALL'
+
+    if 'academic_year' in request.args:
+        session['academic_year'] = request.args.get('academic_year')
+    if 'semester' in request.args:
+        session['semester'] = request.args.get('semester')
+
     query = Event.query
 
     # Status tab filtering
-    today = date.today()
     if tab == 'upcoming':
         query = query.filter(Event.status == 'APPROVED', Event.event_date > today)
     elif tab == 'active':
@@ -260,6 +579,13 @@ def events():
         query = query.filter(Event.status == 'CANCELLED')
     else: # all approved / completed / cancelled
         query = query.filter(Event.status.in_(['APPROVED', 'COMPLETED', 'CANCELLED']))
+
+    # Academic period filtering
+    start_d, end_d = get_period_date_range(academic_year, semester)
+    if start_d:
+        query = query.filter(Event.event_date >= start_d)
+    if end_d:
+        query = query.filter(Event.event_date <= end_d)
 
     # Keyword filter
     if q:
@@ -277,27 +603,138 @@ def events():
     if category_id and category_id.isdigit():
         query = query.filter(Event.category_id == int(category_id))
 
-    events_list = query.order_by(Event.event_date.asc()).all()
+    # Time filter (Month/Year)
+    if time_filter:
+        try:
+            parts = time_filter.split('/')
+            if len(parts) == 2:
+                m, y = int(parts[0]), int(parts[1])
+                from sqlalchemy import extract
+                query = query.filter(extract('month', Event.event_date) == m, extract('year', Event.event_date) == y)
+        except Exception:
+            pass
 
-    # Calculate counts for tabs
+    # Pagination setup (6 events per page)
+    import math
+    page = request.args.get('page', 1, type=int)
+    if not page or page < 1:
+        page = 1
+    per_page = 6
+
+    total_events = query.count()
+    total_pages = max(1, math.ceil(total_events / per_page))
+    if page > total_pages:
+        page = total_pages
+
+    # All matched events (used for full calendar view)
+    all_matched_events = query.order_by(Event.event_date.asc()).all()
+
+    # Paginated events for current grid page
+    offset_count = (page - 1) * per_page
+    paginated_events = query.order_by(Event.event_date.asc()).offset(offset_count).limit(per_page).all()
+
+    start_index = (page - 1) * per_page + 1 if total_events > 0 else 0
+    end_index = min(page * per_page, total_events)
+
+    def page_url(p):
+        args = request.args.to_dict()
+        args['page'] = p
+        return url_for('events', **args) + '#eventsSection'
+
+    def tab_url(tab_name):
+        args = {k: v for k, v in request.args.items() if k not in ('tab', 'page') and v}
+        args['tab'] = tab_name
+        return url_for('events', **args) + '#eventsSection'
+
+    # Calculate counts for tabs (scoped to selected academic period)
+    base_count_q = Event.query
+    if start_d:
+        base_count_q = base_count_q.filter(Event.event_date >= start_d)
+    if end_d:
+        base_count_q = base_count_q.filter(Event.event_date <= end_d)
+
     counts = {
-        'all': Event.query.filter(Event.status.in_(['APPROVED', 'COMPLETED', 'CANCELLED'])).count(),
-        'upcoming': Event.query.filter(Event.status == 'APPROVED', Event.event_date > today).count(),
-        'active': Event.query.filter(Event.status == 'APPROVED', Event.event_date == today).count(),
-        'completed': Event.query.filter(Event.status == 'COMPLETED').count(),
-        'cancelled': Event.query.filter(Event.status == 'CANCELLED').count()
+        'all': base_count_q.filter(Event.status.in_(['APPROVED', 'COMPLETED', 'CANCELLED'])).count(),
+        'upcoming': base_count_q.filter(Event.status == 'APPROVED', Event.event_date > today).count(),
+        'active': base_count_q.filter(Event.status == 'APPROVED', Event.event_date == today).count(),
+        'completed': base_count_q.filter(Event.status == 'COMPLETED').count(),
+        'cancelled': base_count_q.filter(Event.status == 'CANCELLED').count()
     }
 
-    featured = Event.query.filter_by(is_featured=True).first()
+    featured_q = Event.query.filter_by(is_featured=True)
+    if start_d:
+        featured_q = featured_q.filter(Event.event_date >= start_d)
+    if end_d:
+        featured_q = featured_q.filter(Event.event_date <= end_d)
+    featured = featured_q.first()
+    if not featured and all_matched_events:
+        featured = all_matched_events[0]
+
     categories = EventCategory.query.all()
+
+    # Prepare Calendar Months Data (Không giới hạn - Toàn bộ các tháng theo thời gian)
+    import calendar as py_calendar
+    months_keys = set()
+    if start_d and end_d:
+        cur_y, cur_m = start_d.year, start_d.month
+        while (cur_y < end_d.year) or (cur_y == end_d.year and cur_m <= end_d.month):
+            months_keys.add((cur_y, cur_m))
+            cur_m += 1
+            if cur_m > 12:
+                cur_m = 1
+                cur_y += 1
+    
+    for ev in all_matched_events:
+        months_keys.add((ev.event_date.year, ev.event_date.month))
+    months_keys.add((today.year, today.month))
+
+    sorted_months = sorted(list(months_keys))
+    calendar_months = []
+    for (m_year, m_month) in sorted_months:
+        start_weekday, num_days = py_calendar.monthrange(m_year, m_month)
+        is_cur = (m_year == today.year and m_month == today.month)
+        month_events = [ev for ev in all_matched_events if ev.event_date.year == m_year and ev.event_date.month == m_month]
+        days_list = []
+        for d in range(1, num_days + 1):
+            d_events = [ev for ev in month_events if ev.event_date.day == d]
+            days_list.append({
+                'day': d,
+                'is_today': (is_cur and d == today.day),
+                'events': d_events
+            })
+        calendar_months.append({
+            'year': m_year,
+            'month': m_month,
+            'label': f"Tháng {m_month:02d}/{m_year}",
+            'is_current': is_cur,
+            'start_weekday': start_weekday,
+            'days': days_list,
+            'event_count': len(month_events)
+        })
+
+    # Available time filter options for search dropdown
+    available_time_filters = [
+        {'value': f"{cm['month']:02d}/{cm['year']}", 'label': f"{cm['month']:02d}/{cm['year']}"}
+        for cm in calendar_months
+    ]
 
     return render_template(
         'events.html',
-        events=events_list,
+        events=paginated_events,
+        all_events=all_matched_events,
+        calendar_months=calendar_months,
+        available_time_filters=available_time_filters,
         categories=categories,
         featured_event=featured,
         current_tab=tab,
-        counts=counts
+        counts=counts,
+        page=page,
+        total_pages=total_pages,
+        total_events=total_events,
+        start_index=start_index,
+        end_index=end_index,
+        page_url=page_url,
+        tab_url=tab_url
     )
 
 # ----------------- 2. EVENT DETAILS & REGISTRATION -----------------
@@ -353,7 +790,7 @@ def register_event(event_id):
         event_id=event.id,
         registration_status='REGISTERED',
         attendance_status='NOT_YET',
-        registered_at=datetime.utcnow()
+        registered_at=datetime.now()
     )
 
     event.registered_seats += 1
@@ -400,22 +837,43 @@ def my_events():
 
     filter_type = request.args.get('filter', 'all')
     today = date.today()
+    default_year = f"{today.year}-{today.year + 1}" if today.month >= 8 else f"{today.year - 1}-{today.year}"
+    academic_year = request.args.get('academic_year') or session.get('academic_year') or default_year
+    semester = request.args.get('semester') or session.get('semester') or 'ALL'
 
-    query = Registration.query.filter_by(user_id=current_user.id)
+    if 'academic_year' in request.args:
+        session['academic_year'] = request.args.get('academic_year')
+    if 'semester' in request.args:
+        session['semester'] = request.args.get('semester')
+
+    start_d, end_d = get_period_date_range(academic_year, semester)
+
+    query = Registration.query.filter_by(user_id=current_user.id).join(Event)
+
+    if start_d:
+        query = query.filter(Event.event_date >= start_d)
+    if end_d:
+        query = query.filter(Event.event_date <= end_d)
 
     if filter_type == 'upcoming':
-        query = query.join(Event).filter(Event.event_date >= today, Registration.registration_status == 'REGISTERED', Registration.attendance_status != 'ATTENDED')
+        query = query.filter(Event.event_date >= today, Registration.registration_status == 'REGISTERED', Registration.attendance_status != 'ATTENDED')
     elif filter_type == 'attended':
-        query = query.filter_by(attendance_status='ATTENDED')
+        query = query.filter(Registration.attendance_status == 'ATTENDED')
     elif filter_type == 'absent':
-        query = query.filter_by(attendance_status='ABSENT')
+        query = query.filter(Registration.attendance_status == 'ABSENT')
     elif filter_type == 'cancelled':
-        query = query.join(Event).filter((Event.status == 'CANCELLED') | (Registration.registration_status == 'CANCELLED'))
+        query = query.filter((Event.status == 'CANCELLED') | (Registration.registration_status == 'CANCELLED'))
 
     user_registrations = query.order_by(Registration.registered_at.desc()).all()
 
-    # KPI Statistics
-    all_regs = Registration.query.filter_by(user_id=current_user.id).all()
+    # KPI Statistics within selected period
+    all_regs_q = Registration.query.filter_by(user_id=current_user.id).join(Event)
+    if start_d:
+        all_regs_q = all_regs_q.filter(Event.event_date >= start_d)
+    if end_d:
+        all_regs_q = all_regs_q.filter(Event.event_date <= end_d)
+    all_regs = all_regs_q.all()
+
     stats = {
         'total': len([r for r in all_regs if r.registration_status == 'REGISTERED']),
         'upcoming': len([r for r in all_regs if r.registration_status == 'REGISTERED' and r.event.event_date >= today and r.attendance_status != 'ATTENDED']),
@@ -667,40 +1125,179 @@ def manual_checkin(reg_id):
 @app.route('/checkin/export/<int:event_id>')
 @login_required
 def export_attendance(event_id):
-    if current_user.role != 'ORGANIZER':
-        flash('Bạn không có quyền xuất danh sách điểm danh. Quyền này chỉ dành riêng cho Ban tổ chức!', 'error')
+    if current_user.role not in ['ORGANIZER', 'MANAGER']:
+        flash('Bạn không có quyền xuất danh sách điểm danh. Quyền này chỉ dành riêng cho Ban tổ chức và Đơn vị Quản lý!', 'error')
         return redirect(url_for('events'))
 
     event = Event.query.get_or_404(event_id)
-    # Check if organizer owns this event
-    if event.organizer_id != current_user.id:
+    # Check if organizer owns this event (Manager can export any event)
+    if current_user.role == 'ORGANIZER' and event.organizer_id != current_user.id:
         flash('Bạn không có quyền xuất danh sách của sự kiện do Ban tổ chức khác tổ chức!', 'error')
         return redirect(url_for('events'))
 
     registrations = Registration.query.filter_by(event_id=event.id, registration_status='REGISTERED').all()
 
-    si = StringIO()
-    cw = csv.writer(si)
-    cw.writerow(['MSSV', 'Ho va ten', 'Email', 'Khoa/Phong ban', 'Ma ve', 'Trang thai tham du', 'Thoi gian diem danh'])
+    export_format = request.args.get('format', 'xlsx').lower()
 
-    for r in registrations:
-        att_time = r.attendance_record.checked_in_at.strftime('%H:%M %d/%m/%Y') if r.attendance_record else 'Chua diem danh'
-        cw.writerow([
+    if export_format == 'csv':
+        # UTF-8 BOM CSV export with full Vietnamese support
+        si = StringIO()
+        si.write('\ufeff')
+        cw = csv.writer(si)
+        cw.writerow(['STT', 'MSSV', 'Họ và tên', 'Email', 'Khoa/Phòng ban', 'Mã vé', 'Trạng thái tham dự', 'Thời gian điểm danh', 'Hình thức điểm danh'])
+
+        for idx, r in enumerate(registrations, 1):
+            att_time = r.attendance_record.checked_in_at.strftime('%H:%M %d/%m/%Y') if r.attendance_record else 'Chưa điểm danh'
+            method = 'Quét QR' if (r.attendance_record and r.attendance_record.checkin_method == 'QR_CODE') else ('Thủ công' if r.attendance_record else '—')
+            cw.writerow([
+                idx,
+                r.user.student_id or r.user.username,
+                r.user.full_name,
+                r.user.email,
+                r.user.department or '',
+                r.ticket_code,
+                'Đã tham dự' if r.attendance_status == 'ATTENDED' else 'Chưa điểm danh',
+                att_time,
+                method
+            ])
+
+        output_bytes = si.getvalue().encode('utf-8-sig')
+        filename = f"Diem_danh_{event.code}_{date.today().strftime('%Y%m%d')}.csv"
+        return Response(
+            output_bytes,
+            mimetype="text/csv; charset=utf-8",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        )
+
+    # Default export: Professional Excel (.xlsx) workbook using openpyxl
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Diem_danh"
+    ws.views.sheetView[0].showGridLines = True
+
+    # Styling definitions
+    font_title = Font(name="Calibri", size=14, bold=True, color="002B49")
+    font_sub = Font(name="Calibri", size=10, italic=True, color="475569")
+    font_header = Font(name="Calibri", size=10, bold=True, color="FFFFFF")
+    font_data = Font(name="Calibri", size=10, color="0F172A")
+    font_bold = Font(name="Calibri", size=10, bold=True, color="0F172A")
+
+    fill_header = PatternFill(start_color="002B49", end_color="002B49", fill_type="solid")
+    fill_zebra = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
+
+    thin_border_side = Side(border_style="thin", color="CBD5E1")
+    border_cell = Border(left=thin_border_side, right=thin_border_side, top=thin_border_side, bottom=thin_border_side)
+
+    align_center = Alignment(horizontal="center", vertical="center")
+    align_left = Alignment(horizontal="left", vertical="center")
+
+    # Row 1: Title
+    ws.merge_cells("A1:I1")
+    cell_title = ws["A1"]
+    cell_title.value = "DANH SÁCH SINH VIÊN ĐĂNG KÝ VÀ ĐIỂM DANH SỰ KIỆN"
+    cell_title.font = font_title
+    cell_title.alignment = align_center
+    ws.row_dimensions[1].height = 28
+
+    # Row 2: Subtitle
+    ws.merge_cells("A2:I2")
+    cell_sub = ws["A2"]
+    cell_sub.value = f"Sự kiện: {event.title} ({event.code})  |  Ngày tổ chức: {event.event_date.strftime('%d/%m/%Y')}  |  Đơn vị: {event.organizer_name}"
+    cell_sub.font = font_sub
+    cell_sub.alignment = align_center
+    ws.row_dimensions[2].height = 20
+
+    # Row 3: Blank spacer
+    ws.row_dimensions[3].height = 10
+
+    # Row 4: Table Headers
+    headers = [
+        "STT",
+        "Mã sinh viên (MSSV)",
+        "Họ và tên",
+        "Email",
+        "Khoa / Viện / Phòng ban",
+        "Mã vé điện tử",
+        "Trạng thái tham dự",
+        "Thời gian điểm danh",
+        "Hình thức điểm danh"
+    ]
+    ws.row_dimensions[4].height = 24
+    for col_idx, h in enumerate(headers, 1):
+        cell = ws.cell(row=4, column=col_idx, value=h)
+        cell.font = font_header
+        cell.fill = fill_header
+        cell.alignment = align_center
+        cell.border = border_cell
+
+    # Row 5+: Data rows
+    for row_idx, r in enumerate(registrations, 5):
+        ws.row_dimensions[row_idx].height = 20
+        att_time = r.attendance_record.checked_in_at.strftime('%H:%M %d/%m/%Y') if r.attendance_record else 'Chưa điểm danh'
+        method = 'Quét QR' if (r.attendance_record and r.attendance_record.checkin_method == 'QR_CODE') else ('Thủ công' if r.attendance_record else '—')
+        status_text = 'Đã tham dự' if r.attendance_status == 'ATTENDED' else 'Chưa điểm danh'
+
+        row_data = [
+            row_idx - 4,
             r.user.student_id or r.user.username,
             r.user.full_name,
             r.user.email,
             r.user.department or '',
             r.ticket_code,
-            'Da tham du' if r.attendance_status == 'ATTENDED' else 'Chua diem danh',
-            att_time
-        ])
+            status_text,
+            att_time,
+            method
+        ]
 
-    output = si.getvalue()
-    filename = f"Diem_danh_{event.code}_{date.today().strftime('%Y%m%d')}.csv"
+        is_even = ((row_idx - 4) % 2 == 0)
+        for col_idx, val in enumerate(row_data, 1):
+            cell = ws.cell(row=row_idx, column=col_idx, value=val)
+            cell.font = font_data
+            cell.border = border_cell
+            if is_even:
+                cell.fill = fill_zebra
+
+            # Alignments
+            if col_idx in [1, 2, 6, 7, 8, 9]:
+                cell.alignment = align_center
+            else:
+                cell.alignment = align_left
+
+            # Highlight attended status
+            if col_idx == 7 and status_text == 'Đã tham dự':
+                cell.font = Font(name="Calibri", size=10, bold=True, color="15803D")
+
+    # Row summary
+    summary_row = len(registrations) + 5
+    ws.row_dimensions[summary_row].height = 22
+    ws.merge_cells(start_row=summary_row, start_column=1, end_row=summary_row, end_column=9)
+    cell_sum = ws.cell(row=summary_row, column=1, value=f"Tổng số đăng ký: {len(registrations)}  |  Đã tham dự: {event.attended_seats} sinh viên ({event.attendance_rate}%)")
+    cell_sum.font = font_bold
+    cell_sum.alignment = align_left
+
+    # Auto-fit column widths
+    for col in ws.columns:
+        max_len = 0
+        col_letter = get_column_letter(col[0].column)
+        for cell in col:
+            if cell.row in [1, 2, summary_row]:
+                continue
+            val_str = str(cell.value or '')
+            max_len = max(max_len, len(val_str))
+        ws.column_dimensions[col_letter].width = max(max_len + 4, 12)
+
+    buf = BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+
+    filename = f"Diem_danh_{event.code}_{date.today().strftime('%Y%m%d')}.xlsx"
     return Response(
-        output,
-        mimetype="text/csv",
-        headers={"Content-Disposition": f"attachment;filename={filename}"}
+        buf.getvalue(),
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-cache"
+        }
     )
 
 # ----------------- 5. EVENT MANAGEMENT (ORGANIZER) -----------------
@@ -716,8 +1313,23 @@ def organizer_events():
     edit_id = request.args.get('edit_id')
     is_new = request.args.get('new') == '1'
 
+    academic_year = request.args.get('academic_year') or session.get('academic_year')
+    semester = request.args.get('semester') or session.get('semester')
+
+    if 'academic_year' in request.args:
+        session['academic_year'] = request.args.get('academic_year')
+    if 'semester' in request.args:
+        session['semester'] = request.args.get('semester')
+
+    start_d, end_d = get_period_date_range(academic_year, semester)
+
     # Strict isolation: ORGANIZER only sees their own events
-    my_events = Event.query.filter_by(organizer_id=current_user.id).order_by(Event.event_date.desc()).all()
+    query = Event.query.filter_by(organizer_id=current_user.id)
+    if start_d:
+        query = query.filter(Event.event_date >= start_d)
+    if end_d:
+        query = query.filter(Event.event_date <= end_d)
+    my_events = query.order_by(Event.event_date.desc()).all()
 
     if is_new:
         selected_event = None
@@ -730,6 +1342,8 @@ def organizer_events():
         if target.organizer_id != current_user.id:
             flash('Bạn không có quyền truy cập hoặc chỉnh sửa sự kiện của Ban tổ chức khác!', 'error')
             return redirect(url_for('organizer_events'))
+        if target.is_completed:
+            flash('Sự kiện đã kết thúc, hệ thống đã khóa chức năng chỉnh sửa nội dung.', 'warning')
         selected_event = target
     else:
         selected_event = my_events[0] if my_events else None
@@ -774,6 +1388,23 @@ def save_event():
     reg_deadline_str = request.form.get('reg_deadline')
     fee = request.form.get('fee', 'Miễn phí')
     description = request.form.get('description', '').strip()
+    union_points_plus = int(request.form.get('union_points_plus', 5) or 5)
+    union_points_minus = int(request.form.get('union_points_minus', 0) or 0)
+    sponsor_benefits = request.form.get('sponsor_benefits', '').strip() or None
+    handbook_name = request.form.get('handbook_name', '').strip() or 'Cẩm nang sự kiện NEU.pdf'
+
+    # Check publication file upload
+    handbook_file = request.files.get('handbook_file')
+    uploaded_handbook_url = None
+    if handbook_file and handbook_file.filename:
+        from werkzeug.utils import secure_filename
+        filename = secure_filename(handbook_file.filename)
+        if not filename:
+            filename = f"publication_{int(datetime.now().timestamp())}.pdf"
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        handbook_file.save(file_path)
+        handbook_name = handbook_file.filename
+        uploaded_handbook_url = f"/static/uploads/publications/{filename}"
 
     ev_date = datetime.strptime(event_date_str, '%Y-%m-%d').date()
     st_time = datetime.strptime(start_time_str, '%H:%M').time()
@@ -787,6 +1418,11 @@ def save_event():
             flash('Bạn không có quyền chỉnh sửa sự kiện của Ban tổ chức khác!', 'error')
             return redirect(url_for('organizer_events'))
 
+        # REQ 1: Block edit if event is completed
+        if event.is_completed:
+            flash('Sự kiện đã kết thúc, không thể chỉnh sửa thông tin.', 'error')
+            return redirect(url_for('organizer_events', edit_id=event.id))
+
         event.title = title
         event.category_id = category_id
         event.organizer_name = organizer_name
@@ -798,7 +1434,27 @@ def save_event():
         event.registration_deadline = reg_dl
         event.fee = fee
         event.description = description
-        flash('Đã lưu thay đổi thông tin sự kiện thành công!', 'success')
+        event.union_points_plus = union_points_plus
+        event.union_points_minus = union_points_minus
+        event.sponsor_benefits = sponsor_benefits
+        if handbook_name:
+            event.handbook_name = handbook_name
+        if uploaded_handbook_url:
+            event.handbook_url = uploaded_handbook_url
+
+        # REQ 3: When editing, status must reset to PENDING and require Manager/Admin approval
+        event.status = 'PENDING'
+        event.cancel_reason = None
+
+        log = ApprovalLog(
+            event_id=event.id,
+            manager_id=current_user.id,
+            action='REQUEST_CHANGE',
+            note='Ban tổ chức đã cập nhật thông tin sự kiện. Hồ sơ chuyển sang trạng thái Chờ duyệt để Đơn vị Quản lý phê duyệt lại.'
+        )
+        db.session.add(log)
+
+        flash('Đã lưu thay đổi thông tin sự kiện. Hồ sơ đã chuyển sang trạng thái "Chờ duyệt" để Đơn vị Quản lý kiểm duyệt lại trước khi hiển thị Đã duyệt.', 'success')
     else:
         # Create new
         code = f"NEU-EVT-{random.randint(1000, 9999)}"
@@ -817,6 +1473,11 @@ def save_event():
             max_seats=max_seats,
             fee=fee,
             description=description,
+            union_points_plus=union_points_plus,
+            union_points_minus=union_points_minus,
+            sponsor_benefits=sponsor_benefits,
+            handbook_name=handbook_name,
+            handbook_url=uploaded_handbook_url,
             status='PENDING' # requires approval
         )
         db.session.add(new_event)
@@ -999,21 +1660,64 @@ def feedback():
         )
 
     else:
-        # STUDENT VIEW
+        # STUDENT VIEW: Real-time evaluation history (evaluated vs pending)
         user_attended_regs = Registration.query.filter_by(
             user_id=current_user.id,
             attendance_status='ATTENDED'
-        ).all()
-        attended_events = [r.event for r in user_attended_regs]
+        ).order_by(Registration.registered_at.desc()).all()
+        attended_events = [r.event for r in user_attended_regs if r.event]
 
-        # Student's past submitted feedbacks
+        # Student's past submitted feedbacks ordered by real system timestamp created_at desc
         my_feedbacks = Feedback.query.filter_by(user_id=current_user.id).order_by(Feedback.created_at.desc()).all()
+        feedback_map = {fb.event_id: fb for fb in my_feedbacks}
+
+        # Segregate evaluated items
+        evaluated_items = []
+        for fb in my_feedbacks:
+            if fb.event:
+                matching_reg = next((r for r in user_attended_regs if r.event_id == fb.event_id), None)
+                evaluated_items.append({
+                    'event': fb.event,
+                    'registration': matching_reg,
+                    'feedback': fb,
+                    'status': 'EVALUATED'
+                })
+
+        # Segregate pending items (attended but not yet evaluated)
+        pending_items = []
+        for reg in user_attended_regs:
+            ev = reg.event
+            if ev and ev.id not in feedback_map:
+                pending_items.append({
+                    'event': ev,
+                    'registration': reg,
+                    'feedback': None,
+                    'status': 'PENDING'
+                })
+
+        # Determine currently selected event for the evaluation form
+        selected_event = None
+        if selected_event_id:
+            selected_event = next((e for e in attended_events if e.id == selected_event_id), None)
+        if not selected_event:
+            # Default to first pending event, otherwise first attended event
+            if pending_items:
+                selected_event = pending_items[0]['event']
+            elif attended_events:
+                selected_event = attended_events[0]
+
+        active_feedback = feedback_map.get(selected_event.id) if selected_event else None
 
         return render_template(
             'feedback.html',
             attended_events=attended_events,
-            selected_event_id=selected_event_id,
-            my_feedbacks=my_feedbacks
+            selected_event=selected_event,
+            selected_event_id=selected_event.id if selected_event else None,
+            active_feedback=active_feedback,
+            my_feedbacks=my_feedbacks,
+            evaluated_items=evaluated_items,
+            pending_items=pending_items,
+            feedback_map=feedback_map
         )
 
 @app.route('/feedback/submit', methods=['POST'])
@@ -1043,43 +1747,114 @@ def submit_feedback():
         flash('Chỉ những sinh viên đã điểm danh tham dự mới có quyền đánh giá sự kiện này.', 'error')
         return redirect(url_for('feedback'))
 
-    fb = Feedback(
-        event_id=event_id,
-        user_id=current_user.id,
-        rating_stars=rating_stars,
-        rating_content=rating_content,
-        rating_organization=rating_organization,
-        rating_speaker=rating_speaker,
-        rating_venue=rating_venue,
-        comment=comment,
-        is_anonymous=is_anonymous
-    )
-    db.session.add(fb)
-    db.session.commit()
+    # Check if student already gave feedback for this event -> update with current system time
+    fb = Feedback.query.filter_by(event_id=event_id, user_id=current_user.id).first()
+    if fb:
+        fb.rating_stars = rating_stars
+        fb.rating_content = rating_content
+        fb.rating_organization = rating_organization
+        fb.rating_speaker = rating_speaker
+        fb.rating_venue = rating_venue
+        fb.comment = comment
+        fb.is_anonymous = is_anonymous
+        fb.created_at = datetime.now()
+        flash('Đánh giá của bạn đã được cập nhật thành công theo thời gian hệ thống!', 'success')
+    else:
+        fb = Feedback(
+            event_id=event_id,
+            user_id=current_user.id,
+            rating_stars=rating_stars,
+            rating_content=rating_content,
+            rating_organization=rating_organization,
+            rating_speaker=rating_speaker,
+            rating_venue=rating_venue,
+            comment=comment,
+            is_anonymous=is_anonymous,
+            created_at=datetime.now()
+        )
+        db.session.add(fb)
+        flash('Cảm ơn bạn đã gửi đánh giá! Ý kiến của bạn sẽ giúp BTC nâng cao chất lượng các sự kiện tiếp theo.', 'success')
 
-    flash('Cảm ơn bạn đã gửi đánh giá! Ý kiến của bạn sẽ giúp BTC nâng cao chất lượng các sự kiện tiếp theo.', 'success')
-    return redirect(url_for('feedback'))
+    db.session.commit()
+    return redirect(url_for('feedback', event_id=event_id))
 
 # ----------------- 8. REPORTS & ANALYTICS -----------------
 
-@app.route('/analytics')
-@login_required
-def analytics():
-    if current_user.role not in ['ORGANIZER', 'MANAGER']:
-        flash('Bạn không có quyền truy cập trang Báo cáo – thống kê.', 'error')
-        return redirect(url_for('events'))
+def get_analytics_data(user, args, session_obj):
+    period = args.get('period')
+    organizer = args.get('organizer')
+    category_id = args.get('category_id')
 
-    # Compute real dynamic statistics
-    if current_user.role == 'ORGANIZER':
-        org_ev_ids = [e.id for e in Event.query.filter_by(organizer_id=current_user.id).all()]
-        events_count = len(org_ev_ids)
-        regs_count = Registration.query.filter(Registration.event_id.in_(org_ev_ids)).count() if org_ev_ids else 0
-        att_count = Registration.query.filter(Registration.event_id.in_(org_ev_ids), Registration.attendance_status == 'ATTENDED').count() if org_ev_ids else 0
+    # Date range resolution
+    start_d, end_d = None, None
+
+    if period == 'ALL' or not period:
+        start_d, end_d = None, None
+    elif period == 'THIS_WEEK':
+        t = date.today()
+        start_d = t - timedelta(days=t.weekday())
+        end_d = start_d + timedelta(days=6)
+    elif period == 'THIS_MONTH':
+        t = date.today()
+        start_d = date(t.year, t.month, 1)
+        _, last_day = calendar.monthrange(t.year, t.month)
+        end_d = date(t.year, t.month, last_day)
+    elif period == 'THIS_QUARTER':
+        t = date.today()
+        q_idx = (t.month - 1) // 3 + 1
+        m_start = (q_idx - 1) * 3 + 1
+        m_end = q_idx * 3
+        start_d = date(t.year, m_start, 1)
+        _, last_day = calendar.monthrange(t.year, m_end)
+        end_d = date(t.year, m_end, last_day)
+    elif period == 'THIS_YEAR':
+        t = date.today()
+        start_d = date(t.year, 1, 1)
+        end_d = date(t.year, 12, 31)
+    elif period and period.startswith('Q') and len(period) >= 2 and period[1] in '1234':
+        t = date.today()
+        q_idx = int(period[1])
+        parts = period.split('_')
+        y = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else t.year
+        m_start = (q_idx - 1) * 3 + 1
+        m_end = q_idx * 3
+        start_d = date(y, m_start, 1)
+        _, last_day = calendar.monthrange(y, m_end)
+        end_d = date(y, m_end, last_day)
+    elif period and '-' in period and len(period.split('-')) == 2 and period.split('-')[0].isdigit():
+        start_d, end_d = get_period_date_range(period, None)
+    elif period and any(k in period for k in ['Thu', 'Xuân', 'Hè']):
+        start_d, end_d = get_period_date_range(None, period)
     else:
-        events_count = Event.query.count()
-        regs_count = Registration.query.count()
-        att_count = Registration.query.filter_by(attendance_status='ATTENDED').count()
+        academic_year = args.get('academic_year') or session_obj.get('academic_year')
+        semester = args.get('semester') or session_obj.get('semester')
+        if academic_year or semester:
+            start_d, end_d = get_period_date_range(academic_year, semester)
 
+    # Base query based on user role
+    if user.role == 'ORGANIZER':
+        q = Event.query.filter_by(organizer_id=user.id)
+    else:
+        q = Event.query
+        if organizer and organizer != 'ALL':
+            q = q.filter(Event.organizer_name == organizer)
+
+    if start_d:
+        q = q.filter(Event.event_date >= start_d)
+    if end_d:
+        q = q.filter(Event.event_date <= end_d)
+
+    if category_id and category_id != 'ALL':
+        try:
+            q = q.filter(Event.category_id == int(category_id))
+        except (ValueError, TypeError):
+            pass
+
+    display_events = q.order_by(Event.event_date.desc()).all()
+    ev_ids = [e.id for e in display_events]
+    events_count = len(ev_ids)
+    regs_count = Registration.query.filter(Registration.event_id.in_(ev_ids)).count() if ev_ids else 0
+    att_count = Registration.query.filter(Registration.event_id.in_(ev_ids), Registration.attendance_status == 'ATTENDED').count() if ev_ids else 0
     rate = round(att_count / regs_count * 100, 1) if regs_count > 0 else 0.0
 
     stats = {
@@ -1089,15 +1864,471 @@ def analytics():
         'rate': rate
     }
 
-    return render_template('analytics.html', stats=stats)
+    # Category distribution for donut chart
+    cat_colors = {
+        'Nghề nghiệp': '#0F4C81',
+        'Công nghệ': '#3b82f6',
+        'Học thuật': '#10b981',
+        'Văn hóa & Kỹ năng': '#f59e0b',
+        'Cộng đồng': '#14b8a6',
+        'Văn hóa': '#ec4899'
+    }
+    fallback_palette = ['#0F4C81', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#64748b']
+
+    cat_counts = {}
+    for ev in display_events:
+        c_name = ev.category.name if ev.category else 'Khác'
+        cat_counts[c_name] = cat_counts.get(c_name, 0) + 1
+
+    category_items = []
+    cat_labels = []
+    cat_counts_list = []
+    cat_colors_list = []
+
+    sorted_cats = sorted(cat_counts.items(), key=lambda x: x[1], reverse=True)
+    for idx, (cat_name, cnt) in enumerate(sorted_cats):
+        pct = round((cnt / events_count) * 100, 1) if events_count > 0 else 0
+        color = cat_colors.get(cat_name, fallback_palette[idx % len(fallback_palette)])
+        category_items.append({
+            'name': cat_name,
+            'count': cnt,
+            'pct': pct,
+            'color': color
+        })
+        cat_labels.append(cat_name)
+        cat_counts_list.append(cnt)
+        cat_colors_list.append(color)
+
+    category_data = {
+        'total': events_count,
+        'labels': cat_labels,
+        'counts': cat_counts_list,
+        'colors': cat_colors_list,
+        'categories': category_items
+    }
+
+    # Timeline Bar Chart Data (both Weekly and Monthly)
+    today = date.today()
+
+    # 1. Weekly data: 8 consecutive weeks
+    if start_d and end_d and (end_d - start_d).days <= 70:
+        w_cur = start_d - timedelta(days=start_d.weekday())
+        w_end_limit = end_d
+        weekly_labels = []
+        weekly_regs = []
+        weekly_att = []
+        while w_cur <= w_end_limit:
+            w_next = w_cur + timedelta(days=6)
+            weekly_labels.append(f"{w_cur.strftime('%d/%m')}–{w_next.strftime('%d/%m')}")
+            ev_in_w = [e for e in display_events if w_cur <= e.event_date <= w_next]
+            weekly_regs.append(sum(e.registered_seats for e in ev_in_w))
+            weekly_att.append(sum(e.attended_seats for e in ev_in_w))
+            w_cur += timedelta(days=7)
+    else:
+        monday_this_week = today - timedelta(days=today.weekday())
+        weekly_labels = []
+        weekly_regs = []
+        weekly_att = []
+        for i in range(-4, 4):
+            w_start_i = monday_this_week + timedelta(weeks=i)
+            w_end_i = w_start_i + timedelta(days=6)
+            weekly_labels.append(f"{w_start_i.strftime('%d/%m')}–{w_end_i.strftime('%d/%m')}")
+            ev_in_w = [e for e in display_events if w_start_i <= e.event_date <= w_end_i]
+            weekly_regs.append(sum(e.registered_seats for e in ev_in_w))
+            weekly_att.append(sum(e.attended_seats for e in ev_in_w))
+
+    # 2. Monthly data
+    if start_d and end_d:
+        m_cur = date(start_d.year, start_d.month, 1)
+        m_end_limit = date(end_d.year, end_d.month, 1)
+        monthly_labels = []
+        monthly_regs = []
+        monthly_att = []
+        while m_cur <= m_end_limit:
+            lbl = f"Tháng {m_cur.month:02d}" if start_d.year == end_d.year else f"T{m_cur.month:02d}/{str(m_cur.year)[2:]}"
+            monthly_labels.append(lbl)
+            ev_in_m = [e for e in display_events if e.event_date.year == m_cur.year and e.event_date.month == m_cur.month]
+            monthly_regs.append(sum(e.registered_seats for e in ev_in_m))
+            monthly_att.append(sum(e.attended_seats for e in ev_in_m))
+            if m_cur.month == 12:
+                m_cur = date(m_cur.year + 1, 1, 1)
+            else:
+                m_cur = date(m_cur.year, m_cur.month + 1, 1)
+    else:
+        # All time: all distinct months from display_events
+        distinct_ym = sorted(list(set((e.event_date.year, e.event_date.month) for e in display_events)))
+        monthly_labels = []
+        monthly_regs = []
+        monthly_att = []
+        for y, m in distinct_ym:
+            monthly_labels.append(f"T{m:02d}/{str(y)[2:]}")
+            ev_in_m = [e for e in display_events if e.event_date.year == y and e.event_date.month == m]
+            monthly_regs.append(sum(e.registered_seats for e in ev_in_m))
+            monthly_att.append(sum(e.attended_seats for e in ev_in_m))
+
+    # 3. Quarterly data
+    if start_d and end_d:
+        y_cur = start_d.year
+        q_cur = (start_d.month - 1) // 3 + 1
+        y_end = end_d.year
+        q_end = (end_d.month - 1) // 3 + 1
+        quarterly_labels = []
+        quarterly_regs = []
+        quarterly_att = []
+        while (y_cur < y_end) or (y_cur == y_end and q_cur <= q_end):
+            lbl = f"Quý {q_cur}" if start_d.year == end_d.year else f"Q{q_cur}/{str(y_cur)[2:]}"
+            quarterly_labels.append(lbl)
+            m_start = (q_cur - 1) * 3 + 1
+            m_end = q_cur * 3
+            ev_in_q = [e for e in display_events if e.event_date.year == y_cur and m_start <= e.event_date.month <= m_end]
+            quarterly_regs.append(sum(e.registered_seats for e in ev_in_q))
+            quarterly_att.append(sum(e.attended_seats for e in ev_in_q))
+            if q_cur == 4:
+                y_cur += 1
+                q_cur = 1
+            else:
+                q_cur += 1
+    else:
+        distinct_yq = sorted(list(set((e.event_date.year, (e.event_date.month - 1) // 3 + 1) for e in display_events)))
+        quarterly_labels = []
+        quarterly_regs = []
+        quarterly_att = []
+        if not distinct_yq:
+            distinct_yq = [(today.year, q) for q in range(1, 5)]
+        for y, q in distinct_yq:
+            quarterly_labels.append(f"Q{q}/{str(y)[2:]}")
+            m_start = (q - 1) * 3 + 1
+            m_end = q * 3
+            ev_in_q = [e for e in display_events if e.event_date.year == y and m_start <= e.event_date.month <= m_end]
+            quarterly_regs.append(sum(e.registered_seats for e in ev_in_q))
+            quarterly_att.append(sum(e.attended_seats for e in ev_in_q))
+
+    # 4. Yearly data
+    if start_d and end_d and start_d.year != end_d.year:
+        y_cur = start_d.year
+        yearly_labels = []
+        yearly_regs = []
+        yearly_att = []
+        while y_cur <= end_d.year:
+            yearly_labels.append(f"Năm {y_cur}")
+            ev_in_y = [e for e in display_events if e.event_date.year == y_cur]
+            yearly_regs.append(sum(e.registered_seats for e in ev_in_y))
+            yearly_att.append(sum(e.attended_seats for e in ev_in_y))
+            y_cur += 1
+    else:
+        distinct_y = sorted(list(set(e.event_date.year for e in display_events)))
+        if not distinct_y:
+            distinct_y = [today.year - 1, today.year, today.year + 1]
+        elif len(distinct_y) == 1:
+            only_y = distinct_y[0]
+            distinct_y = [only_y - 1, only_y, only_y + 1]
+        yearly_labels = []
+        yearly_regs = []
+        yearly_att = []
+        for y in distinct_y:
+            yearly_labels.append(f"Năm {y}")
+            ev_in_y = [e for e in display_events if e.event_date.year == y]
+            yearly_regs.append(sum(e.registered_seats for e in ev_in_y))
+            yearly_att.append(sum(e.attended_seats for e in ev_in_y))
+
+    bar_chart_data = {
+        'week': {
+            'labels': weekly_labels,
+            'registrations': weekly_regs,
+            'attendances': weekly_att
+        },
+        'weekly': {
+            'labels': weekly_labels,
+            'registrations': weekly_regs,
+            'attendances': weekly_att
+        },
+        'month': {
+            'labels': monthly_labels,
+            'registrations': monthly_regs,
+            'attendances': monthly_att
+        },
+        'monthly': {
+            'labels': monthly_labels,
+            'registrations': monthly_regs,
+            'attendances': monthly_att
+        },
+        'quarter': {
+            'labels': quarterly_labels,
+            'registrations': quarterly_regs,
+            'attendances': quarterly_att
+        },
+        'quarterly': {
+            'labels': quarterly_labels,
+            'registrations': quarterly_regs,
+            'attendances': quarterly_att
+        },
+        'year': {
+            'labels': yearly_labels,
+            'registrations': yearly_regs,
+            'attendances': yearly_att
+        },
+        'yearly': {
+            'labels': yearly_labels,
+            'registrations': yearly_regs,
+            'attendances': yearly_att
+        }
+    }
+
+    # Available organizers for filter dropdown (if Manager)
+    available_organizers = [r[0] for r in db.session.query(Event.organizer_name).distinct().order_by(Event.organizer_name).all() if r[0]]
+    available_categories = EventCategory.query.order_by(EventCategory.id).all()
+
+    return {
+        'stats': stats,
+        'events': display_events,
+        'category_data': category_data,
+        'bar_chart_data': bar_chart_data,
+        'available_organizers': available_organizers,
+        'available_categories': available_categories,
+        'selected_period': period or 'ALL',
+        'selected_organizer': organizer or 'ALL',
+        'selected_category': category_id or 'ALL',
+        'start_d': start_d,
+        'end_d': end_d
+    }
+
+@app.route('/analytics')
+@login_required
+def analytics():
+    if current_user.role not in ['ORGANIZER', 'MANAGER']:
+        flash('Bạn không có quyền truy cập trang Báo cáo – thống kê.', 'error')
+        return redirect(url_for('events'))
+
+    analytics_data = get_analytics_data(current_user, request.args, session)
+
+    return render_template(
+        'analytics.html',
+        stats=analytics_data['stats'],
+        events=analytics_data['events'],
+        category_data=analytics_data['category_data'],
+        bar_chart_data=analytics_data['bar_chart_data'],
+        available_organizers=analytics_data['available_organizers'],
+        available_categories=analytics_data['available_categories'],
+        selected_period=analytics_data['selected_period'],
+        selected_organizer=analytics_data['selected_organizer'],
+        selected_category=analytics_data['selected_category']
+    )
+
+@app.route('/analytics/export')
+@login_required
+def export_analytics():
+    if current_user.role not in ['ORGANIZER', 'MANAGER']:
+        flash('Bạn không có quyền xuất báo cáo thống kê.', 'error')
+        return redirect(url_for('events'))
+
+    export_format = request.args.get('format', 'xlsx').lower()
+    analytics_data = get_analytics_data(current_user, request.args, session)
+    display_events = analytics_data['events']
+    stats = analytics_data['stats']
+    events_count = stats['events']
+    regs_count = stats['registrations']
+    att_count = stats['attended']
+    rate = stats['rate']
+    raw_period = analytics_data['selected_period']
+    if raw_period == 'THIS_WEEK':
+        academic_year = 'Tuần hiện tại'
+    elif raw_period == 'THIS_MONTH':
+        academic_year = f'Tháng {date.today().strftime("%m/%Y")}'
+    elif raw_period == 'THIS_QUARTER':
+        academic_year = f'Quý {(date.today().month - 1) // 3 + 1}/{date.today().year}'
+    elif raw_period == 'THIS_YEAR':
+        academic_year = f'Năm {date.today().year}'
+    elif raw_period == 'ALL':
+        academic_year = 'Toàn bộ thời gian'
+    else:
+        academic_year = raw_period or 'Tất cả'
+    semester = request.args.get('semester') or ''
+
+    now_str = datetime.now().strftime('%H:%M %d/%m/%Y')
+    date_file_str = date.today().strftime('%Y%m%d')
+
+    if export_format == 'csv':
+        # CSV with UTF-8 BOM
+        si = StringIO()
+        si.write('\ufeff')
+        cw = csv.writer(si)
+        cw.writerow(['BÁO CÁO THỐNG KÊ HOẠT ĐỘNG SỰ KIỆN - NEU EVENTS'])
+        cw.writerow([f'Thời gian xuất: {now_str}', f'Người xuất: {current_user.full_name} ({current_user.email})'])
+        cw.writerow([f'Năm học: {academic_year or "Tất cả"}', f'Học kỳ: {semester or "Tất cả"}'])
+        cw.writerow([])
+        cw.writerow(['TỔNG QUAN CHỈ SỐ KPI'])
+        cw.writerow(['Tổng số sự kiện', 'Tổng lượt đăng ký', 'Tổng lượt tham dự', 'Tỷ lệ tham dự chung'])
+        cw.writerow([events_count, regs_count, att_count, f'{rate}%'])
+        cw.writerow([])
+        cw.writerow(['DANH SÁCH CHI TIẾT HIỆU QUẢ TỪNG SỰ KIỆN'])
+        cw.writerow(['STT', 'Mã sự kiện', 'Tên sự kiện', 'Ngày tổ chức', 'Đơn vị tổ chức', 'Địa điểm', 'Đăng ký', 'Tham dự', 'Tỷ lệ tham dự', 'Đánh giá', 'Trạng thái'])
+        for idx, ev in enumerate(display_events, 1):
+            att_seats = ev.attended_seats if ev.event_date <= date.today() else '—'
+            st_text = 'Đang diễn ra' if (ev.status == 'APPROVED' and ev.event_date == date.today()) else ('Đã hủy' if ev.status == 'CANCELLED' else ('Đã kết thúc' if (ev.status == 'COMPLETED' or ev.event_date < date.today()) else ('Chờ duyệt' if ev.status == 'PENDING' else 'Sắp diễn ra')))
+            cw.writerow([
+                idx,
+                ev.code,
+                ev.title,
+                ev.event_date.strftime('%d/%m/%Y'),
+                ev.organizer_name,
+                ev.location,
+                ev.registered_seats,
+                att_seats,
+                f'{ev.attendance_rate}%',
+                f'{ev.average_rating} / 5' if ev.average_rating else 'Chưa có',
+                st_text
+            ])
+        output_bytes = si.getvalue().encode('utf-8-sig')
+        filename = f"Bao_cao_thong_ke_NEU_Events_{date_file_str}.csv"
+        return Response(
+            output_bytes,
+            mimetype="text/csv; charset=utf-8",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        )
+
+    elif export_format == 'pdf':
+        return render_template(
+            'analytics_report_pdf.html',
+            stats=stats,
+            events=display_events,
+            academic_year=academic_year,
+            semester=semester,
+            export_time=now_str
+        )
+
+    # Default: Professional Excel (.xlsx) using openpyxl
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Bao_cao_thong_ke"
+    ws.views.sheetView[0].showGridLines = True
+
+    # Styling definitions
+    font_title = Font(name="Calibri", size=14, bold=True, color="002B49")
+    font_sub = Font(name="Calibri", size=10, italic=True, color="475569")
+    font_header = Font(name="Calibri", size=10, bold=True, color="FFFFFF")
+    font_kpi_head = Font(name="Calibri", size=10, bold=True, color="1E3A8A")
+    font_kpi_val = Font(name="Calibri", size=12, bold=True, color="002B49")
+    font_data = Font(name="Calibri", size=10, color="0F172A")
+
+    fill_header = PatternFill(start_color="002B49", end_color="002B49", fill_type="solid")
+    fill_kpi = PatternFill(start_color="EFF6FF", end_color="EFF6FF", fill_type="solid")
+    fill_zebra = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
+
+    thin_border_side = Side(border_style="thin", color="CBD5E1")
+    border_cell = Border(left=thin_border_side, right=thin_border_side, top=thin_border_side, bottom=thin_border_side)
+
+    align_center = Alignment(horizontal="center", vertical="center")
+    align_left = Alignment(horizontal="left", vertical="center")
+    align_right = Alignment(horizontal="right", vertical="center")
+
+    # Row 1: Title
+    ws.merge_cells("A1:K1")
+    cell_title = ws["A1"]
+    cell_title.value = "BÁO CÁO THỐNG KÊ TỔNG HỢP HIỆU QUẢ HOẠT ĐỘNG SỰ KIỆN NEU"
+    cell_title.font = font_title
+    cell_title.alignment = align_center
+    ws.row_dimensions[1].height = 28
+
+    # Row 2: Subtitle
+    ws.merge_cells("A2:K2")
+    cell_sub = ws["A2"]
+    cell_sub.value = f"Thời gian xuất: {now_str}  |  Người lập: {current_user.full_name} ({current_user.email})  |  Năm học: {academic_year or 'Tất cả'}  |  Học kỳ: {semester or 'Tất cả'}"
+    cell_sub.font = font_sub
+    cell_sub.alignment = align_center
+    ws.row_dimensions[2].height = 20
+
+    # Row 4: KPI Summary Table
+    ws["B4"] = "Tổng số sự kiện"
+    ws["D4"] = "Tổng lượt đăng ký"
+    ws["F4"] = "Tổng lượt tham dự"
+    ws["H4"] = "Tỷ lệ tham dự chung"
+    for col_l in ["B4", "D4", "F4", "H4"]:
+        ws[col_l].font = font_kpi_head
+        ws[col_l].alignment = align_center
+        ws[col_l].fill = fill_kpi
+        ws[col_l].border = border_cell
+
+    ws["B5"] = events_count
+    ws["D5"] = regs_count
+    ws["F5"] = att_count
+    ws["H5"] = f"{rate}%"
+    for col_l in ["B5", "D5", "F5", "H5"]:
+        ws[col_l].font = font_kpi_val
+        ws[col_l].alignment = align_center
+        ws[col_l].border = border_cell
+    ws.row_dimensions[4].height = 22
+    ws.row_dimensions[5].height = 24
+
+    # Row 7: Data Table Header
+    headers = ['STT', 'Mã sự kiện', 'Tên sự kiện', 'Ngày tổ chức', 'Đơn vị tổ chức', 'Địa điểm', 'Đăng ký', 'Tham dự', 'Tỷ lệ', 'Đánh giá', 'Trạng thái']
+    ws.row_dimensions[7].height = 26
+    for col_idx, h in enumerate(headers, 1):
+        cell = ws.cell(row=7, column=col_idx, value=h)
+        cell.font = font_header
+        cell.fill = fill_header
+        cell.alignment = align_center
+        cell.border = border_cell
+
+    # Rows 8+: Events Data
+    for row_idx, ev in enumerate(display_events, 8):
+        att_seats = ev.attended_seats if ev.event_date <= date.today() else '—'
+        st_text = 'Đang diễn ra' if (ev.status == 'APPROVED' and ev.event_date == date.today()) else ('Đã hủy' if ev.status == 'CANCELLED' else ('Đã kết thúc' if (ev.status == 'COMPLETED' or ev.event_date < date.today()) else ('Chờ duyệt' if ev.status == 'PENDING' else 'Sắp diễn ra')))
+        row_vals = [
+            row_idx - 7,
+            ev.code,
+            ev.title,
+            ev.event_date.strftime('%d/%m/%Y'),
+            ev.organizer_name,
+            ev.location,
+            ev.registered_seats,
+            att_seats,
+            f"{ev.attendance_rate}%",
+            f"{ev.average_rating} / 5" if ev.average_rating else "Chưa có",
+            st_text
+        ]
+        ws.row_dimensions[row_idx].height = 22
+        is_even = (row_idx % 2 == 0)
+        for col_idx, val in enumerate(row_vals, 1):
+            cell = ws.cell(row=row_idx, column=col_idx, value=val)
+            cell.font = font_data
+            cell.border = border_cell
+            if is_even:
+                cell.fill = fill_zebra
+            if col_idx in [1, 2, 4, 9, 10, 11]:
+                cell.alignment = align_center
+            elif col_idx in [7, 8]:
+                cell.alignment = align_right
+            else:
+                cell.alignment = align_left
+
+    # Auto-adjust column widths
+    for col_idx in range(1, 12):
+        col_letter = get_column_letter(col_idx)
+        max_len = 0
+        for row in range(7, len(display_events) + 8):
+            cell_val = ws.cell(row=row, column=col_idx).value
+            v_str = str(cell_val or '')
+            if len(v_str) > max_len:
+                max_len = len(v_str)
+        ws.column_dimensions[col_letter].width = max(max_len + 4, 12)
+
+    buf = BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    filename = f"Bao_cao_thong_ke_NEU_Events_{date_file_str}.xlsx"
+    return Response(
+        buf.getvalue(),
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
 
 # ----------------- APP INITIALIZATION -----------------
 
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-        # Automatically seed compact clean dataset if missing or mismatching
-        if User.query.count() != 5 or Event.query.count() != 4:
+        # Automatically seed compact clean dataset if missing
+        if User.query.count() == 0 or Event.query.count() == 0:
             from data_seeder import seed_database
             seed_database(app)
     print("Starting NEU Events Web Server at http://127.0.0.1:5000")

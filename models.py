@@ -17,12 +17,18 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     full_name = db.Column(db.String(100), nullable=False)
     role = db.Column(db.String(20), nullable=False, default='STUDENT') # STUDENT, ORGANIZER, MANAGER
-    department = db.Column(db.String(150), nullable=True) # E.g., Viện CNTT & KTS, Phòng CTCT & QLSV
+    department = db.Column(db.String(150), nullable=True) # E.g., Khoa Công nghệ thông tin, Phòng CTCT & QLSV
     student_id = db.Column(db.String(20), nullable=True) # MSSV
     phone = db.Column(db.String(20), nullable=True)
     avatar_initials = db.Column(db.String(5), default='NEU')
     is_password_set = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+    @property
+    def display_email(self):
+        if self.role == 'STUDENT' and self.student_id:
+            return f"{self.student_id}@st.neu.edu.vn"
+        return self.email
 
     # Relationships
     registrations = db.relationship('Registration', backref='user', lazy=True)
@@ -30,7 +36,7 @@ class User(UserMixin, db.Model):
     feedbacks = db.relationship('Feedback', backref='user', lazy=True)
 
     def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+        self.password_hash = generate_password_hash(password, method='pbkdf2:sha256')
         self.is_password_set = True
 
     def check_password(self, password):
@@ -80,12 +86,16 @@ class Event(db.Model):
     agenda_json = db.Column(db.Text, nullable=True) # JSON timeline of agenda
     checklist_json = db.Column(db.Text, nullable=True) # JSON items to prepare
     handbook_name = db.Column(db.String(150), default='Cẩm nang sự kiện NEU.pdf')
+    handbook_url = db.Column(db.String(500), nullable=True) # URL / file path của ấn phẩm chương trình
+    union_points_plus = db.Column(db.Integer, default=5, nullable=False) # Điểm cộng Đoàn khi tham dự
+    union_points_minus = db.Column(db.Integer, default=0, nullable=False) # Điểm phạt Đoàn nếu vắng mặt
+    sponsor_benefits = db.Column(db.Text, nullable=True) # Quyền lợi, quà tặng, voucher khóa học từ nhà tài trợ
     cover_image_url = db.Column(db.String(500), nullable=True)
 
     status = db.Column(db.String(20), default='APPROVED') # DRAFT, PENDING, APPROVED, REJECTED, CANCELLED, COMPLETED
     is_featured = db.Column(db.Boolean, default=False)
     cancel_reason = db.Column(db.Text, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
     # Relationships
     registrations = db.relationship('Registration', backref='event', lazy=True, cascade="all, delete-orphan")
@@ -96,6 +106,38 @@ class Event(db.Model):
     @property
     def remaining_seats(self):
         return max(0, self.max_seats - self.registered_seats)
+
+    @property
+    def academic_year(self):
+        if not self.event_date:
+            return ""
+        if self.event_date.month >= 8:
+            return f"{self.event_date.year}-{self.event_date.year + 1}"
+        else:
+            return f"{self.event_date.year - 1}-{self.event_date.year}"
+
+    @property
+    def semester(self):
+        if not self.event_date:
+            return ""
+        m, y = self.event_date.month, self.event_date.year
+        if m >= 8:
+            return f"Học kỳ Thu {y}"
+        elif m <= 5:
+            return f"Học kỳ Xuân {y}"
+        else:
+            return f"Học kỳ Hè {y}"
+
+    @property
+    def sponsor_benefits_list(self):
+        if not self.sponsor_benefits:
+            return []
+        lines = []
+        for line in self.sponsor_benefits.split('\n'):
+            cleaned = line.strip().lstrip('-•*+ ').strip()
+            if cleaned:
+                lines.append(cleaned)
+        return lines
 
     @property
     def is_registration_open(self):
@@ -116,6 +158,57 @@ class Event(db.Model):
             return round(sum(valid_ratings) / len(valid_ratings), 1)
         return None
 
+    @property
+    def agenda_items(self):
+        import json
+        if self.agenda_json:
+            try:
+                items = json.loads(self.agenda_json)
+                if isinstance(items, list) and len(items) > 0:
+                    return items
+            except Exception:
+                pass
+        return [
+            {"time": f"{self.start_time.strftime('%H:%M')}–{self.end_time.strftime('%H:%M')}", "title": "Chương trình sự kiện chính", "venue": self.location}
+        ]
+
+    @property
+    def is_completed(self):
+        from datetime import date
+        return self.status == 'COMPLETED' or (self.event_date is not None and self.event_date < date.today())
+
+    @property
+    def current_status_label(self):
+        from datetime import date
+        today = date.today()
+        if self.status == 'CANCELLED':
+            return 'Đã hủy'
+        if self.status == 'REJECTED':
+            return 'Từ chối duyệt'
+        if self.status == 'PENDING':
+            return 'Chờ duyệt'
+        if self.status == 'COMPLETED' or self.event_date < today:
+            return 'Đã kết thúc'
+        if self.event_date == today and self.status == 'APPROVED':
+            return 'Đang diễn ra'
+        if self.status == 'APPROVED':
+            return 'Sắp diễn ra'
+        return self.status
+
+    @property
+    def current_status_badge(self):
+        label = self.current_status_label
+        if label == 'Đang diễn ra':
+            return {'label': label, 'class': 'bg-emerald-500/90 text-white animate-pulse', 'dot': 'bg-white'}
+        elif label == 'Đã kết thúc':
+            return {'label': label, 'class': 'bg-slate-600/85 text-white', 'dot': 'bg-slate-300'}
+        elif label in ['Đã hủy', 'Từ chối duyệt']:
+            return {'label': label, 'class': 'bg-rose-500/85 text-white', 'dot': 'bg-white'}
+        elif label == 'Chờ duyệt':
+            return {'label': label, 'class': 'bg-amber-500/85 text-white', 'dot': 'bg-white'}
+        else: # Sắp diễn ra
+            return {'label': label, 'class': 'bg-blue-600/85 text-white', 'dot': 'bg-white'}
+
 
 class Registration(db.Model):
     __tablename__ = 'registrations'
@@ -126,7 +219,7 @@ class Registration(db.Model):
     event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False)
     registration_status = db.Column(db.String(20), default='REGISTERED') # REGISTERED, CANCELLED
     attendance_status = db.Column(db.String(20), default='NOT_YET') # NOT_YET, ATTENDED, ABSENT, NOT_APPLICABLE
-    registered_at = db.Column(db.DateTime, default=datetime.utcnow)
+    registered_at = db.Column(db.DateTime, default=datetime.now)
 
     attendance_record = db.relationship('AttendanceRecord', backref='registration', uselist=False, lazy=True)
 
@@ -141,7 +234,7 @@ class AttendanceSession(db.Model):
     valid_from = db.Column(db.DateTime, nullable=False)
     valid_to = db.Column(db.DateTime, nullable=False)
     is_active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
     records = db.relationship('AttendanceRecord', backref='session', lazy=True)
 
@@ -153,7 +246,7 @@ class AttendanceRecord(db.Model):
     session_id = db.Column(db.Integer, db.ForeignKey('attendance_sessions.id'), nullable=False)
     registration_id = db.Column(db.Integer, db.ForeignKey('registrations.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    checked_in_at = db.Column(db.DateTime, default=datetime.utcnow)
+    checked_in_at = db.Column(db.DateTime, default=datetime.now)
     checkin_method = db.Column(db.String(20), default='PIN') # PIN, QR, MANUAL
     status = db.Column(db.String(20), default='ATTENDED') # ATTENDED, ABSENT
 
@@ -171,7 +264,7 @@ class Feedback(db.Model):
     rating_venue = db.Column(db.Integer, default=5)
     comment = db.Column(db.Text, nullable=True)
     is_anonymous = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
 
 class ApprovalLog(db.Model):
@@ -182,4 +275,4 @@ class ApprovalLog(db.Model):
     manager_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     action = db.Column(db.String(30), nullable=False) # APPROVE, REJECT, REQUEST_CHANGE
     note = db.Column(db.Text, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)

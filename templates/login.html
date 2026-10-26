@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng nhập - NEU Events</title>
-    <link rel="icon" type="image/webp" href="{{ url_for('static', filename='img/logo_neu.webp') }}">
+    <link rel="icon" type="image/webp" href="{{ url_for('static', filename='img/logo_neu.webp') }}?v=2">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}?v=2">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo_neu.webp') }}?v=2">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -51,10 +53,10 @@
 
         <!-- TOP LOGO -->
         <div class="relative z-10 flex items-center gap-5">
-            <img src="{{ url_for('static', filename='img/logo_neu.webp') }}" alt="Logo NEU" class="w-28 h-28 xl:w-32 xl:h-32 object-contain shrink-0 drop-shadow-2xl">
-            <div>
-                <div class="text-2xl xl:text-3xl font-extrabold leading-tight tracking-wide text-white drop-shadow-md">NEU Events</div>
-                <div class="text-xs xl:text-sm uppercase font-bold text-blue-200 tracking-wider mt-1">ĐẠI HỌC KINH TẾ QUỐC DÂN</div>
+            <img src="{{ url_for('static', filename='img/logo_neu.webp') }}?v=2" alt="Logo NEU" class="w-24 h-24 xl:w-28 xl:h-28 object-contain shrink-0 drop-shadow-2xl">
+            <div class="min-w-0">
+                <div class="text-2xl xl:text-3xl font-black leading-tight tracking-wide text-white drop-shadow-md">NEU Events</div>
+                <div class="text-xs xl:text-sm uppercase font-bold text-blue-200 tracking-wider mt-1 whitespace-nowrap">ĐẠI HỌC KINH TẾ QUỐC DÂN</div>
             </div>
         </div>
 
@@ -107,10 +109,10 @@
         <!-- FORM CONTAINER -->
         <div class="max-w-md w-full mx-auto my-auto space-y-6">
             <div class="lg:hidden flex items-center gap-3.5 pb-4 border-b border-slate-100">
-                <img src="{{ url_for('static', filename='img/logo_neu.webp') }}" alt="Logo NEU" class="w-12 h-12 object-contain shrink-0">
-                <div>
-                    <div class="text-xl font-extrabold text-slate-900 leading-tight">NEU Events</div>
-                    <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Đại học Kinh tế Quốc dân</div>
+                <img src="{{ url_for('static', filename='img/logo_neu.webp') }}?v=2" alt="Logo NEU" class="w-14 h-14 object-contain shrink-0 drop-shadow-xs">
+                <div class="min-w-0">
+                    <div class="text-xl font-black text-slate-900 leading-tight">NEU Events</div>
+                    <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider whitespace-nowrap">ĐẠI HỌC KINH TẾ QUỐC DÂN</div>
                 </div>
             </div>
             <div>
@@ -224,16 +226,16 @@
                     <div class="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200">
                         <div>
                             <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 mr-1.5">BTC 2</span>
-                            <span class="font-mono font-bold text-slate-800">it@neu.edu.vn</span>
-                            <span class="text-slate-400 block text-[10px]">Viện CNTT (Sự kiện AI & Hackathon)</span>
+                            <span class="font-mono font-bold text-slate-800">fit@neu.edu.vn</span>
+                            <span class="text-slate-400 block text-[10px]">Khoa Công nghệ thông tin (Sự kiện AI & Hackathon)</span>
                         </div>
-                        <button type="button" onclick="fillDemo('it@neu.edu.vn', '123')" class="px-2.5 py-1 bg-slate-100 hover:bg-neu-700 hover:text-white rounded-lg font-semibold text-slate-600 transition text-[11px]">Chọn</button>
+                        <button type="button" onclick="fillDemo('fit@neu.edu.vn', '123')" class="px-2.5 py-1 bg-slate-100 hover:bg-neu-700 hover:text-white rounded-lg font-semibold text-slate-600 transition text-[11px]">Chọn</button>
                     </div>
                     <div class="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200">
                         <div>
                             <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 mr-1.5">Sinh viên</span>
                             <span class="font-mono font-bold text-slate-800">11244035</span>
-                            <span class="text-slate-400 block text-[10px]">Nguyễn Thị Thu (Xem vé & quét QR điểm danh)</span>
+                            <span class="text-slate-400 block text-[10px]">Nguyễn Thị Thu • 11244035@st.neu.edu.vn</span>
                         </div>
                         <button type="button" onclick="fillDemo('11244035', '123')" class="px-2.5 py-1 bg-slate-100 hover:bg-neu-700 hover:text-white rounded-lg font-semibold text-slate-600 transition text-[11px]">Chọn</button>
                     </div>
@@ -253,7 +255,7 @@
 
         <!-- FOOTER -->
         <div class="text-center text-[11px] text-slate-400 pt-6">
-            <div>© 2026 Đại học Kinh tế Quốc dân</div>
+            <div>© {{ current_year }} Đại học Kinh tế Quốc dân</div>
             <div class="flex items-center justify-center gap-4 mt-1">
                 <a href="#" class="hover:text-slate-600">Điều khoản sử dụng</a>
                 <span>•</span>

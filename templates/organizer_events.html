@@ -25,10 +25,10 @@
             </p>
         </div>
         {% if current_user.role == 'ORGANIZER' %}
-        <button onclick="document.getElementById('eventFormSection').scrollIntoView({behavior: 'smooth'})" class="inline-flex items-center gap-2 px-5 py-2.5 bg-neu-700 hover:bg-neu-800 text-white rounded-xl text-xs font-bold transition shadow-sm">
+        <a href="{{ url_for('organizer_events', new='1') }}#eventFormSection" class="inline-flex items-center gap-2 px-5 py-2.5 bg-neu-700 hover:bg-neu-800 text-white rounded-xl text-xs font-bold transition shadow-sm">
             <i class="fa-solid fa-plus text-xs"></i>
-            <span>Tạo sự kiện</span>
-        </button>
+            <span>Tạo sự kiện mới</span>
+        </a>
         {% elif current_user.role == 'MANAGER' %}
         <a href="{{ url_for('moderation') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-neu-700 hover:bg-neu-800 text-white rounded-xl text-xs font-bold transition shadow-sm">
             <i class="fa-solid fa-shield-halved text-xs"></i>
@@ -43,21 +43,42 @@
             <div>
                 <div class="flex items-center gap-2">
                     <h3 class="font-bold text-base text-slate-900">Sự kiện của đơn vị</h3>
-                    <span class="text-xs bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-full">{{ my_events|length }} sự kiện</span>
+                    <span class="text-xs bg-slate-100 text-slate-600 font-bold px-2.5 py-0.5 rounded-full" id="unitEventTotalBadge">{{ my_events|length }} sự kiện ({{ current_academic_year }}{% if current_semester and current_semester != 'ALL' %} • {{ current_semester }}{% endif %})</span>
                 </div>
             </div>
-            <div class="flex items-center gap-3">
+            <div class="flex flex-wrap items-center gap-3">
                 <div class="relative w-64">
                     <input type="text" id="unitEventSearch" onkeyup="filterUnitEvents()" placeholder="Tìm sự kiện của đơn vị" class="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-neu-700">
                     <i class="fa-solid fa-magnifying-glass text-xs absolute left-2.5 top-2.5 text-slate-400"></i>
                 </div>
-                <select id="unitStatusFilter" onchange="filterUnitEvents()" class="px-3 py-1.5 text-xs rounded-xl border border-slate-300 bg-white text-slate-600 focus:outline-none focus:ring-2 focus:ring-neu-700">
+                <select id="unitStatusFilter" onchange="handleUnitSelectChange()" class="px-3 py-1.5 text-xs rounded-xl border border-slate-300 bg-white text-slate-600 focus:outline-none focus:ring-2 focus:ring-neu-700">
                     <option value="">Tất cả trạng thái</option>
                     <option value="Đã duyệt">Đã duyệt</option>
                     <option value="Chờ duyệt">Chờ duyệt</option>
+                    <option value="Đã kết thúc">Đã kết thúc</option>
                     <option value="Đã hủy">Đã hủy</option>
                 </select>
             </div>
+        </div>
+
+        <!-- QUICK STATUS TABS (REQ 2: Trực quan hóa bộ lọc trạng thái và hiển thị nếu có/không có) -->
+        <div class="px-6 py-2.5 bg-slate-50/70 border-b border-slate-100 flex items-center gap-1.5 overflow-x-auto text-xs no-scrollbar">
+            <span class="text-slate-400 font-semibold text-[11px] mr-1 shrink-0"><i class="fa-solid fa-filter text-[10px] mr-1"></i>Lọc trạng thái:</span>
+            <button type="button" onclick="setUnitStatusFilter('')" data-status-btn="" class="unit-status-btn px-3 py-1 rounded-lg font-bold text-xs bg-neu-700 text-white transition shadow-2xs">
+                Tất cả ({{ my_events|length }})
+            </button>
+            <button type="button" onclick="setUnitStatusFilter('Đã duyệt')" data-status-btn="Đã duyệt" class="unit-status-btn px-3 py-1 rounded-lg font-medium text-xs bg-white text-slate-600 hover:text-slate-900 border border-slate-200 transition">
+                Đã duyệt
+            </button>
+            <button type="button" onclick="setUnitStatusFilter('Chờ duyệt')" data-status-btn="Chờ duyệt" class="unit-status-btn px-3 py-1 rounded-lg font-medium text-xs bg-white text-slate-600 hover:text-slate-900 border border-slate-200 transition">
+                Chờ duyệt
+            </button>
+            <button type="button" onclick="setUnitStatusFilter('Đã kết thúc')" data-status-btn="Đã kết thúc" class="unit-status-btn px-3 py-1 rounded-lg font-medium text-xs bg-white text-slate-600 hover:text-slate-900 border border-slate-200 transition">
+                Đã kết thúc
+            </button>
+            <button type="button" onclick="setUnitStatusFilter('Đã hủy')" data-status-btn="Đã hủy" class="unit-status-btn px-3 py-1 rounded-lg font-medium text-xs bg-white text-slate-600 hover:text-slate-900 border border-slate-200 transition">
+                Đã hủy
+            </button>
         </div>
 
         <div class="overflow-x-auto">
@@ -72,38 +93,75 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
+                    {% if my_events|length == 0 %}
+                    <tr>
+                        <td colspan="5" class="py-10 px-6 text-center text-slate-500">
+                            <p class="font-semibold text-slate-700">Chưa có sự kiện nào của đơn vị trong Năm học {{ current_academic_year }}{% if current_semester and current_semester != 'ALL' %} ({{ current_semester }}){% endif %}</p>
+                            <p class="text-[11px] text-slate-400 mt-1">Bạn có thể chọn mốc thời gian khác trên thanh điều hướng hoặc bấm "Tạo sự kiện mới".</p>
+                        </td>
+                    </tr>
+                    {% endif %}
                     {% for ev in my_events %}
-                    <tr class="hover:bg-slate-50/70 transition">
+                    {% set ev_status_label = 'Đã kết thúc' if ev.is_completed else ('Đã duyệt' if ev.status == 'APPROVED' else ('Chờ duyệt' if ev.status == 'PENDING' else ('Đã hủy' if ev.status == 'CANCELLED' else ev.status))) %}
+                    <tr class="unit-event-row hover:bg-slate-50/70 transition" data-status="{{ ev_status_label }}">
                         <td class="py-4 px-6">
-                            <a href="{{ url_for('organizer_events', edit_id=ev.id) }}" class="font-bold text-slate-900 hover:text-neu-700">{{ ev.title }}</a>
+                            {% if ev.is_completed %}
+                            <a href="{{ url_for('organizer_events', edit_id=ev.id) }}#eventFormSection" class="font-bold text-slate-900 hover:text-neu-700">{{ ev.title }}</a>
+                            <span class="inline-block ml-1.5 px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-500">Đã kết thúc</span>
+                            {% else %}
+                            <a href="{{ url_for('organizer_events', edit_id=ev.id) }}#eventFormSection" class="font-bold text-slate-900 hover:text-neu-700">{{ ev.title }}</a>
+                            {% endif %}
                             <div class="text-[11px] text-slate-400 mt-0.5">{{ ev.code }} • {{ ev.location }}</div>
                         </td>
                         <td class="py-4 px-6 text-slate-600 whitespace-nowrap">{{ ev.event_date.strftime('%d/%m/%Y') }}</td>
                         <td class="py-4 px-6 whitespace-nowrap">
-                            {% if ev.status == 'APPROVED' %}
+                            {% if ev.is_completed %}
+                            <span class="inline-block px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">Đã kết thúc</span>
+                            {% elif ev.status == 'APPROVED' %}
                             <span class="inline-block px-2.5 py-1 rounded-md text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">Đã duyệt</span>
                             {% elif ev.status == 'PENDING' %}
                             <span class="inline-block px-2.5 py-1 rounded-md text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">Chờ duyệt</span>
                             {% elif ev.status == 'CANCELLED' %}
                             <span class="inline-block px-2.5 py-1 rounded-md text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-100">Đã hủy</span>
                             {% else %}
-                            <span class="inline-block px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-600">Đã kết thúc</span>
+                            <span class="inline-block px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-600">{{ ev.status }}</span>
                             {% endif %}
                         </td>
                         <td class="py-4 px-6 whitespace-nowrap font-mono font-medium text-slate-700">
                             {{ ev.registered_seats }}/{{ ev.max_seats }}
                         </td>
                         <td class="py-4 px-6 text-right whitespace-nowrap space-x-2 font-medium">
-                            <a href="{{ url_for('organizer_events', edit_id=ev.id) }}" class="text-neu-700 hover:underline">Chỉnh sửa</a>
+                            {% if ev.is_completed %}
+                            <span class="inline-flex items-center gap-1 text-slate-400 cursor-not-allowed select-none text-xs" title="Sự kiện đã kết thúc, không thể chỉnh sửa">
+                                <i class="fa-solid fa-lock text-[10px]"></i>
+                                <span>Khóa sửa</span>
+                            </span>
+                            {% else %}
+                            <a href="{{ url_for('organizer_events', edit_id=ev.id) }}#eventFormSection" class="text-neu-700 hover:underline">Chỉnh sửa</a>
+                            {% endif %}
                             <span class="text-slate-300">•</span>
                             <a href="{{ url_for('checkin', event_id=ev.id) }}" class="text-neu-700 hover:underline">Điểm danh</a>
                         </td>
                     </tr>
                     {% endfor %}
+                    <!-- REQ 2: EMPTY STATE ROW KHI KHÔNG CÓ SỰ KIỆN Ở TRẠNG THÁI ĐÃ CHỌN (VD: ĐÃ HỦY) -->
+                    <tr id="emptyFilterRow" class="hidden">
+                        <td colspan="5" class="py-12 px-6 text-center text-slate-500">
+                            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 text-slate-400 mb-3">
+                                <i class="fa-regular fa-folder-open text-xl"></i>
+                            </div>
+                            <p class="font-bold text-slate-700 text-sm" id="emptyFilterTitle">Không có sự kiện nào ở trạng thái này</p>
+                            <p class="text-xs text-slate-400 mt-1" id="emptyFilterSubtitle">Hiện chưa có sự kiện nào của đơn vị phù hợp với trạng thái đã chọn.</p>
+                            <button type="button" onclick="setUnitStatusFilter('')" class="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-medium transition shadow-2xs">
+                                <i class="fa-solid fa-rotate-left text-xs"></i>
+                                <span>Xem tất cả sự kiện</span>
+                            </button>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
-        <div class="p-4 border-t border-slate-100 text-xs text-slate-400">
+        <div class="p-4 border-t border-slate-100 text-xs text-slate-400 flex items-center justify-between" id="unitEventFooterCount">
             Hiển thị 1–{{ my_events|length }} / {{ my_events|length }} sự kiện
         </div>
     </div>
@@ -114,21 +172,40 @@
         <div class="lg:col-span-8 bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-2xs space-y-6">
             <div class="border-b border-slate-100 pb-4">
                 <div class="flex items-center gap-4 text-xs font-bold text-slate-400 mb-2">
-                    <a href="{{ url_for('organizer_events', edit_id=selected_event.id if selected_event else None) }}" class="{% if selected_event %}text-neu-700 border-b-2 border-neu-700{% else %}hover:text-slate-600{% endif %} pb-1">Chỉnh sửa sự kiện</a>
-                    <a href="{{ url_for('organizer_events', new='1') }}" class="{% if not selected_event %}text-neu-700 border-b-2 border-neu-700{% else %}hover:text-slate-600{% endif %} pb-1">Tạo mới</a>
+                    <a href="{{ url_for('organizer_events', edit_id=selected_event.id if selected_event else None) }}#eventFormSection" class="{% if selected_event %}text-neu-700 border-b-2 border-neu-700{% else %}hover:text-slate-600{% endif %} pb-1">Chỉnh sửa sự kiện</a>
+                    <a href="{{ url_for('organizer_events', new='1') }}#eventFormSection" class="{% if not selected_event %}text-neu-700 border-b-2 border-neu-700{% else %}hover:text-slate-600{% endif %} pb-1">Tạo mới</a>
                 </div>
-                <h3 class="text-lg font-bold text-slate-900">{% if selected_event %}Chỉnh sửa sự kiện{% else %}Tạo mới sự kiện{% endif %}</h3>
+                <h3 class="text-lg font-bold text-slate-900">
+                    {% if selected_event and selected_event.is_completed %}
+                    Chi tiết sự kiện (Đã kết thúc - Khóa sửa)
+                    {% elif selected_event %}
+                    Chỉnh sửa sự kiện
+                    {% else %}
+                    Tạo mới sự kiện
+                    {% endif %}
+                </h3>
                 <div class="text-xs text-slate-400 mt-0.5">
                     {% if selected_event %}
-                    Đang chỉnh sửa: <span class="font-mono text-neu-700 font-bold">{{ selected_event.code }}</span>
+                    Mã sự kiện: <span class="font-mono text-neu-700 font-bold">{{ selected_event.code }}</span>
                     {% else %}
                     Nhập thông tin sự kiện để gửi phê duyệt tới Đơn vị Quản lý.
                     {% endif %}
                 </div>
             </div>
 
-            <form method="POST" action="{{ url_for('save_event') }}" class="space-y-5">
+            {% if selected_event and selected_event.is_completed %}
+            <!-- REQ 1: THÔNG BÁO KHÓA CHỈNH SỬA SỰ KIỆN ĐÃ KẾT THÚC -->
+            <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs font-medium flex items-start gap-2.5">
+                <i class="fa-solid fa-lock text-amber-600 text-base mt-0.5 shrink-0"></i>
+                <div>
+                    <strong class="font-bold">Sự kiện đã kết thúc:</strong> Hệ thống đã khóa tính năng chỉnh sửa đối với sự kiện đã qua ngày tổ chức hoặc đã kết thúc. Bạn chỉ có thể tra cứu thông tin và xuất danh sách điểm danh.
+                </div>
+            </div>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('save_event') }}" enctype="multipart/form-data" class="space-y-5">
                 <input type="hidden" name="event_id" value="{{ selected_event.id if selected_event else '' }}">
+                <fieldset {% if selected_event and selected_event.is_completed %}disabled class="space-y-5 cursor-not-allowed opacity-85"{% else %}class="space-y-5"{% endif %}>
 
                 <!-- EVENT TITLE -->
                 <div>
@@ -196,14 +273,99 @@
                     <textarea name="description" rows="4" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-neu-700" placeholder="Giới thiệu mục tiêu, đối tượng tham gia và quyền lợi sinh viên...">{{ selected_event.description if selected_event else '' }}</textarea>
                 </div>
 
+                <!-- YOUTH UNION POINTS (ĐIỂM ĐOÀN) -->
+                <div class="p-4 rounded-xl bg-amber-50/70 border border-amber-200/90 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-award text-amber-500 text-sm"></i>
+                            <span class="text-xs font-bold text-slate-800">Quy định Điểm Đoàn sinh viên</span>
+                        </div>
+                        <span class="text-[10px] text-amber-800 bg-amber-100/80 font-bold px-2 py-0.5 rounded-md border border-amber-200">
+                            Hiển thị góc dưới phải banner
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Điểm cộng Đoàn khi tham dự * <span class="text-emerald-600 font-bold">(+ điểm)</span>
+                            </label>
+                            <input type="number" name="union_points_plus" required min="0" max="50" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-neu-700 font-bold text-emerald-700" value="{{ selected_event.union_points_plus if selected_event else 5 }}">
+                            <p class="text-[11px] text-slate-400 mt-1">Cộng khi sinh viên được ghi nhận điểm danh có mặt.</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Điểm phạt Đoàn nếu vắng mặt <span class="text-rose-600 font-bold">(- điểm)</span>
+                            </label>
+                            <input type="number" name="union_points_minus" required min="0" max="50" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-neu-700 font-bold text-rose-600" value="{{ selected_event.union_points_minus if selected_event else 0 }}">
+                            <p class="text-[11px] text-slate-400 mt-1">Trừ nếu sinh viên đăng ký vé nhưng vắng mặt (nhập 0 nếu không phạt).</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PROGRAM PUBLICATIONS / HANDBOOK (ẤN PHẨM CHƯƠNG TRÌNH) -->
+                <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-regular fa-file-pdf text-rose-500 text-sm"></i>
+                        <span class="text-xs font-bold text-slate-800">Ấn phẩm chương trình & Cẩm nang sự kiện</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Tên ấn phẩm / Tài liệu đính kèm</label>
+                            <input type="text" name="handbook_name" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-neu-700 font-medium" value="{{ selected_event.handbook_name if selected_event else 'Cẩm nang sự kiện NEU.pdf' }}" placeholder="Ví dụ: Cẩm nang Ngày hội việc làm 2026.pdf">
+                            <p class="text-[11px] text-slate-400 mt-1">Tên tài liệu hiển thị trên trang chi tiết sự kiện.</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Tải lên tệp ấn phẩm (PDF, Word, Ảnh)</label>
+                            <input type="file" name="handbook_file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-neu-50 file:text-neu-700 hover:file:bg-neu-100">
+                            {% if selected_event and selected_event.handbook_url %}
+                            <div class="text-[11px] text-emerald-600 mt-1.5 flex items-center gap-1.5">
+                                <i class="fa-solid fa-check-circle"></i>
+                                <span>Tệp hiện tại:</span>
+                                <a href="{{ selected_event.handbook_url }}" target="_blank" class="underline font-bold hover:text-emerald-700">{{ selected_event.handbook_name }}</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SPONSOR PERKS & BENEFITS (QUYỀN LỢI & QUÀ TẶNG TỪ NHÀ TÀI TRỢ) -->
+                <div class="p-4 rounded-xl bg-purple-50/70 border border-purple-200/90 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-gift text-purple-600 text-sm"></i>
+                            <span class="text-xs font-bold text-slate-800">Quyền lợi & Quà tặng từ Nhà tài trợ (nếu có)</span>
+                        </div>
+                        <span class="text-[10px] text-purple-800 bg-purple-100/80 font-bold px-2 py-0.5 rounded-md border border-purple-200">
+                            Hiện ở mục chi tiết sự kiện
+                        </span>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Danh sách quà tặng, voucher khóa học, học bổng...
+                        </label>
+                        <textarea name="sponsor_benefits" rows="3" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-purple-600 font-medium" placeholder="Nhập mỗi quyền lợi trên một dòng. Ví dụ:&#10;- Quà tặng túi tote & sổ tay thương hiệu&#10;- Voucher khóa học tiếng Anh / Tin học trị giá 2.000.000đ&#10;- Cơ hội phỏng vấn thực tập trực tiếp cùng doanh nghiệp">{{ selected_event.sponsor_benefits if selected_event and selected_event.sponsor_benefits else '' }}</textarea>
+                        <p class="text-[11px] text-slate-400 mt-1">Dành cho các sự kiện có nhà tài trợ đồng hành. Sinh viên sẽ xem được thông tin này khi bấm vào xem chi tiết sự kiện (không hiển thị ở banner ngoài).</p>
+                    </div>
+                </div>
+
+                </fieldset>
+
                 <!-- SUBMIT ACTIONS -->
                 <div class="flex items-center gap-3 pt-3 border-t border-slate-100">
+                    {% if selected_event and selected_event.is_completed %}
+                    <!-- REQ 1: KHÓA NÚT SỬA NẾU SỰ KIỆN ĐÃ KẾT THÚC -->
+                    <button type="button" disabled class="px-6 py-2.5 bg-slate-200 text-slate-400 text-xs font-bold rounded-xl cursor-not-allowed inline-flex items-center gap-2">
+                        <i class="fa-solid fa-lock text-xs"></i>
+                        <span>Đã kết thúc (Khóa chỉnh sửa)</span>
+                    </button>
+                    {% else %}
                     <button type="submit" class="px-6 py-2.5 bg-neu-700 hover:bg-neu-800 text-white text-xs font-bold rounded-xl shadow-xs transition">
-                        {% if selected_event %}Lưu thay đổi{% else %}Gửi duyệt sự kiện{% endif %}
+                        {% if selected_event %}Lưu thay đổi & Chờ duyệt{% else %}Gửi duyệt sự kiện{% endif %}
                     </button>
                     <button type="button" onclick="alert('Đã lưu nháp sự kiện thành công!')" class="px-5 py-2.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl transition">
                         Lưu nháp
                     </button>
+                    {% endif %}
                 </div>
             </form>
         </div>
@@ -215,7 +377,9 @@
             <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
                 <div class="text-xs font-bold text-slate-700 uppercase tracking-wider">Trạng thái xuất bản</div>
                 <div>
-                    {% if selected_event.status == 'APPROVED' %}
+                    {% if selected_event.is_completed %}
+                    <span class="inline-block px-3 py-1 rounded-md text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">Đã kết thúc</span>
+                    {% elif selected_event.status == 'APPROVED' %}
                     <span class="inline-block px-3 py-1 rounded-md text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">Đã duyệt</span>
                     {% elif selected_event.status == 'PENDING' %}
                     <span class="inline-block px-3 py-1 rounded-md text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">Chờ duyệt</span>
@@ -306,9 +470,9 @@
                 </div>
             </div>
             <div class="flex items-center gap-3">
-                <a href="{{ url_for('export_attendance', event_id=selected_event.id) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">
-                    <i class="fa-solid fa-arrow-down-to-bracket text-slate-400"></i>
-                    <span>Xuất danh sách</span>
+                <a href="{{ url_for('export_attendance', event_id=selected_event.id) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-emerald-300 bg-emerald-50 text-emerald-800 rounded-xl text-xs font-semibold hover:bg-emerald-100 transition shadow-2xs" title="Tải xuống danh sách dạng file Excel chuẩn">
+                    <i class="fa-solid fa-file-excel text-emerald-600"></i>
+                    <span>Xuất file Excel (.xlsx)</span>
                 </a>
                 <button onclick="alert('Đã gửi thông báo nhắc lịch sự kiện qua email tới tất cả sinh viên đăng ký!')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-neu-700 text-white rounded-xl text-xs font-semibold hover:bg-neu-800 transition">
                     <i class="fa-regular fa-paper-plane text-xs"></i>
@@ -341,7 +505,7 @@
                         <td class="py-3 px-6 font-bold text-slate-900">{{ reg.user.full_name }}</td>
                         <td class="py-3 px-6 text-slate-500 font-mono">{{ reg.user.student_id or reg.user.username }}</td>
                         <td class="py-3 px-6 text-slate-600">{{ reg.user.email }}</td>
-                        <td class="py-3 px-6 text-slate-500 font-mono text-[11px]">{{ reg.registered_at.strftime('%d/%m/%Y') }}</td>
+                        <td class="py-3 px-6 text-slate-500 font-mono text-[11px]">{{ reg.registered_at.strftime('%H:%M • %d/%m/%Y') }}</td>
                         <td class="py-3 px-6">
                             <span class="inline-block px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-neu-50 text-neu-700 border border-neu-100">Đã đăng ký</span>
                         </td>
@@ -367,16 +531,68 @@
         return false;
     }
 
+    function handleUnitSelectChange() {
+        const selVal = document.getElementById('unitStatusFilter').value;
+        setUnitStatusFilter(selVal);
+    }
+
+    function setUnitStatusFilter(status) {
+        document.getElementById('unitStatusFilter').value = status;
+        document.querySelectorAll('.unit-status-btn').forEach(btn => {
+            if (btn.getAttribute('data-status-btn') === status) {
+                btn.className = 'unit-status-btn px-3 py-1 rounded-lg font-bold text-xs bg-neu-700 text-white transition shadow-2xs';
+            } else {
+                btn.className = 'unit-status-btn px-3 py-1 rounded-lg font-medium text-xs bg-white text-slate-600 hover:text-slate-900 border border-slate-200 transition';
+            }
+        });
+        filterUnitEvents();
+    }
+
     function filterUnitEvents() {
-        const query = document.getElementById('unitEventSearch').value.toLowerCase();
+        const query = (document.getElementById('unitEventSearch').value || '').toLowerCase().trim();
         const status = document.getElementById('unitStatusFilter').value;
-        const rows = document.querySelectorAll('#unitEventsTable tbody tr');
+        const rows = document.querySelectorAll('.unit-event-row');
+        let visibleCount = 0;
+
         rows.forEach(r => {
             const text = r.innerText.toLowerCase();
-            const matchesQuery = text.includes(query);
-            const matchesStatus = !status || text.includes(status.toLowerCase());
-            r.style.display = (matchesQuery && matchesStatus) ? '' : 'none';
+            const rowStatus = r.getAttribute('data-status') || '';
+            const matchesQuery = !query || text.includes(query);
+            const matchesStatus = !status || rowStatus === status || text.includes(status.toLowerCase());
+            if (matchesQuery && matchesStatus) {
+                r.style.display = '';
+                visibleCount++;
+            } else {
+                r.style.display = 'none';
+            }
         });
+
+        const emptyRow = document.getElementById('emptyFilterRow');
+        const emptyTitle = document.getElementById('emptyFilterTitle');
+        const emptySubtitle = document.getElementById('emptyFilterSubtitle');
+        const footerCount = document.getElementById('unitEventFooterCount');
+
+        if (emptyRow) {
+            if (visibleCount === 0 && rows.length > 0) {
+                emptyRow.classList.remove('hidden');
+                if (status) {
+                    emptyTitle.innerText = `Không có sự kiện nào ở trạng thái "${status}"`;
+                    emptySubtitle.innerText = `Đơn vị của bạn hiện chưa có sự kiện nào ở trạng thái "${status}".`;
+                } else if (query) {
+                    emptyTitle.innerText = `Không tìm thấy sự kiện phù hợp với từ khóa "${query}"`;
+                    emptySubtitle.innerText = `Vui lòng kiểm tra lại từ khóa tìm kiếm.`;
+                } else {
+                    emptyTitle.innerText = `Không có sự kiện nào`;
+                    emptySubtitle.innerText = `Danh sách sự kiện trống.`;
+                }
+            } else {
+                emptyRow.classList.add('hidden');
+            }
+        }
+
+        if (footerCount) {
+            footerCount.innerText = `Hiển thị ${visibleCount} / ${rows.length} sự kiện`;
+        }
     }
 
     function filterRegUsers() {

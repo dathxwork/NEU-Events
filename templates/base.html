@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html lang="vi" class="h-full bg-slate-50">
+<html lang="vi" class="bg-slate-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}NEU Events - Đại học Kinh tế Quốc dân{% endblock %}</title>
-    <link rel="icon" type="image/webp" href="{{ url_for('static', filename='img/logo_neu.webp') }}">
+    <link rel="icon" type="image/webp" href="{{ url_for('static', filename='img/logo_neu.webp') }}?v=2">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}?v=2">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo_neu.webp') }}?v=2">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -37,28 +39,214 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
     </style>
-</head>
-<body class="h-full flex flex-col text-slate-800 antialiased">
+    <!-- THEME INITIALIZATION SCRIPT (Runs before render to prevent FOUC) -->
+    <script>
+        (function() {
+            try {
+                var theme = localStorage.getItem('neu_theme') || 'light';
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {}
+        })();
+    </script>
+        <style>
+        /* THEME GLOBAL VARIABLES */
+        :root, [data-theme="light"] {
+            --bg-page: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-sub: #475569;
+            --border-color: #e2e8f0;
+        }
 
-<div class="min-h-full flex">
+        [data-theme="dark"] {
+            --bg-page: #0b1120;
+            --bg-card: #151e32;
+            --text-main: #f8fafc;
+            --text-sub: #cbd5e1;
+            --border-color: #1e293b;
+            color-scheme: dark;
+        }
+
+        [data-theme="nature"] {
+            --bg-page: #f2fbf5;
+            --bg-card: #ffffff;
+            --text-main: #064e3b;
+            --text-sub: #166534;
+            --border-color: #d1fae5;
+        }
+
+        /* DARK THEME STYLES (Chế độ Ban đêm OLED) */
+        html[data-theme="dark"],
+        body[data-theme="dark"],
+        [data-theme="dark"] body {
+            background-color: #0b1120 !important;
+            color: #f1f5f9 !important;
+        }
+        [data-theme="dark"] aside {
+            background-color: #0f172a !important;
+            border-color: #1e293b !important;
+        }
+        [data-theme="dark"] header {
+            background-color: #0f172a !important;
+            border-color: #1e293b !important;
+        }
+        [data-theme="dark"] footer {
+            background-color: #0f172a !important;
+            border-color: #1e293b !important;
+            color: #94a3b8 !important;
+        }
+        [data-theme="dark"] .bg-white {
+            background-color: #151e32 !important;
+            color: #f1f5f9;
+        }
+        [data-theme="dark"] .bg-slate-50 {
+            background-color: #0b1120 !important;
+        }
+        [data-theme="dark"] .bg-slate-100 {
+            background-color: #1e293b !important;
+            color: #cbd5e1 !important;
+        }
+        [data-theme="dark"] *[class*="border-slate-"] {
+            border-color: #1e293b !important;
+        }
+        [data-theme="dark"] *[class*="text-slate-900"],
+        [data-theme="dark"] *[class*="text-slate-800"] {
+            color: #f8fafc !important;
+        }
+        [data-theme="dark"] *[class*="text-slate-700"],
+        [data-theme="dark"] *[class*="text-slate-600"] {
+            color: #cbd5e1 !important;
+        }
+        [data-theme="dark"] *[class*="text-slate-500"],
+        [data-theme="dark"] *[class*="text-slate-400"] {
+            color: #94a3b8 !important;
+        }
+        [data-theme="dark"] select,
+        [data-theme="dark"] input,
+        [data-theme="dark"] textarea {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
+            border-color: #334155 !important;
+        }
+        [data-theme="dark"] #themeDropdownMenu,
+        [data-theme="dark"] #userDropdownMenu,
+        [data-theme="dark"] #notifDropdown {
+            background-color: #151e32 !important;
+            border-color: #1e293b !important;
+            color: #f8fafc !important;
+        }
+        [data-theme="dark"] #themeDropdownMenu button:hover,
+        [data-theme="dark"] #userDropdownMenu button:hover,
+        [data-theme="dark"] #userDropdownMenu a:hover {
+            background-color: #1e293b !important;
+        }
+        [data-theme="dark"] #themeDropdownMenu span {
+            color: #f8fafc !important;
+        }
+
+        /* NATURE THEME STYLES (Xanh Tự nhiên / Dịu mắt) */
+        html[data-theme="nature"],
+        body[data-theme="nature"],
+        [data-theme="nature"] body {
+            background-color: #f0fdf4 !important;
+            color: #064e3b !important;
+        }
+        [data-theme="nature"] aside {
+            background-color: #f8fdfa !important;
+            border-color: #d1fae5 !important;
+        }
+        [data-theme="nature"] header {
+            background-color: #ffffff !important;
+            border-color: #d1fae5 !important;
+        }
+        [data-theme="nature"] footer {
+            background-color: #f8fdfa !important;
+            border-color: #d1fae5 !important;
+            color: #047857 !important;
+        }
+        [data-theme="nature"] .bg-slate-50 {
+            background-color: #f0fdf4 !important;
+        }
+        [data-theme="nature"] .bg-white {
+            background-color: #ffffff !important;
+        }
+        [data-theme="nature"] *[class*="border-slate-"] {
+            border-color: #d1fae5 !important;
+        }
+        [data-theme="nature"] *[class*="text-slate-900"],
+        [data-theme="nature"] *[class*="text-slate-800"] {
+            color: #064e3b !important;
+        }
+        [data-theme="nature"] *[class*="text-slate-700"],
+        [data-theme="nature"] *[class*="text-slate-600"] {
+            color: #166534 !important;
+        }
+        [data-theme="nature"] *[class*="text-slate-500"],
+        [data-theme="nature"] *[class*="text-slate-400"] {
+            color: #047857 !important;
+        }
+        [data-theme="nature"] .bg-neu-700 {
+            background-color: #059669 !important;
+        }
+        [data-theme="nature"] .hover\:bg-neu-800:hover {
+            background-color: #047857 !important;
+        }
+        [data-theme="nature"] .text-neu-700 {
+            color: #059669 !important;
+        }
+        [data-theme="nature"] .bg-neu-50 {
+            background-color: #ecfdf5 !important;
+            color: #047857 !important;
+        }
+        [data-theme="nature"] .border-neu-200,
+        [data-theme="nature"] .border-neu-100 {
+            border-color: #a7f3d0 !important;
+        }
+        [data-theme="nature"] select,
+        [data-theme="nature"] input,
+        [data-theme="nature"] textarea {
+            background-color: #ffffff !important;
+            color: #064e3b !important;
+            border-color: #a7f3d0 !important;
+        }
+        [data-theme="nature"] #themeDropdownMenu,
+        [data-theme="nature"] #userDropdownMenu,
+        [data-theme="nature"] #notifDropdown {
+            background-color: #ffffff !important;
+            border-color: #d1fae5 !important;
+            color: #064e3b !important;
+        }
+        [data-theme="nature"] #themeDropdownMenu button:hover {
+            background-color: #ecfdf5 !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800 antialiased">
+
+<div class="min-h-screen flex">
     <!-- SIDEBAR -->
-    <aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 select-none">
+    <aside class="w-72 bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 select-none sticky top-0 h-screen overflow-y-auto z-20">
         <div>
             <!-- LOGO BRAND -->
-            <a href="{{ url_for('events') }}" class="flex items-center gap-3.5 px-5 py-4 border-b border-slate-100 hover:bg-slate-50 transition">
-                <img src="{{ url_for('static', filename='img/logo_neu.webp') }}" alt="Logo NEU" class="w-12 h-12 object-contain shrink-0">
-                <div>
-                    <div class="text-base font-bold text-slate-900 leading-tight">NEU Events</div>
-                    <div class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">Đại học Kinh tế Quốc dân</div>
+            <a href="{{ url_for('events') }}" class="group flex items-center gap-3.5 px-5 h-[72px] border-b border-slate-100 hover:bg-slate-50/80 transition">
+                <img src="{{ url_for('static', filename='img/logo_neu.webp') }}?v=2" alt="Logo NEU" class="w-14 h-14 object-contain shrink-0 drop-shadow-xs group-hover:scale-105 transition-transform">
+                <div class="min-w-0">
+                    <div class="text-[17px] font-black text-slate-900 leading-tight tracking-tight">NEU Events</div>
+                    <div class="text-[10px] uppercase font-bold text-slate-500 tracking-wider whitespace-nowrap">ĐẠI HỌC KINH TẾ QUỐC DÂN</div>
                 </div>
             </a>
 
             <!-- NAVIGATION GROUPS -->
-            <div class="px-4 py-4 space-y-6">
+            <div class="px-4 pt-2 pb-4 space-y-5">
                 {% if current_user.role == 'STUDENT' %}
                 <!-- KHÔNG GIAN SINH VIÊN (CHỈ DÀNH CHO SINH VIÊN) -->
                 <div>
-                    <div class="px-3 mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">Không gian sinh viên</div>
+                    <div class="mb-2 px-3 flex justify-center text-center">
+                        <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200 shadow-2xs">
+                            <i class="fa-solid fa-graduation-cap text-[11px]"></i>
+                            <span>Sinh viên</span>
+                        </span>
+                    </div>
                     <nav class="space-y-1">
                         <a href="{{ url_for('events') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {% if active_page == 'events' %}bg-neu-50 text-neu-700 font-semibold shadow-xs{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
                             <i class="fa-regular fa-calendar-check w-5 text-center text-base"></i>
@@ -82,7 +270,12 @@
                 {% elif current_user.role == 'ORGANIZER' %}
                 <!-- BAN TỔ CHỨC (KHÔNG CÓ "ĐÃ ĐĂNG KÝ" VÀ "KIỂM DUYỆT") -->
                 <div>
-                    <div class="px-3 mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">Ban tổ chức sự kiện</div>
+                    <div class="mb-2 px-3 flex justify-center text-center">
+                        <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs">
+                            <i class="fa-solid fa-briefcase text-[11px]"></i>
+                            <span>Ban tổ chức</span>
+                        </span>
+                    </div>
                     <nav class="space-y-1">
                         <a href="{{ url_for('events') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {% if active_page == 'events' %}bg-neu-50 text-neu-700 font-semibold shadow-xs{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
                             <i class="fa-regular fa-calendar-check w-5 text-center text-base"></i>
@@ -110,7 +303,12 @@
                 {% elif current_user.role == 'MANAGER' %}
                 <!-- ĐƠN VỊ QUẢN LÝ / NHÀ TRƯỜNG -->
                 <div>
-                    <div class="px-3 mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">Đơn vị Quản lý</div>
+                    <div class="mb-2 px-3 flex justify-center text-center">
+                        <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200 shadow-2xs">
+                            <i class="fa-solid fa-shield-halved text-[11px]"></i>
+                            <span>Đơn vị quản lý</span>
+                        </span>
+                    </div>
                     <nav class="space-y-1">
                         <a href="{{ url_for('events') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {% if active_page == 'events' %}bg-neu-50 text-neu-700 font-semibold shadow-xs{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
                             <i class="fa-regular fa-calendar-check w-5 text-center text-base"></i>
@@ -134,15 +332,11 @@
             </div>
         </div>
 
-        <!-- BOTTOM ACTIONS & LOGOUT -->
+        <!-- BOTTOM ACTIONS -->
         <div class="p-4 border-t border-slate-100 space-y-3">
-            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-2">Cài đặt & Hỗ trợ</div>
+            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-2">Hỗ trợ & Trợ giúp</div>
             <div class="space-y-1">
-                <button type="button" onclick="openChangePasswordModal()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition text-left">
-                    <i class="fa-solid fa-key w-4 text-center"></i>
-                    <span>Đổi mật khẩu</span>
-                </button>
-                <button type="button" onclick="document.getElementById('helpModal').classList.remove('hidden')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition text-left">
+                <button type="button" onclick="document.getElementById('helpModal').classList.remove('hidden')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition text-left cursor-pointer">
                     <i class="fa-regular fa-circle-question w-4 text-center"></i>
                     <span>Hướng dẫn sử dụng</span>
                 </button>
@@ -150,73 +344,338 @@
                     <i class="fa-regular fa-envelope w-4 text-center"></i>
                     <span>events@neu.edu.vn</span>
                 </a>
-                <button type="button" onclick="openLogoutModal()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-rose-600 hover:bg-rose-50 transition text-left">
-                    <i class="fa-solid fa-arrow-right-from-bracket w-4 text-center"></i>
-                    <span>Đăng xuất</span>
-                </button>
             </div>
         </div>
     </aside>
 
     <!-- MAIN AREA -->
-    <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+    <div class="flex-1 flex flex-col min-w-0">
         <!-- TOPBAR -->
-        <header class="h-16 bg-white border-b border-slate-200 px-8 flex items-center justify-between shrink-0 z-10 sticky top-0 shadow-2xs">
-            <!-- LEFT TOP: ACADEMIC SEMESTER & ROLE BADGE -->
-            <div class="flex items-center gap-4 text-sm text-slate-500 font-medium">
-                <span>Học kỳ I • Năm học 2026–2027</span>
-                <span class="text-slate-300">|</span>
-                <!-- ROLE BADGE (NO PUBLIC SWITCHING) -->
-                <div class="flex items-center gap-2">
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold
-                        {% if current_user.role == 'MANAGER' %}bg-purple-50 text-purple-700 border border-purple-200
-                        {% elif current_user.role == 'ORGANIZER' %}bg-blue-50 text-blue-700 border border-blue-200
-                        {% else %}bg-slate-100 text-slate-700 border border-slate-200{% endif %}">
-                        <i class="{% if current_user.role == 'MANAGER' %}fa-solid fa-shield-halved
-                                  {% elif current_user.role == 'ORGANIZER' %}fa-solid fa-briefcase
-                                  {% else %}fa-solid fa-graduation-cap{% endif %} text-[11px]"></i>
-                        <span>
-                            {% if current_user.role == 'MANAGER' %}Đơn vị quản lý
-                            {% elif current_user.role == 'ORGANIZER' %}Ban tổ chức
-                            {% else %}Sinh viên{% endif %}
-                        </span>
-                    </span>
+        <header class="h-[72px] bg-white border-b border-slate-200 px-8 flex items-center justify-between shrink-0 z-30 sticky top-0 shadow-2xs">
+            <!-- LEFT TOP: ACADEMIC YEAR & SEMESTER SELECTORS (MATCHING UI MOCKUP) + ROLE BADGE -->
+            <div class="flex items-center gap-3 sm:gap-4 flex-wrap">
+                <!-- DROPDOWN NĂM HỌC -->
+                <div class="relative inline-flex items-center">
+                    <span class="absolute -top-1.5 left-3 px-1.5 bg-white text-[10px] font-semibold text-slate-500 z-10 leading-none pointer-events-none">Năm học</span>
+                    <div class="relative">
+                        <select id="academicYearSelect" onchange="onAcademicYearChange(this.value)"
+                                class="appearance-none h-9 pl-4 pr-8 bg-white border border-slate-300 hover:border-slate-400 focus:border-neu-700 focus:ring-1 focus:ring-neu-700 rounded-full text-xs font-bold text-slate-800 cursor-pointer outline-none transition shadow-2xs">
+                            {% if current_user.role == 'STUDENT' %}
+                                {# MSSV starts with 1124 -> 2024; maximum 6 academic years #}
+                                {% set start_cohort_year = 2024 %}
+                                {% if current_user.student_id and current_user.student_id|length >= 4 and current_user.student_id[:2] == '11' %}
+                                    {% set cohort_suffix = current_user.student_id[2:4] %}
+                                    {% set start_cohort_year = ('20' ~ cohort_suffix)|int %}
+                                {% endif %}
+                                {% for i in range(6) %}
+                                    {% set yr1 = start_cohort_year + i %}
+                                    {% set yr2 = yr1 + 1 %}
+                                    {% set opt_val = yr1 ~ '-' ~ yr2 %}
+                                    <option value="{{ opt_val }}" {% if opt_val == current_academic_year %}selected{% endif %}>{{ opt_val }}</option>
+                                {% endfor %}
+                            {% else %}
+                                <option value="ALL" {% if current_academic_year == 'ALL' %}selected{% endif %}>Tất cả năm học</option>
+                                <option value="2028-2029" {% if current_academic_year == '2028-2029' %}selected{% endif %}>2028-2029</option>
+                                <option value="2027-2028" {% if current_academic_year == '2027-2028' %}selected{% endif %}>2027-2028</option>
+                                <option value="2026-2027" {% if current_academic_year == '2026-2027' %}selected{% endif %}>2026-2027</option>
+                                <option value="2025-2026" {% if current_academic_year == '2025-2026' %}selected{% endif %}>2025-2026</option>
+                                <option value="2024-2025" {% if current_academic_year == '2024-2025' %}selected{% endif %}>2024-2025</option>
+                                <option value="2023-2024" {% if current_academic_year == '2023-2024' %}selected{% endif %}>2023-2024</option>
+                                <option value="2022-2023" {% if current_academic_year == '2022-2023' %}selected{% endif %}>2022-2023</option>
+                            {% endif %}
+                        </select>
+                        <i class="fa-solid fa-chevron-down text-[9px] text-slate-500 pointer-events-none absolute right-3 top-1/2 -translate-y-1/2"></i>
+                    </div>
                 </div>
+
+                <!-- DROPDOWN HỌC KỲ -->
+                <div class="relative inline-flex items-center">
+                    <span class="absolute -top-1.5 left-3 px-1.5 bg-white text-[10px] font-semibold text-slate-500 z-10 leading-none pointer-events-none">Học kỳ</span>
+                    <div class="relative">
+                        <select id="semesterSelect" onchange="onSemesterChange(this.value)"
+                                class="appearance-none h-9 pl-4 pr-8 bg-white border border-slate-300 hover:border-slate-400 focus:border-neu-700 focus:ring-1 focus:ring-neu-700 rounded-full text-xs font-bold text-slate-800 cursor-pointer outline-none transition shadow-2xs min-w-[148px]">
+                            <option value="ALL" {% if current_semester == 'ALL' %}selected{% endif %}>Tất cả học kỳ</option>
+                            {% if current_academic_year and current_academic_year != 'ALL' and '-' in current_academic_year %}
+                                {% set sem_p = current_academic_year.split('-') %}
+                                {% set sy1 = sem_p[0] %}
+                                {% set sy2 = sem_p[1] %}
+                                <option value="Học kỳ Thu {{ sy1 }}" {% if current_semester == ('Học kỳ Thu ' ~ sy1) %}selected{% endif %}>Học kỳ Thu {{ sy1 }}</option>
+                                <option value="Học kỳ Xuân {{ sy2 }}" {% if current_semester == ('Học kỳ Xuân ' ~ sy2) %}selected{% endif %}>Học kỳ Xuân {{ sy2 }}</option>
+                                <option value="Học kỳ Hè {{ sy2 }}" {% if current_semester == ('Học kỳ Hè ' ~ sy2) %}selected{% endif %}>Học kỳ Hè {{ sy2 }}</option>
+                            {% endif %}
+                        </select>
+                        <i class="fa-solid fa-chevron-down text-[9px] text-slate-500 pointer-events-none absolute right-3 top-1/2 -translate-y-1/2"></i>
+                    </div>
+                </div>
+
+
             </div>
 
             <!-- RIGHT TOP: USER & NOTIFICATIONS -->
             <div class="flex items-center gap-4">
-                <!-- NOTIFICATION BELL -->
-                <button onclick="document.getElementById('notifDropdown').classList.toggle('hidden')" class="relative w-9 h-9 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-100 transition">
-                    <i class="fa-regular fa-bell text-base"></i>
-                    <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-neu-accent"></span>
-                </button>
+                                <!-- NOTIFICATION BELL & DROPDOWN COMPONENT -->
+                <div class="relative" id="notifWrapper">
+                    <button type="button" id="notifBtn" onclick="toggleNotifDropdown(event)"
+                            title="Thông báo hệ thống"
+                            class="relative w-9 h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 flex items-center justify-center transition shadow-2xs cursor-pointer focus:outline-none">
+                        <i class="fa-regular fa-bell text-slate-600 text-sm" id="notifBellIcon"></i>
+                        <!-- UNREAD BADGE -->
+                        <span id="notifBadge"
+                              class="{% if unread_notif_count == 0 %}hidden{% endif %} absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white shadow-xs">
+                            {{ unread_notif_count }}
+                        </span>
+                    </button>
 
-                <!-- USER AVATAR & INFO -->
-                <div class="flex items-center gap-3 pl-2 border-l border-slate-200">
-                    <div class="w-9 h-9 rounded-full bg-neu-100 text-neu-700 font-bold text-xs flex items-center justify-center border border-neu-200">
-                        {% if current_user.role == 'MANAGER' %}
-                            QL
-                        {% else %}
-                            {{ current_user.avatar_initials or 'NEU' }}
-                        {% endif %}
-                    </div>
-                    <div class="text-left text-xs">
-                        <div class="font-semibold text-slate-800 leading-snug">
-                            {% if current_user.role == 'MANAGER' %}
-                                Đơn vị quản lý
-                            {% else %}
-                                {{ current_user.full_name }}
+                    <!-- NOTIFICATION DROPDOWN MENU -->
+                    <div id="notifDropdown"
+                         class="hidden absolute right-0 -right-16 sm:right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-50 animate-in fade-in slide-in-from-top-1 duration-150 flex flex-col max-h-[85vh]">
+                        <!-- HEADER -->
+                        <div class="p-3.5 bg-gradient-to-r from-neu-900 via-neu-800 to-neu-700 text-white shrink-0 flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-8 h-8 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-white text-sm shadow-inner">
+                                    <i class="fa-solid fa-bell"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-sm text-white flex items-center gap-2">
+                                        <span>Thông báo</span>
+                                        <span id="notifHeaderBadge" class="{% if unread_notif_count == 0 %}hidden{% endif %} px-1.5 py-0.2 rounded-full text-[10px] font-semibold bg-rose-500/90 text-white">
+                                            <span id="notifHeaderCount">{{ unread_notif_count }}</span> mới
+                                        </span>
+                                    </h4>
+                                    <p class="text-[11px] text-white/80">Cổng thông tin sự kiện NEU</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <button type="button" onclick="markAllNotifsAsRead()" title="Đánh dấu tất cả đã đọc"
+                                        class="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[11px] font-semibold flex items-center gap-1 transition cursor-pointer">
+                                    <i class="fa-solid fa-check-double text-[10px]"></i>
+                                    <span class="hidden sm:inline">Đã đọc tất cả</span>
+                                </button>
+                                <button type="button" onclick="closeNotifDropdown()" title="Đóng"
+                                        class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-xs transition cursor-pointer">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- FILTER TABS -->
+                        <div class="flex items-center gap-1 p-2 bg-slate-50 border-b border-slate-200 shrink-0 text-xs font-semibold">
+                            <button type="button" id="notifFilterAllBtn" onclick="filterNotifs('all')"
+                                    class="flex-1 py-1.5 px-2.5 rounded-lg text-center transition bg-white text-neu-700 shadow-2xs border border-slate-200 cursor-pointer font-bold">
+                                Tất cả (<span id="notifFilterAllCount">{{ user_notifications|length }}</span>)
+                            </button>
+                            <button type="button" id="notifFilterUnreadBtn" onclick="filterNotifs('unread')"
+                                    class="flex-1 py-1.5 px-2.5 rounded-lg text-center transition text-slate-600 hover:text-slate-900 hover:bg-white/50 cursor-pointer font-semibold">
+                                Chưa đọc (<span id="notifFilterUnreadCount">{{ unread_notif_count }}</span>)
+                            </button>
+                        </div>
+
+                        <!-- NOTIFICATIONS LIST BODY -->
+                        <div id="notifList" class="p-2 overflow-y-auto space-y-1.5 flex-1 divide-y divide-slate-100">
+                            {% if user_notifications %}
+                                {% for notif in user_notifications %}
+                                <div id="{{ notif.id }}" data-unread="{{ 'true' if notif.unread else 'false' }}"
+                                     class="notif-item group relative p-3 rounded-xl transition cursor-pointer {% if notif.unread %}bg-blue-50/40 hover:bg-blue-50/70 border border-blue-100/60 hover:border-blue-300{% else %}hover:bg-slate-50 border border-transparent hover:border-slate-200{% endif %} hover:shadow-2xs"
+                                     onclick="handleNotifClick('{{ notif.id }}', '{{ notif.link }}')"
+                                     title="Bấm để xem chi tiết">
+                                    <div class="flex items-start gap-3">
+                                        <!-- ICON -->
+                                        <div class="w-8 h-8 rounded-xl {{ notif.icon_bg }} border flex items-center justify-center {{ notif.icon_color }} text-sm shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+                                            <i class="{{ notif.icon }}"></i>
+                                        </div>
+                                        <!-- CONTENT -->
+                                        <div class="flex-1 min-w-0 pr-4">
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <h5 class="font-bold text-slate-900 text-xs truncate group-hover:text-neu-700 transition-colors">{{ notif.title }}</h5>
+                                                {% if notif.tag %}
+                                                <span class="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 shrink-0">{{ notif.tag }}</span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="text-[12px] text-slate-600 leading-relaxed">
+                                                {{ notif.message|safe }}
+                                            </div>
+                                            <div class="flex items-center justify-between gap-2 mt-2 pt-1.5 border-t border-slate-100/80 text-[10px] text-slate-500">
+                                                <span class="flex items-center gap-1 font-medium">
+                                                    <i class="fa-regular fa-clock text-[9px] text-neu-600"></i> {{ notif.time }}
+                                                </span>
+                                                <span class="inline-flex items-center gap-1 font-bold text-neu-700 group-hover:text-neu-900 group-hover:underline text-[10.5px]">
+                                                    <span>Xem chi tiết</span>
+                                                    <i class="fa-solid fa-arrow-right text-[8px] transition-transform group-hover:translate-x-0.5"></i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <!-- UNREAD DOT & DISMISS -->
+                                        <div class="flex flex-col items-end gap-1.5 shrink-0">
+                                            <span class="notif-unread-dot w-2 h-2 rounded-full bg-blue-600 {% if not notif.unread %}hidden{% endif %}"></span>
+                                            <button type="button" onclick="dismissNotif(event, '{{ notif.id }}')" title="Ẩn thông báo này"
+                                                    class="opacity-0 group-hover:opacity-100 w-5 h-5 rounded-md hover:bg-slate-200 text-slate-500 flex items-center justify-center text-[10px] transition cursor-pointer">
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
                             {% endif %}
                         </div>
-                        <div class="text-[11px] text-slate-400">
+
+                        <!-- EMPTY STATE -->
+                        <div id="notifEmptyState" class="{% if user_notifications %}hidden{% endif %} p-8 text-center space-y-2.5">
+                            <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto text-xl border border-slate-200">
+                                <i class="fa-regular fa-bell-slash"></i>
+                            </div>
+                            <h5 class="font-bold text-slate-800 text-xs">Hiện không có thông báo mới</h5>
+                            <p class="text-[11px] text-slate-500 max-w-[220px] mx-auto leading-relaxed">
+                                Bạn đã đọc hết tất cả thông báo trên Cổng thông tin sự kiện NEU Events.
+                            </p>
+                        </div>
+
+                        <!-- FOOTER -->
+                        <div class="p-2.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0 text-xs font-semibold">
+                            <button type="button" onclick="clearAllNotifs()"
+                                    class="text-slate-500 hover:text-rose-600 text-[11px] transition flex items-center gap-1 cursor-pointer">
+                                <i class="fa-regular fa-trash-can text-[10px]"></i>
+                                <span>Xóa tất cả</span>
+                            </button>
+                            <a href="/events" class="text-neu-700 hover:text-neu-800 text-[11px] font-bold transition flex items-center gap-1">
+                                <span>Khám phá sự kiện</span>
+                                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. USER DROPDOWN COMPONENT (ICON NGƯỜI DÙNG & THÔNG TIN SV/BTC/QL) -->
+                <div class="relative pl-3 border-l border-slate-200" id="userMenuWrapper">
+                    <button type="button" id="userMenuBtn" onclick="toggleUserDropdown(event)"
+                            class="flex items-center gap-3 p-1.5 rounded-xl hover:bg-slate-100 transition focus:outline-none cursor-pointer group text-left">
+                        <!-- USER AVATAR -->
+                        <div class="w-9 h-9 rounded-full bg-neu-100 text-neu-700 font-bold text-xs flex items-center justify-center border border-neu-200 shadow-2xs group-hover:scale-105 transition-transform">
                             {% if current_user.role == 'MANAGER' %}
-                                Cấp trường • Phê duyệt sự kiện
-                            {% elif current_user.student_id %}
-                                MSSV: {{ current_user.student_id }}
+                                QL
                             {% else %}
-                                {{ current_user.department or 'Ban tổ chức sự kiện' }}
+                                {{ current_user.avatar_initials or 'NEU' }}
                             {% endif %}
+                        </div>
+                        <div class="text-left text-xs hidden sm:block">
+                            <div class="font-semibold text-slate-800 leading-snug flex items-center gap-1.5">
+                                <span>
+                                    {% if current_user.role == 'MANAGER' %}
+                                        Đơn vị quản lý
+                                    {% else %}
+                                        {{ current_user.full_name }}
+                                    {% endif %}
+                                </span>
+                                <i class="fa-solid fa-chevron-down text-[10px] text-slate-500 group-hover:text-slate-700 transition"></i>
+                            </div>
+                            <div class="text-[11px] text-slate-500 font-medium">
+                                {% if current_user.role == 'MANAGER' %}
+                                    Cấp trường • Quản trị
+                                {% elif current_user.student_id %}
+                                    MSSV: {{ current_user.student_id }}
+                                {% else %}
+                                    {{ current_user.department or 'Ban tổ chức sự kiện' }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-500 sm:hidden"></i>
+                    </button>
+
+                    <!-- DROPDOWN MENU DIRECTLY UNDER ICON TÊN SV MSV (ORIGINAL POSITION) -->
+                    <div id="userDropdownMenu" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                        <div class="px-4 py-3 border-b border-slate-100 text-center flex flex-col items-center">
+                            <p class="text-xs font-bold text-slate-800 truncate w-full text-center">{{ current_user.full_name }}</p>
+                            <p class="text-[11px] text-slate-500 font-medium truncate w-full text-center">{{ current_user.display_email or current_user.email }}</p>
+                        </div>
+
+                        <div class="py-1">
+                            <!-- THÔNG TIN CÁ NHÂN -->
+                            <button type="button" onclick="closeUserDropdown(); openUserInfoModal();" class="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-neu-700 transition text-left cursor-pointer">
+                                <span class="w-7 h-7 rounded-lg bg-blue-50 text-neu-700 flex items-center justify-center shrink-0">
+                                    <i class="fa-regular fa-id-card text-xs"></i>
+                                </span>
+                                <div class="flex-1">
+                                    <div class="font-semibold text-slate-800">Thông tin cá nhân</div>
+                                    <div class="text-[10px] text-slate-500">Xem hồ sơ & thông tin tài khoản</div>
+                                </div>
+                            </button>
+
+                            <!-- ĐỔI MẬT KHẨU -->
+                            <button type="button" onclick="closeUserDropdown(); openChangePasswordModal();" class="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-neu-700 transition text-left cursor-pointer">
+                                <span class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                                    <i class="fa-solid fa-key text-xs"></i>
+                                </span>
+                                <div class="flex-1">
+                                    <div class="font-semibold text-slate-800">Đổi mật khẩu</div>
+                                    <div class="text-[10px] text-slate-500">Cập nhật mật khẩu bảo mật</div>
+                                </div>
+                            </button>
+                        </div>
+
+                        <div class="border-t border-slate-100 pt-1">
+                            <!-- ĐĂNG XUẤT -->
+                            <button type="button" onclick="closeUserDropdown(); openLogoutModal();" class="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition text-left cursor-pointer">
+                                <span class="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                                    <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i>
+                                </span>
+                                <span>Đăng xuất</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. THEME SWITCHER COMPONENT (ICON GIAO DIỆN Ở GÓC BÊN PHẢI) -->
+                <div class="relative pl-3 border-l border-slate-200" id="themeMenuWrapper">
+                    <button type="button" id="themeMenuBtn" onclick="toggleThemeDropdown(event)"
+                            title="Đổi màu giao diện (Sáng / Tối / Tự nhiên)"
+                            class="relative w-9 h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 flex items-center justify-center transition shadow-2xs cursor-pointer focus:outline-none group">
+                        <i class="fa-solid fa-sun text-amber-500 text-sm transition-transform group-hover:rotate-45" id="themeCurrentIcon"></i>
+                        <!-- Hidden badge elements to maintain test suite compatibility -->
+                        <span id="themeAvatarBadge" class="hidden"><i id="themeAvatarIcon"></i></span>
+                    </button>
+
+                    <!-- THEME DROPDOWN MENU -->
+                    <div id="themeDropdownMenu" class="hidden absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                        <div class="px-3 py-2 border-b border-slate-100 mb-1 flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-800">Màu giao diện</span>
+                            <span class="text-[10px] text-slate-400 font-medium">3 chế độ</span>
+                        </div>
+                        <div class="space-y-1">
+                            <button type="button" onclick="setTheme('light')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium hover:bg-slate-50 transition cursor-pointer text-left group">
+                                <div class="flex items-center gap-2.5">
+                                    <span class="w-7 h-7 rounded-lg bg-amber-50 text-amber-500 flex items-center justify-center text-xs">
+                                        <i class="fa-solid fa-sun"></i>
+                                    </span>
+                                    <div>
+                                        <div class="font-semibold text-slate-800">Giao diện Sáng (Light)</div>
+                                        <div class="text-[10px] text-slate-400">Trực quan, rõ nét ban ngày</div>
+                                    </div>
+                                </div>
+                                <i class="fa-solid fa-check text-neu-700 text-xs theme-check hidden" data-check="light"></i>
+                            </button>
+                            <button type="button" onclick="setTheme('dark')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium hover:bg-slate-50 transition cursor-pointer text-left group">
+                                <div class="flex items-center gap-2.5">
+                                    <span class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center text-xs">
+                                        <i class="fa-solid fa-moon"></i>
+                                    </span>
+                                    <div>
+                                        <div class="font-semibold text-slate-800">Giao diện Tối (Dark)</div>
+                                        <div class="text-[10px] text-slate-400">Dịu mắt, tối ưu ban đêm</div>
+                                    </div>
+                                </div>
+                                <i class="fa-solid fa-check text-neu-700 text-xs theme-check hidden" data-check="dark"></i>
+                            </button>
+                            <button type="button" onclick="setTheme('nature')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium hover:bg-slate-50 transition cursor-pointer text-left group">
+                                <div class="flex items-center gap-2.5">
+                                    <span class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-500 flex items-center justify-center text-xs">
+                                        <i class="fa-solid fa-leaf"></i>
+                                    </span>
+                                    <div>
+                                        <div class="font-semibold text-slate-800">Tự nhiên (Nature)</div>
+                                        <div class="text-[10px] text-slate-400">Tông xanh lá mát dịu</div>
+                                    </div>
+                                </div>
+                                <i class="fa-solid fa-check text-neu-700 text-xs theme-check hidden" data-check="nature"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -239,7 +698,7 @@
                                   {% else %}fa-solid fa-circle-info text-blue-600{% endif %} text-base"></i>
                         <span>{{ message }}</span>
                     </div>
-                    <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600">
+                    <button onclick="this.parentElement.remove()" class="text-slate-500 hover:text-slate-700">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
@@ -254,41 +713,614 @@
         </main>
 
         <!-- FOOTER -->
-        <footer class="bg-white border-t border-slate-200 px-8 py-5 flex items-center justify-between text-xs text-slate-400 shrink-0">
-            <div>© 2026 Đại học Kinh tế Quốc dân. Cổng thông tin sự kiện.</div>
-            <div class="flex items-center gap-6">
-                <a href="#" class="hover:text-slate-600 transition">Quy định sử dụng</a>
-                <span>•</span>
-                <a href="#" class="hover:text-slate-600 transition">Chính sách bảo mật</a>
-                <span>•</span>
-                <a href="mailto:events@neu.edu.vn" class="hover:text-slate-600 transition">Liên hệ hỗ trợ</a>
+        <footer class="bg-white border-t border-slate-200 px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600 font-medium shrink-0">
+            <div class="text-slate-700 font-semibold">© {{ current_year }} Đại học Kinh tế Quốc dân - Cổng thông tin sự kiện - NEU Events.</div>
+            <div class="flex items-center gap-5 sm:gap-6 text-slate-600">
+                <button type="button" onclick="openTermsModal()" class="hover:text-neu-700 font-semibold transition cursor-pointer">Quy định sử dụng</button>
+                <span class="text-slate-300">•</span>
+                <button type="button" onclick="openPrivacyModal()" class="hover:text-neu-700 font-semibold transition cursor-pointer">Chính sách bảo mật</button>
+                <span class="text-slate-300">•</span>
+                <a href="mailto:events@neu.edu.vn" class="hover:text-neu-700 font-semibold transition flex items-center gap-1.5">
+                    <i class="fa-regular fa-envelope text-[11px] text-neu-700"></i>
+                    <span>Liên hệ hỗ trợ</span>
+                </a>
             </div>
         </footer>
     </div>
 </div>
 
-<!-- HELP MODAL -->
-<div id="helpModal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4">
-        <div class="flex items-center justify-between border-b pb-3">
-            <h3 class="text-lg font-bold text-slate-800">Hướng dẫn sử dụng NEU Events</h3>
-            <button onclick="document.getElementById('helpModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+<!-- HELP & SYSTEM USER GUIDE MODAL (STRICT ROLE-BASED ACCESS) -->
+<div id="helpModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 p-4 transition-all cursor-pointer" onclick="this.classList.add('hidden')">
+    <div class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-100 overflow-hidden transform transition-all text-left flex flex-col max-h-[90vh] cursor-auto" onclick="event.stopPropagation()">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-[#0a2540] via-neu-800 to-neu-700 text-white p-6 relative shrink-0">
+            <button type="button" onclick="document.getElementById('helpModal').classList.add('hidden')" class="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+            <div class="flex items-center gap-3.5">
+                <div class="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-white text-xl shadow-inner">
+                    <i class="fa-solid fa-book-open-reader"></i>
+                </div>
+                <div>
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-white/20 text-white backdrop-blur-xs mb-1">
+                        {% if current_user.role == 'ORGANIZER' %}
+                        <i class="fa-solid fa-briefcase text-[10px]"></i> Ban tổ chức sự kiện
+                        {% elif current_user.role == 'MANAGER' %}
+                        <i class="fa-solid fa-shield-halved text-[10px]"></i> Đơn vị quản lý hệ thống
+                        {% else %}
+                        <i class="fa-solid fa-graduation-cap text-[10px]"></i> Cổng thông tin Sinh viên
+                        {% endif %}
+                    </div>
+                    <h3 class="text-lg font-bold text-white">Hướng dẫn sử dụng NEU Events</h3>
+                    <p class="text-xs text-white/80">
+                        {% if current_user.role == 'ORGANIZER' %}
+                        Cẩm nang nghiệp vụ khởi tạo, điều hành và điểm danh sự kiện
+                        {% elif current_user.role == 'MANAGER' %}
+                        Nghiệp vụ thẩm định, phê duyệt và giám sát phong trào toàn trường
+                        {% else %}
+                        Quy trình tìm kiếm, đăng ký vé, điểm danh và nhận Điểm Đoàn
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
         </div>
-        <div class="text-sm text-slate-600 space-y-3 max-h-96 overflow-y-auto pr-2">
-            <p><strong>1. Dành cho sinh viên:</strong> Khám phá sự kiện tại trang Sự kiện, bấm "Đăng ký tham gia". Khi đến sự kiện, vào trang Điểm danh nhập mã PIN hoặc quét QR để được ghi nhận hoạt động.</p>
-            <p><strong>2. Ban tổ chức:</strong> Quản lý danh sách sự kiện đơn vị mình, mở phiên điểm danh và xuất danh sách sinh viên tham dự file Excel.</p>
-            <p><strong>3. Đơn vị quản lý:</strong> Xem xét các hồ sơ sự kiện gửi duyệt tại mục phê duyệt và theo dõi các chỉ số KPI tại Báo cáo - Thống kê.</p>
-            <p><strong>Bảo mật tài khoản:</strong> Bạn có thể đổi mật khẩu tài khoản bất kỳ lúc nào qua menu tài khoản ở thanh điều hướng.</p>
+
+        <!-- CONTENTS BODY -->
+        <div class="p-6 overflow-y-auto space-y-4 text-xs sm:text-sm text-slate-600 leading-relaxed flex-1">
+            {% if current_user.role == 'ORGANIZER' %}
+            <!-- 1. CONTENT BAN TỔ CHỨC DUY NHẤT -->
+            <div id="helpTabContent-organizer" class="space-y-4">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                    <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-briefcase text-blue-700"></i>
+                        <span>Cẩm nang nghiệp vụ dành cho Ban Tổ Chức sự kiện</span>
+                    </h4>
+                    <span class="text-[11px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">Phân quyền BTC</span>
+                </div>
+                <div class="p-4 bg-blue-50/70 border border-blue-200/60 rounded-2xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-neu-700 text-white flex items-center justify-center text-sm shrink-0 font-bold">1</div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Khởi tạo & Gửi duyệt sự kiện</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Vào mục <strong>"Quản lý sự kiện"</strong> bấm <strong>"Tạo sự kiện mới"</strong>. Điền đầy đủ thông tin: Tên chương trình, thời gian, địa điểm, số lượng chỗ, định mức Điểm Đoàn và <strong>quyền lợi/quà tặng từ nhà tài trợ</strong> (học bổng, voucher khóa học, quà tặng...). Hồ sơ sẽ tự động chuyển tới Đơn vị quản lý để phê duyệt.
+                        </p>
+                    </div>
+                </div>
+                <div class="p-4 bg-indigo-50/70 border border-indigo-200/60 rounded-2xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-sm shrink-0 font-bold">2</div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Theo dõi danh sách đăng ký</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Theo dõi trực tiếp số lượng sinh viên giữ chỗ, tỷ lệ lấp đầy hội trường và danh sách sinh viên đăng ký để chủ động chuẩn bị tài liệu, hội trường và công tác đón tiếp.
+                        </p>
+                    </div>
+                </div>
+                <div class="p-4 bg-emerald-50/70 border border-emerald-200/60 rounded-2xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-sm shrink-0 font-bold">3</div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Tổ chức phiên Điểm danh (Check-in)</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Vào mục <strong>"Điểm danh"</strong>, chọn sự kiện và bấm <strong>"Bắt đầu phiên điểm danh"</strong>. Cung cấp mã PIN 6 số trên màn chiếu hoặc sử dụng camera/máy quét để quét mã QR vé của sinh viên tại bàn lễ tân. Kết thúc phiên để hệ thống tự động cộng Điểm Đoàn cho sinh viên có mặt.
+                        </p>
+                    </div>
+                </div>
+                <div class="p-4 bg-amber-50/70 border border-amber-200/60 rounded-2xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-amber-600 text-white flex items-center justify-center text-sm shrink-0 font-bold">4</div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Xuất danh sách Excel & Báo cáo thống kê</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Xuất file Excel danh sách sinh viên tham dự để lưu hồ sơ đơn vị và báo cáo Đoàn Đại học. Đồng thời truy cập mục <strong>"Báo cáo – thống kê"</strong> để theo dõi mức độ tương tác và đánh giá phản hồi của sinh viên.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {% elif current_user.role == 'MANAGER' %}
+            <!-- 2. CONTENT ĐƠN VỊ QUẢN LÝ DUY NHẤT -->
+            <div id="helpTabContent-manager" class="space-y-4">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                    <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-shield-halved text-purple-700"></i>
+                        <span>Nghiệp vụ Phê duyệt & Giám sát dành cho Đơn vị Quản lý</span>
+                    </h4>
+                    <span class="text-[11px] font-semibold text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-md">Phân quyền Quản lý</span>
+                </div>
+                <div class="p-4 bg-purple-50/70 border border-purple-200/60 rounded-2xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-purple-700 text-white flex items-center justify-center text-sm shrink-0 font-bold">1</div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Thẩm định & Kiểm duyệt sự kiện</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Vào mục <strong>"Kiểm duyệt"</strong> để xem các hồ sơ sự kiện do các Câu lạc bộ, Ban tổ chức gửi lên. Kiểm tra tính phù hợp về nội dung, thời gian, địa điểm và định mức Điểm Đoàn. Bấm <strong>"Phê duyệt"</strong> để mở đăng ký công khai hoặc gửi yêu cầu chỉnh sửa kèm lý do.
+                        </p>
+                    </div>
+                </div>
+                <div class="p-4 bg-blue-50/70 border border-blue-200/60 rounded-2xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-neu-700 text-white flex items-center justify-center text-sm shrink-0 font-bold">2</div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Giám sát hoạt động phong trào toàn trường</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Theo dõi tổng thể các sự kiện đang diễn ra trong từng học kỳ và năm học. Quản lý các sự kiện lớn có đơn vị tài trợ đồng hành cùng trường để bảo đảm chất lượng và uy tín của NEU.
+                        </p>
+                    </div>
+                </div>
+                <div class="p-4 bg-emerald-50/70 border border-emerald-200/60 rounded-2xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-sm shrink-0 font-bold">3</div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Báo cáo & Phân tích chỉ số KPI (Analytics)</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Xem các báo cáo thống kê chuyên sâu: Tổng số sự kiện, tổng lượt sinh viên tham gia, tỷ lệ điểm danh, phân bổ hoạt động theo Khoa/Viện và đánh giá mức độ tích cực trong phong trào sinh viên toàn trường.
+                        </p>
+                    </div>
+                </div>
+                <div class="p-4 bg-amber-50/70 border border-amber-200/60 rounded-2xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-amber-600 text-white flex items-center justify-center text-sm shrink-0 font-bold">4</div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Điều phối & Đảm bảo tính công bằng</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Kiểm soát việc cấp phát Điểm Đoàn, phòng chống các trường hợp gian lận điểm danh và hỗ trợ giải quyết các thắc mắc, khiếu nại của sinh viên và đơn vị tổ chức.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {% else %}
+            <!-- 3. CONTENT SINH VIÊN DUY NHẤT -->
+            <div id="helpTabContent-student" class="space-y-4">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                    <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-graduation-cap text-neu-700"></i>
+                        <span>Quy trình tham gia sự kiện dành cho Sinh viên NEU</span>
+                    </h4>
+                    <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">Phân quyền Sinh viên</span>
+                </div>
+                <div class="p-4 bg-blue-50/70 border border-blue-200/60 rounded-2xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-neu-700 text-white flex items-center justify-center text-sm shrink-0 font-bold">1</div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Tìm kiếm & Đăng ký sự kiện</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Khám phá các sự kiện học thuật, hội thảo tuyển dụng và phong trào Đoàn tại trang <strong>Sự kiện</strong>. Bạn có thể lọc theo năm học, học kỳ và thể loại. Bấm vào bất kỳ vị trí nào trên thẻ sự kiện để xem chi tiết và bấm <strong>"Đăng ký tham gia"</strong>.
+                        </p>
+                    </div>
+                </div>
+                <div class="p-4 bg-emerald-50/70 border border-emerald-200/60 rounded-2xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-sm shrink-0 font-bold">2</div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Nhận Vé điện tử & Mã QR độc bản</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Sau khi đăng ký thành công, hãy truy cập mục <strong>"Đã đăng ký"</strong> để xem vé. Bấm <strong>"Xem vé & QR"</strong> để lấy mã vé riêng biệt và tải ảnh mã QR về điện thoại phục vụ quét điểm danh tại cổng sự kiện.
+                        </p>
+                    </div>
+                </div>
+                <div class="p-4 bg-amber-50/70 border border-amber-200/60 rounded-2xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-amber-600 text-white flex items-center justify-center text-sm shrink-0 font-bold">3</div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Điểm danh & Tích lũy Điểm Đoàn</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Khi đến địa điểm sự kiện, vào mục <strong>"Điểm danh"</strong> nhập mã PIN do BTC công bố hoặc xuất trình mã QR cá nhân cho BTC quét. Sau khi điểm danh hợp lệ, hệ thống sẽ tự động cộng <strong>Điểm Đoàn</strong> vào hồ sơ hoạt động của bạn.
+                        </p>
+                    </div>
+                </div>
+                <div class="p-4 bg-purple-50/70 border border-purple-200/60 rounded-2xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center text-sm shrink-0 font-bold">4</div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Đánh giá chất lượng sự kiện</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Sau khi tham dự, vào mục <strong>"Đánh giá"</strong> để đóng góp ý kiến nhận xét và chấm điểm cho sự kiện. Ý kiến của bạn giúp BTC và Nhà trường cải tiến các chương trình tiếp theo.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
-        <div class="pt-2 text-right">
-            <button onclick="document.getElementById('helpModal').classList.add('hidden')" class="px-4 py-2 bg-neu-700 text-white rounded-lg text-sm font-semibold hover:bg-neu-800">Đã hiểu</button>
+
+        <!-- Footer -->
+        <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between shrink-0">
+            <span class="text-xs text-slate-500 font-medium">Hỗ trợ kỹ thuật: events@neu.edu.vn</span>
+            <button type="button" onclick="document.getElementById('helpModal').classList.add('hidden')" class="px-5 py-2.5 bg-neu-700 hover:bg-neu-800 text-white font-semibold rounded-xl text-xs sm:text-sm transition shadow-sm cursor-pointer">
+                Đã hiểu
+            </button>
+        </div>
+    </div>
+</div>
+<!-- TERMS OF SERVICE MODAL (STRICT ROLE-BASED ACCESS) -->
+<div id="termsModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 p-4 transition-all cursor-pointer" onclick="closeTermsModal()">
+    <div class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-100 overflow-hidden transform transition-all text-left flex flex-col max-h-[90vh] cursor-auto" onclick="event.stopPropagation()">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-neu-900 via-neu-800 to-neu-700 text-white p-6 relative shrink-0">
+            <button type="button" onclick="closeTermsModal()" class="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+            <div class="flex items-center gap-3.5">
+                <div class="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-white text-xl shadow-inner">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                </div>
+                <div>
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-white/20 text-white backdrop-blur-xs mb-1">
+                        {% if current_user.role == 'ORGANIZER' %}
+                        <i class="fa-solid fa-briefcase text-[10px]"></i> Ban tổ chức sự kiện
+                        {% elif current_user.role == 'MANAGER' %}
+                        <i class="fa-solid fa-shield-halved text-[10px]"></i> Đơn vị quản lý hệ thống
+                        {% else %}
+                        <i class="fa-solid fa-graduation-cap text-[10px]"></i> Cổng thông tin Sinh viên
+                        {% endif %}
+                    </div>
+                    <h3 class="text-lg font-bold text-white">Quy định sử dụng NEU Events</h3>
+                    <p class="text-xs text-white/80">
+                        {% if current_user.role == 'ORGANIZER' %}
+                        Quy chế tổ chức sự kiện, hợp tác tài trợ & quản lý điểm danh dành cho Ban Tổ Chức
+                        {% elif current_user.role == 'MANAGER' %}
+                        Quy định thẩm định, phê duyệt & giám sát hệ thống dành cho Đơn vị Quản lý
+                        {% else %}
+                        Quy chế quyền lợi, nghĩa vụ tham gia & văn hóa học đường dành cho Sinh viên NEU
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTENTS BODY -->
+        <div class="p-6 overflow-y-auto space-y-4 text-xs sm:text-sm text-slate-600 leading-relaxed flex-1">
+            {% if current_user.role == 'ORGANIZER' %}
+            <!-- 1. CONTENT BAN TỔ CHỨC DUY NHẤT -->
+            <div id="termsTabContent-organizer" class="space-y-4">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                    <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-briefcase text-blue-700"></i>
+                        <span>Quy chế tổ chức sự kiện & Quản lý điểm danh dành cho Ban Tổ Chức & CLB</span>
+                    </h4>
+                    <span class="text-[11px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">Phân quyền BTC</span>
+                </div>
+
+                <div class="p-3.5 bg-blue-50/70 border border-blue-200/60 rounded-xl text-blue-900 text-xs flex items-start gap-2.5">
+                    <i class="fa-solid fa-circle-info text-blue-600 text-sm mt-0.5 shrink-0"></i>
+                    <div>
+                        <strong>Lưu ý quan trọng:</strong> Ban tổ chức sự kiện (Đoàn - Hội, Khoa/Viện, Câu lạc bộ) chịu trách nhiệm toàn diện về tính chính xác thông tin, nội dung tư tưởng, an toàn trật tự và quyền lợi của sinh viên trước Nhà trường.
+                    </div>
+                </div>
+
+                <div class="p-4 bg-blue-50/70 border border-blue-200/60 rounded-2xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-neu-700 text-white flex items-center justify-center text-sm shrink-0 font-bold">1</div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Khởi tạo hồ sơ & Tiêu chuẩn thông tin sự kiện</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Cung cấp đầy đủ, minh bạch và chính xác thông tin sự kiện: Tên chương trình, thời gian, địa điểm, quy mô số chỗ, định mức Điểm Đoàn và danh mục tài trợ (học bổng, quà tặng, voucher...). Mọi sự kiện phải được gửi hồ sơ và chờ Đơn vị Quản lý phê duyệt trước khi công bố ra toàn trường tối thiểu 03 - 05 ngày làm việc. Tuyệt đối không tự ý tổ chức khi chưa được phê duyệt.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-emerald-50/70 border border-emerald-200/60 rounded-2xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-sm shrink-0 font-bold">2</div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Quy định về Doanh nghiệp tài trợ & Quyền lợi người tham gia</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Các đơn vị đồng hành và nhà tài trợ phải có tư cách pháp nhân hợp pháp, phù hợp với môi trường giáo dục Đại học Kinh tế Quốc dân. Nghiêm cấm quảng bá các sản phẩm, dịch vụ trái với chuẩn mực đạo đức hoặc quy định của pháp luật. Trao tặng đầy đủ, minh bạch toàn bộ quyền lợi đã cam kết cho sinh viên tham gia; không được thu thêm bất kỳ khoản phí trái phép nào.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-amber-50/70 border border-amber-200/60 rounded-2xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-amber-600 text-white flex items-center justify-center text-sm shrink-0 font-bold">3</div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Vận hành Phiên điểm danh & Giám sát trung thực</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Chỉ mở phiên điểm danh trong khung giờ sự kiện thực tế diễn ra. Bảo mật mã PIN 6 số và bố trí nhân sự giám sát chặt chẽ bàn quét mã QR đón tiếp tại cửa hội trường. Chủ động đối chiếu thông tin sinh viên, kịp thời hỗ trợ sinh viên gặp sự cố kỹ thuật và kiên quyết ngăn chặn các hành vi điểm danh hộ. Không được can thiệp thủ công sửa đổi danh sách điểm danh trái quy chế.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-rose-50/70 border border-rose-200/60 rounded-2xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center text-sm shrink-0 font-bold">4</div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Chế độ Báo cáo tổng kết & Trách nhiệm kỷ luật</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Đóng phiên điểm danh và xuất báo cáo kết quả tham dự, danh sách đề nghị ghi nhận Điểm Đoàn chậm nhất sau 24 giờ kể từ khi sự kiện kết thúc. Đơn vị hoặc Câu lạc bộ để xảy ra gian lận điểm danh có hệ thống hoặc vi phạm quy chế an toàn sẽ bị đình chỉ quyền tổ chức sự kiện từ 01 học kỳ đến 01 năm học.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {% elif current_user.role == 'MANAGER' %}
+            <!-- 2. CONTENT ĐƠN VỊ QUẢN LÝ DUY NHẤT -->
+            <div id="termsTabContent-manager" class="space-y-4">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                    <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-shield-halved text-purple-700"></i>
+                        <span>Quy định Thẩm định, Phê duyệt & Giám sát Hệ thống dành cho Đơn vị Quản lý</span>
+                    </h4>
+                    <span class="text-[11px] font-semibold text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-md">Phân quyền Quản lý</span>
+                </div>
+
+                <div class="p-3.5 bg-purple-50/70 border border-purple-200/60 rounded-xl text-purple-900 text-xs flex items-start gap-2.5">
+                    <i class="fa-solid fa-building-columns text-purple-600 text-sm mt-0.5 shrink-0"></i>
+                    <div>
+                        <strong>Cơ quan thường trực:</strong> Đoàn Thanh niên - Hội Sinh viên Đại học phối hợp cùng Phòng Quản lý Đào tạo và Ban Quản trị hệ thống là cơ quan có thẩm quyền cao nhất trong phê duyệt, giám sát và ban hành chế tài xử lý tại NEU Events.
+                    </div>
+                </div>
+
+                <div class="p-4 bg-purple-50/70 border border-purple-200/60 rounded-2xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-purple-700 text-white flex items-center justify-center text-sm shrink-0 font-bold">1</div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Tiêu chuẩn Thẩm định & Phê duyệt sự kiện</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Rà soát hồ sơ sự kiện của các Câu lạc bộ, Ban tổ chức theo định hướng giáo dục chính trị tư tưởng và kế hoạch năm học của Nhà trường. Thẩm định định mức Điểm Đoàn đề xuất, bảo đảm tính công bằng, tương xứng với thời lượng và tính chất hoạt động. Phê duyệt hồ sơ hoặc gửi yêu cầu giải trình, bổ sung thông tin trong vòng tối đa 48 giờ làm việc.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-blue-50/70 border border-blue-200/60 rounded-2xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-neu-700 text-white flex items-center justify-center text-sm shrink-0 font-bold">2</div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Giám sát Vận hành & Quản trị Rủi ro</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Thanh tra đột xuất công tác tổ chức và quy trình điểm danh tại các hội trường lớn. Kiểm soát chặt chẽ các cam kết tài trợ và quyền lợi từ doanh nghiệp đồng hành để bảo vệ quyền lợi chính đáng của sinh viên và nâng cao uy tín thương hiệu NEU.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-amber-50/70 border border-amber-200/60 rounded-2xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-amber-600 text-white flex items-center justify-center text-sm shrink-0 font-bold">3</div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Thẩm quyền Chế tài & Giải quyết Khiếu nại</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Có toàn quyền tạm đình chỉ ngay lập tức các sự kiện có dấu hiệu vi phạm pháp luật, văn hóa học đường hoặc gây mất trật tự an toàn. Thụ lý và giải quyết dứt điểm các thắc mắc, khiếu nại về Điểm Đoàn và gian lận điểm danh của sinh viên trong thời hạn 07 ngày làm việc.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-emerald-50/70 border border-emerald-200/60 rounded-2xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-sm shrink-0 font-bold">4</div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Quản trị Cơ sở dữ liệu & Báo cáo Ban Giám hiệu</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Bảo đảm an toàn và tính toàn vẹn của cơ sở dữ liệu sự kiện, vé điện tử và lịch sử điểm danh. Định kỳ tổng hợp báo cáo phân tích chỉ số KPI hoạt động ngoại khóa toàn trường trình Đảng ủy, Ban Giám hiệu Nhà trường.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {% else %}
+            <!-- 3. CONTENT SINH VIÊN DUY NHẤT -->
+            <div id="termsTabContent-student" class="space-y-4">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                    <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-graduation-cap text-neu-700"></i>
+                        <span>Quy định & Quyền lợi tham gia sự kiện dành cho Sinh viên NEU</span>
+                    </h4>
+                    <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">Phân quyền Sinh viên</span>
+                </div>
+
+                <div class="p-3.5 bg-amber-50/70 border border-amber-200/60 rounded-xl text-amber-900 text-xs flex items-start gap-2.5">
+                    <i class="fa-solid fa-circle-exclamation text-amber-600 text-sm mt-0.5 shrink-0"></i>
+                    <div>
+                        <strong>Lưu ý quan trọng:</strong> Sinh viên có trách nhiệm tuân thủ nghiêm ngặt Quy chế công tác sinh viên của Đại học Kinh tế Quốc dân và quy chế Văn hóa học đường NEU khi đăng ký, điểm danh và tham gia mọi sự kiện.
+                    </div>
+                </div>
+
+                <div class="p-4 bg-blue-50/70 border border-blue-200/60 rounded-2xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-neu-700 text-white flex items-center justify-center text-sm shrink-0 font-bold">1</div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Tài khoản chính chủ & Sử dụng vé sự kiện</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Sử dụng duy nhất tài khoản MSSV chính chủ do Nhà trường cấp để tra cứu, đăng ký sự kiện. Sau khi đăng ký thành công, sinh viên nhận được 01 vé điện tử kèm mã QR và mã vé độc bản duy nhất. Vé điện tử là tài sản cá nhân gắn liền với hồ sơ sinh viên, <strong>nghiêm cấm mọi hành vi mua bán, chuyển nhượng vé</strong> dưới bất kỳ hình thức nào.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-rose-50/70 border border-rose-200/60 rounded-2xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center text-sm shrink-0 font-bold">2</div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Quy định Điểm danh & Phòng chống gian lận</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Có mặt đúng giờ tại địa điểm tổ chức, xuất trình vé điện tử hoặc nhập mã PIN khi được yêu cầu. <strong class="text-rose-700">Nghiêm cấm tuyệt đối hành vi gian lận:</strong> Không chụp ảnh gửi mã QR, mã PIN cho người khác điểm danh hộ, hoặc nhận điểm danh hộ sinh viên khác. Hệ thống sẽ tự động hủy kết quả điểm danh, trừ Điểm Đoàn kỳ đó và chuyển hồ sơ lên Hội đồng kỷ luật sinh viên nếu phát hiện vi phạm.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-emerald-50/70 border border-emerald-200/60 rounded-2xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-sm shrink-0 font-bold">3</div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Cơ chế công nhận Điểm Đoàn & Quyền lợi tài trợ</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Tại NEU, các sự kiện hợp lệ sẽ được ghi nhận và cộng <strong>Điểm Đoàn</strong> theo quy định của Đoàn Thanh niên - Hội Sinh viên Đại học. Đối với các sự kiện lớn có nhà tài trợ đồng hành (học bổng, voucher khóa học, quà tặng), sinh viên hoàn tất điểm danh hợp lệ sẽ được nhận quyền lợi minh bạch theo hướng dẫn của Ban tổ chức tại chương trình.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-indigo-50/70 border border-indigo-200/60 rounded-2xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-sm shrink-0 font-bold">4</div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Văn hóa tham gia & Quy định hủy đăng ký</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Trang phục lịch sự, giữ gìn vệ sinh và trật tự chung trong hội trường. Trong trường hợp có việc đột xuất không thể tham dự, sinh viên có trách nhiệm hủy đăng ký trước giờ khai mạc tối thiểu 02 giờ để nhường chỗ cho sinh viên khác. Sinh viên vắng mặt không lý do quá 03 lần/kỳ sẽ bị tạm dừng quyền đăng ký sự kiện 30 ngày.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Footer -->
+        <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between shrink-0">
+            <span class="text-xs text-slate-500 font-medium">Phiên bản quy định: 2026.1 • Đại học Kinh tế Quốc dân</span>
+            <button type="button" onclick="closeTermsModal()" class="px-5 py-2.5 bg-neu-700 hover:bg-neu-800 text-white font-semibold rounded-xl text-xs sm:text-sm transition shadow-sm cursor-pointer">
+                Tôi đã hiểu & Đồng ý
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- PRIVACY POLICY MODAL -->
+<div id="privacyModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 p-4 transition-all cursor-pointer">
+    <div class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-100 overflow-hidden transform transition-all text-left flex flex-col max-h-[90vh] cursor-auto" onclick="event.stopPropagation()">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-[#0a2540] to-neu-700 text-white p-6 relative shrink-0">
+            <button type="button" onclick="closePrivacyModal()" class="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+            <div class="flex items-center gap-3.5">
+                <div class="w-11 h-11 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white text-lg shadow-inner">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-white">Chính sách bảo mật thông tin</h3>
+                    <p class="text-xs text-white/80 mt-0.5">Bảo vệ quyền riêng tư & dữ liệu cá nhân tại NEU Events</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6 overflow-y-auto space-y-4 text-xs sm:text-sm text-slate-600 leading-relaxed">
+            <div>
+                <h4 class="font-bold text-slate-800 text-sm mb-1.5 flex items-center gap-2">
+                    <i class="fa-solid fa-database text-neu-700 text-xs"></i>
+                    1. Dữ liệu cá nhân thu thập
+                </h4>
+                <p class="text-xs sm:text-[13px] text-slate-600">
+                    Cổng thông tin sự kiện NEU Events chỉ thu thập các dữ liệu cần thiết phục vụ quản lý hoạt động phong trào và công tác sinh viên:
+                </p>
+                <ul class="list-disc list-inside space-y-1 pl-2 text-slate-600 text-xs sm:text-[13px] mt-1.5">
+                    <li><strong>Thông tin định danh:</strong> Mã sinh viên (MSSV), Họ và tên, Lớp chuyên ngành, Khoa/Viện, Email sinh viên NEU (<code class="text-neu-700 font-mono">@st.neu.edu.vn</code>).</li>
+                    <li><strong>Dữ liệu hoạt động:</strong> Lịch sử đăng ký sự kiện, nhật ký điểm danh (thời gian, địa điểm, mã vé), điểm Đoàn tích lũy qua từng học kỳ.</li>
+                </ul>
+            </div>
+
+            <div class="border-t border-slate-100 pt-3">
+                <h4 class="font-bold text-slate-800 text-sm mb-1.5 flex items-center gap-2">
+                    <i class="fa-solid fa-bullseye text-neu-700 text-xs"></i>
+                    2. Mục đích sử dụng dữ liệu
+                </h4>
+                <ul class="list-disc list-inside space-y-1 pl-2 text-slate-600 text-xs sm:text-[13px]">
+                    <li>Xác nhận đăng ký tham dự và cấp phát vé điện tử QR độc bản cho sinh viên.</li>
+                    <li>Tự động xác thực điểm danh tại cổng sự kiện và đồng bộ kết quả điểm Đoàn vào hồ sơ công tác Đoàn và hoạt động của sinh viên.</li>
+                    <li>Ban tổ chức liên hệ thông báo các thay đổi quan trọng về lịch trình, diễn giả hoặc hướng dẫn nhận quà/quyền lợi tài trợ.</li>
+                </ul>
+            </div>
+
+            <div class="border-t border-slate-100 pt-3">
+                <h4 class="font-bold text-slate-800 text-sm mb-1.5 flex items-center gap-2">
+                    <i class="fa-solid fa-lock text-neu-700 text-xs"></i>
+                    3. Cam kết an toàn & Không chia sẻ cho bên thứ ba
+                </h4>
+                <ul class="list-disc list-inside space-y-1 pl-2 text-slate-600 text-xs sm:text-[13px]">
+                    <li>Toàn bộ mật khẩu tài khoản được băm một chiều bằng thuật toán mã hóa an toàn (<code class="text-neu-700 font-mono">pbkdf2:sha256</code>), hệ thống không lưu mật khẩu dạng văn bản gốc.</li>
+                    <li><strong>Tuyệt đối không thương mại hóa:</strong> Dữ liệu sinh viên được lưu trữ an toàn trên hệ thống máy chủ Trường và không bao giờ được chia sẻ hay mua bán cho các bên thứ ba ngoài mục đích học tập và phong trào Đoàn.</li>
+                    <li>Đối với các sự kiện có nhà tài trợ, Nhà trường chỉ cung cấp số liệu thống kê ẩn danh (tổng số lượng sinh viên tham gia), không cung cấp số điện thoại hay email cá nhân khi chưa có sự đồng ý của sinh viên.</li>
+                </ul>
+            </div>
+
+            <div class="border-t border-slate-100 pt-3">
+                <h4 class="font-bold text-slate-800 text-sm mb-1.5 flex items-center gap-2">
+                    <i class="fa-solid fa-user-shield text-neu-700 text-xs"></i>
+                    4. Quyền của sinh viên đối với dữ liệu
+                </h4>
+                <p class="text-xs sm:text-[13px] text-slate-600">
+                    Sinh viên có quyền truy cập hồ sơ cá nhân để tra cứu thông tin, chủ động đổi mật khẩu bảo mật và yêu cầu hỗ trợ đính chính thông tin điểm danh/điểm Đoàn qua email ban quản trị: <a href="mailto:events@neu.edu.vn" class="text-neu-700 font-semibold underline">events@neu.edu.vn</a>.
+                </p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between shrink-0">
+            <span class="text-xs text-slate-500 font-medium"><i class="fa-solid fa-shield-check text-emerald-600 mr-1"></i>Bảo vệ bởi Đại học Kinh tế Quốc dân</span>
+            <button type="button" onclick="closePrivacyModal()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold rounded-xl text-xs sm:text-sm transition shadow-sm cursor-pointer">
+                Đã hiểu
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- USER INFO MODAL -->
+<div id="userInfoModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 p-4 transition-all cursor-pointer">
+    <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden transform transition-all text-left cursor-auto" onclick="event.stopPropagation()">
+        <!-- TOP BRAND BANNER -->
+        <div class="bg-gradient-to-r from-[#0a2540] to-neu-700 text-white p-6 relative">
+            <button type="button" onclick="closeUserInfoModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-white text-neu-700 font-black text-lg flex items-center justify-center border-2 border-white/20 shadow-md">
+                    {% if current_user.role == 'MANAGER' %}
+                        QL
+                    {% else %}
+                        {{ current_user.avatar_initials or 'NEU' }}
+                    {% endif %}
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-white">{{ current_user.full_name }}</h3>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-white/15 text-white backdrop-blur-xs">
+                            {% if current_user.role == 'MANAGER' %}
+                                <i class="fa-solid fa-shield-halved text-[10px]"></i> Đơn vị quản lý
+                            {% elif current_user.role == 'ORGANIZER' %}
+                                <i class="fa-solid fa-briefcase text-[10px]"></i> Ban tổ chức
+                            {% else %}
+                                <i class="fa-solid fa-graduation-cap text-[10px]"></i> Sinh viên NEU
+                            {% endif %}
+                        </span>
+                        {% if current_user.student_id %}
+                        <span class="text-xs text-white/80 font-mono">MSSV: {{ current_user.student_id }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BODY INFO DETAILS -->
+        <div class="p-6 space-y-4">
+            <div class="grid grid-cols-1 gap-2.5 text-xs">
+                <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between">
+                    <span class="text-slate-500 font-semibold">Họ và tên</span>
+                    <span class="font-bold text-slate-800">{{ current_user.full_name }}</span>
+                </div>
+                {% if current_user.student_id %}
+                <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between">
+                    <span class="text-slate-500 font-semibold">Mã số sinh viên (MSSV)</span>
+                    <span class="font-bold text-slate-800 font-mono">{{ current_user.student_id }}</span>
+                </div>
+                {% else %}
+                <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between">
+                    <span class="text-slate-500 font-semibold">Tên đăng nhập</span>
+                    <span class="font-bold text-slate-800 font-mono">{{ current_user.username }}</span>
+                </div>
+                {% endif %}
+                <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between">
+                    <span class="text-slate-500 font-semibold">Email</span>
+                    <span class="font-semibold text-slate-800">{{ current_user.display_email or current_user.email }}</span>
+                </div>
+                <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between">
+                    <span class="text-slate-500 font-semibold">Khoa / Viện / Ban</span>
+                    <span class="font-semibold text-slate-800 text-right">{{ current_user.department or 'Đại học Kinh tế Quốc dân' }}</span>
+                </div>
+                <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between">
+                    <span class="text-slate-500 font-semibold">Số điện thoại</span>
+                    <span class="font-semibold text-slate-800">{{ current_user.phone or 'Chưa cập nhật' }}</span>
+                </div>
+                <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between">
+                    <span class="text-slate-500 font-semibold">Trạng thái tài khoản</span>
+                    <span class="inline-flex items-center gap-1.5 text-emerald-600 font-bold">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Đang hoạt động (SSO)
+                    </span>
+                </div>
+            </div>
+
+            <!-- ACTIONS -->
+            <div class="flex items-center gap-3 pt-2">
+                <button type="button" onclick="closeUserInfoModal(); openChangePasswordModal();" class="flex-1 py-2.5 px-4 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 border border-amber-200 cursor-pointer">
+                    <i class="fa-solid fa-key"></i>
+                    <span>Đổi mật khẩu</span>
+                </button>
+                <button type="button" onclick="closeUserInfoModal()" class="py-2.5 px-5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition cursor-pointer">
+                    Đóng
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
 <!-- LOGOUT CONFIRMATION MODAL -->
-<div id="logoutConfirmModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl border border-slate-100">
+<div id="logoutConfirmModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 p-4 cursor-pointer">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl border border-slate-100 cursor-auto" onclick="event.stopPropagation()">
         <div class="w-14 h-14 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mx-auto text-2xl border border-rose-100 shadow-xs">
             <i class="fa-solid fa-arrow-right-from-bracket"></i>
         </div>
@@ -299,10 +1331,10 @@
             </p>
         </div>
         <div class="grid grid-cols-2 gap-3 pt-2">
-            <button type="button" onclick="closeLogoutModal()" class="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition">
+            <button type="button" onclick="closeLogoutModal()" class="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition cursor-pointer">
                 Hủy bỏ
             </button>
-            <a href="{{ url_for('logout') }}" class="w-full py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center shadow-xs">
+            <a href="{{ url_for('logout') }}" class="w-full py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center shadow-xs cursor-pointer">
                 Đăng xuất
             </a>
         </div>
@@ -310,8 +1342,8 @@
 </div>
 
 <!-- CHANGE PASSWORD MODAL -->
-<div id="changePasswordModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100">
+<div id="changePasswordModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 p-4 cursor-pointer">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100 cursor-auto" onclick="event.stopPropagation()">
         <div class="flex items-center justify-between border-b border-slate-100 pb-4">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-neu-50 text-neu-700 flex items-center justify-center text-lg border border-neu-100">
@@ -319,14 +1351,14 @@
                 </div>
                 <div>
                     <h3 class="text-base font-bold text-slate-900">Đổi mật khẩu tài khoản</h3>
-                    <p class="text-xs text-slate-400">
+                    <p class="text-xs text-slate-500">
                         {% if current_user.role == 'MANAGER' %}Đơn vị quản lý
                         {% elif current_user.role == 'ORGANIZER' %}Ban tổ chức
                         {% else %}Sinh viên NEU{% endif %}
                     </p>
                 </div>
             </div>
-            <button type="button" onclick="closeChangePasswordModal()" class="text-slate-400 hover:text-slate-600 text-sm">
+            <button type="button" onclick="closeChangePasswordModal()" class="text-slate-500 hover:text-slate-700 text-sm">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
@@ -334,24 +1366,39 @@
         <form method="POST" action="{{ url_for('change_password') }}" class="space-y-4">
             <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1">Mật khẩu hiện tại *</label>
-                <input type="password" name="old_password" required placeholder="Nhập mật khẩu đang sử dụng" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-neu-700">
+                <div class="relative">
+                    <input type="password" name="old_password" id="oldPasswordInput" required placeholder="Nhập mật khẩu đang sử dụng" class="w-full pl-4 pr-11 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-neu-700 transition">
+                    <button type="button" onclick="togglePasswordVisibility('oldPasswordInput', this)" title="Ẩn/hiện mật khẩu" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-500 hover:text-slate-700 focus:outline-none cursor-pointer transition">
+                        <i class="fa-regular fa-eye text-sm"></i>
+                    </button>
+                </div>
             </div>
 
             <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1">Mật khẩu mới *</label>
-                <input type="password" name="new_password" required minlength="6" placeholder="Tối thiểu 6 ký tự" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-neu-700">
+                <div class="relative">
+                    <input type="password" name="new_password" id="newPasswordInput" required minlength="6" placeholder="Tối thiểu 6 ký tự" class="w-full pl-4 pr-11 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-neu-700 transition">
+                    <button type="button" onclick="togglePasswordVisibility('newPasswordInput', this)" title="Ẩn/hiện mật khẩu" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-500 hover:text-slate-700 focus:outline-none cursor-pointer transition">
+                        <i class="fa-regular fa-eye text-sm"></i>
+                    </button>
+                </div>
             </div>
 
             <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1">Xác nhận mật khẩu mới *</label>
-                <input type="password" name="confirm_password" required minlength="6" placeholder="Nhập lại mật khẩu mới" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-neu-700">
+                <div class="relative">
+                    <input type="password" name="confirm_password" id="confirmPasswordInput" required minlength="6" placeholder="Nhập lại mật khẩu mới" class="w-full pl-4 pr-11 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-neu-700 transition">
+                    <button type="button" onclick="togglePasswordVisibility('confirmPasswordInput', this)" title="Ẩn/hiện mật khẩu" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-500 hover:text-slate-700 focus:outline-none cursor-pointer transition">
+                        <i class="fa-regular fa-eye text-sm"></i>
+                    </button>
+                </div>
             </div>
 
             <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
-                <button type="button" onclick="closeChangePasswordModal()" class="px-4 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-50 transition">
+                <button type="button" onclick="closeChangePasswordModal()" class="px-4 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-50 transition cursor-pointer">
                     Hủy
                 </button>
-                <button type="submit" class="px-5 py-2.5 bg-neu-700 hover:bg-neu-800 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-2">
+                <button type="submit" class="px-5 py-2.5 bg-neu-700 hover:bg-neu-800 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-check"></i>
                     <span>Cập nhật mật khẩu</span>
                 </button>
@@ -360,36 +1407,36 @@
     </div>
 </div>
 
-<!-- GLOBAL TICKET MODAL -->
-<div id="ticketModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 transition-all">
-    <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden transform transition-all text-left">
-        <!-- TOP BRAND BAR -->
-        <div class="bg-gradient-to-r from-[#0a2540] to-neu-700 text-white p-5 flex items-center justify-between">
+<!-- GLOBAL TICKET MODAL (RESPONSIVE & NON-OVERFLOWING) -->
+<div id="ticketModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto transition-all cursor-pointer">
+    <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh] my-auto text-left cursor-auto" onclick="event.stopPropagation()">
+        <!-- TOP BRAND BAR (FIXED HEADER - NEVER LOST) -->
+        <div class="bg-gradient-to-r from-[#0a2540] to-neu-700 text-white px-4 py-3 sm:px-5 sm:py-3.5 flex items-center justify-between shrink-0 shadow-xs">
             <div class="flex items-center gap-3">
-                <img src="{{ url_for('static', filename='img/logo_neu.webp') }}" alt="Logo NEU" class="w-10 h-10 object-contain shrink-0 drop-shadow">
-                <div>
-                    <div class="text-[10px] uppercase font-bold tracking-widest text-blue-200">ĐẠI HỌC KINH TẾ QUỐC DÂN</div>
-                    <div class="text-sm font-extrabold tracking-wide">VÉ THAM DỰ SỰ KIỆN ĐIỆN TỬ</div>
+                <img src="{{ url_for('static', filename='img/logo_neu.webp') }}?v=2" alt="Logo NEU" class="w-10 h-10 object-contain shrink-0 drop-shadow">
+                <div class="min-w-0">
+                    <div class="text-[9px] sm:text-[10px] uppercase font-bold tracking-widest text-blue-200 whitespace-nowrap">ĐẠI HỌC KINH TẾ QUỐC DÂN</div>
+                    <div class="text-xs sm:text-sm font-extrabold tracking-wide">VÉ THAM DỰ SỰ KIỆN ĐIỆN TỬ</div>
                 </div>
             </div>
-            <button type="button" onclick="closeTicketModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition">
+            <button type="button" onclick="closeTicketModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer" title="Đóng vé">
                 <i class="fa-solid fa-xmark text-sm"></i>
             </button>
         </div>
 
-        <!-- TICKET CONTENT -->
-        <div class="p-6 space-y-4">
+        <!-- TICKET CONTENT (SCROLLABLE IF NEEDED - NEVER OVERFLOWS VIEWPORT) -->
+        <div class="p-4 sm:p-5 overflow-y-auto space-y-3 flex-1 text-slate-800">
             <!-- EVENT INFO -->
             <div>
-                <div class="flex items-center justify-between gap-2 mb-1.5">
+                <div class="flex items-center justify-between gap-2 mb-1">
                     <span id="modalTicketStatusBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                         <i class="fa-solid fa-circle-check text-[10px]"></i>
                         <span id="modalTicketStatusText">VÉ HỢP LỆ</span>
                     </span>
-                    <span class="text-[11px] text-slate-400 font-mono">NEU-EVENT-PASS</span>
+                    <span class="text-[11px] text-slate-500 font-mono font-semibold">NEU-EVENT-PASS</span>
                 </div>
-                <h3 id="modalEventTitle" class="text-base font-black text-slate-900 leading-snug"></h3>
-                <div class="mt-2 space-y-1 text-xs text-slate-600">
+                <h3 id="modalEventTitle" class="text-sm sm:text-base font-black text-slate-900 leading-snug line-clamp-2"></h3>
+                <div class="mt-1.5 space-y-1 text-xs text-slate-600">
                     <div class="flex items-center gap-2">
                         <i class="fa-regular fa-calendar text-neu-700 w-4 text-center"></i>
                         <span id="modalEventDate" class="font-semibold text-slate-800"></span>
@@ -398,91 +1445,568 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-location-dot text-rose-600 w-4 text-center"></i>
-                        <span id="modalEventVenue" class="font-medium text-slate-700"></span>
+                        <span id="modalEventVenue" class="font-medium text-slate-700 truncate"></span>
                     </div>
                 </div>
             </div>
 
             <!-- TICKET STUB DIVIDER -->
-            <div class="relative py-1">
+            <div class="relative py-0.5">
                 <div class="border-t-2 border-dashed border-slate-200"></div>
             </div>
 
             <!-- STUDENT INFO GRID -->
-            <div class="grid grid-cols-2 gap-2.5 p-3.5 bg-slate-50 rounded-2xl border border-slate-100 text-xs">
+            <div class="grid grid-cols-2 gap-2 p-3 bg-slate-50 rounded-2xl border border-slate-100 text-xs">
                 <div>
-                    <span class="text-[10px] uppercase font-bold text-slate-400 block">Sinh viên</span>
+                    <span class="text-[10px] uppercase font-bold text-slate-500 block">Sinh viên</span>
                     <span id="modalStudentName" class="font-bold text-slate-800 text-xs truncate block"></span>
                 </div>
                 <div>
-                    <span class="text-[10px] uppercase font-bold text-slate-400 block">Mã sinh viên (MSSV)</span>
+                    <span class="text-[10px] uppercase font-bold text-slate-500 block">Mã sinh viên (MSSV)</span>
                     <span id="modalStudentId" class="font-mono font-bold text-slate-800 text-xs block"></span>
                 </div>
                 <div class="col-span-2 pt-1 border-t border-slate-200/60">
-                    <span class="text-[10px] uppercase font-bold text-slate-400 block">Khoa / Viện / Lớp</span>
+                    <span class="text-[10px] uppercase font-bold text-slate-500 block">Khoa / Viện / Lớp</span>
                     <span id="modalStudentDept" class="font-medium text-slate-600 text-[11px] truncate block"></span>
                 </div>
             </div>
 
-            <!-- UNIQUE QR CODE SECTION -->
-            <div class="p-4 bg-gradient-to-b from-slate-50 to-blue-50/40 rounded-2xl border border-slate-200 text-center space-y-3">
-                <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-center gap-1.5">
+            <!-- UNIQUE QR CODE SECTION (COMPACT & CLEAR) -->
+            <div class="p-3 bg-gradient-to-b from-slate-50 to-blue-50/40 rounded-2xl border border-slate-200 text-center space-y-2.5">
+                <div class="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-center gap-1.5">
                     <i class="fa-solid fa-qrcode text-neu-700"></i>
                     <span>MÃ QR VÉ RIÊNG BIỆT CỦA BẠN</span>
                 </div>
 
-                <!-- DYNAMIC QR CODE CONTAINER -->
-                <div class="p-3 bg-white rounded-2xl inline-block shadow-sm border border-slate-200 mx-auto">
-                    <div id="ticketQrContainer" class="w-40 h-40 flex items-center justify-center mx-auto overflow-hidden">
+                <!-- DYNAMIC QR CODE CONTAINER (OPTIMIZED 140x140) -->
+                <div class="p-2.5 bg-white rounded-2xl inline-block shadow-xs border border-slate-200 mx-auto">
+                    <div id="ticketQrContainer" class="w-32 h-32 sm:w-36 sm:h-36 flex items-center justify-center mx-auto overflow-hidden">
                         <!-- Dynamic QR Canvas or Image -->
                     </div>
                 </div>
 
                 <!-- TICKET CODE & QUICK ACTIONS -->
-                <div class="space-y-1.5">
-                    <div class="inline-flex items-center gap-2 bg-white px-3.5 py-1.5 rounded-xl border border-slate-200 shadow-2xs">
-                        <span class="text-[11px] font-bold text-slate-400 uppercase">Mã vé:</span>
-                        <span id="modalTicketCode" class="text-base font-mono font-black text-neu-700 tracking-wider"></span>
-                        <button type="button" id="copyTicketBtn" onclick="copyTicketCode()" title="Sao chép mã vé" class="ml-1 text-slate-400 hover:text-neu-700 text-xs transition">
+                <div class="space-y-1">
+                    <div class="inline-flex items-center gap-2 bg-white px-3 py-1 rounded-xl border border-slate-200 shadow-2xs">
+                        <span class="text-[11px] font-bold text-slate-500 uppercase">Mã vé:</span>
+                        <span id="modalTicketCode" class="text-sm sm:text-base font-mono font-black text-neu-700 tracking-wider"></span>
+                        <button type="button" id="copyTicketBtn" onclick="copyTicketCode()" title="Sao chép mã vé" class="ml-1 text-slate-500 hover:text-neu-700 text-xs transition cursor-pointer">
                             <i class="fa-regular fa-copy"></i>
                         </button>
                     </div>
-                    <div class="text-[10px] text-slate-400">
-                        Mã QR được mã hóa riêng biệt theo mã vé này để quét điểm danh tại sự kiện.
+                    <div class="text-[10px] text-slate-500 leading-tight">
+                        Xuất trình mã QR này tại cổng sự kiện để điểm danh và nhận Điểm Đoàn.
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- BOTTOM ACTIONS -->
-            <div class="grid grid-cols-2 gap-2 pt-1">
-                <button type="button" onclick="downloadTicketQr()" class="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-download text-xs text-neu-700"></i>
-                    <span>Tải ảnh QR</span>
-                </button>
-                <button type="button" onclick="closeTicketModal()" class="py-2.5 px-3 bg-neu-700 hover:bg-neu-800 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs">
-                    <span>Đóng vé</span>
-                </button>
-            </div>
+        <!-- BOTTOM ACTIONS (FIXED FOOTER - ALWAYS VISIBLE) -->
+        <div class="p-3 sm:p-4 bg-slate-50 border-t border-slate-100 grid grid-cols-2 gap-2.5 shrink-0">
+            <button type="button" onclick="downloadTicketQr()" class="py-2.5 px-3 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer">
+                <i class="fa-solid fa-download text-xs text-neu-700"></i>
+                <span>Tải ảnh QR</span>
+            </button>
+            <button type="button" onclick="closeTicketModal()" class="py-2.5 px-3 bg-neu-700 hover:bg-neu-800 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer">
+                <span>Đóng vé</span>
+            </button>
         </div>
     </div>
 </div>
-
 <script>
+    // ----------------- NOTIFICATION SYSTEM -----------------
+    let currentNotifFilter = 'all';
+
+    function toggleNotifDropdown(e) {
+        if (e) e.stopPropagation();
+        const dropdown = document.getElementById('notifDropdown');
+        if (!dropdown) return;
+        closeUserDropdown();
+        closeThemeDropdown();
+        dropdown.classList.toggle('hidden');
+    }
+
+    function closeNotifDropdown() {
+        const dropdown = document.getElementById('notifDropdown');
+        if (dropdown) dropdown.classList.add('hidden');
+    }
+
+    function filterNotifs(type) {
+        currentNotifFilter = type;
+        const allBtn = document.getElementById('notifFilterAllBtn');
+        const unreadBtn = document.getElementById('notifFilterUnreadBtn');
+        const items = document.querySelectorAll('.notif-item');
+        
+        if (type === 'all') {
+            if (allBtn) allBtn.className = "flex-1 py-1.5 px-2.5 rounded-lg text-center transition bg-white text-neu-700 shadow-2xs border border-slate-200 cursor-pointer font-bold";
+            if (unreadBtn) unreadBtn.className = "flex-1 py-1.5 px-2.5 rounded-lg text-center transition text-slate-600 hover:text-slate-900 hover:bg-white/50 cursor-pointer font-semibold";
+            items.forEach(el => el.classList.remove('hidden'));
+        } else {
+            if (unreadBtn) unreadBtn.className = "flex-1 py-1.5 px-2.5 rounded-lg text-center transition bg-white text-neu-700 shadow-2xs border border-slate-200 cursor-pointer font-bold";
+            if (allBtn) allBtn.className = "flex-1 py-1.5 px-2.5 rounded-lg text-center transition text-slate-600 hover:text-slate-900 hover:bg-white/50 cursor-pointer font-semibold";
+            items.forEach(el => {
+                if (el.dataset.unread === 'true') {
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+        }
+    }
+
+    function markAllNotifsAsRead() {
+        const items = document.querySelectorAll('.notif-item');
+        const readIds = [];
+        items.forEach(el => {
+            el.dataset.unread = 'false';
+            el.className = 'notif-item group relative p-3 rounded-xl transition cursor-pointer hover:bg-slate-50 border border-transparent';
+            const dot = el.querySelector('.notif-unread-dot');
+            if (dot) dot.classList.add('hidden');
+            if (el.id) readIds.push(el.id);
+        });
+        
+        try {
+            const stored = JSON.parse(localStorage.getItem('neu_read_notifs') || '[]');
+            const updated = Array.from(new Set([...stored, ...readIds]));
+            localStorage.setItem('neu_read_notifs', JSON.stringify(updated));
+        } catch(err) {}
+        
+        updateNotifBadgeCounters(0);
+        
+        if (currentNotifFilter === 'unread') {
+            filterNotifs('unread');
+        }
+        
+        fetch('/api/notifications/read-all', { method: 'POST' }).catch(()=>{});
+    }
+
+    function handleNotifClick(notifId, link) {
+        markSingleNotifAsRead(notifId);
+        if (link && link !== '#' && link !== '') {
+            window.location.href = link;
+        } else {
+            window.location.href = '/events';
+        }
+    }
+
+    function markSingleNotifAsRead(notifId) {
+        const el = document.getElementById(notifId);
+        if (!el) return;
+        
+        if (el.dataset.unread === 'true') {
+            el.dataset.unread = 'false';
+            el.className = 'notif-item group relative p-3 rounded-xl transition cursor-pointer hover:bg-slate-50 border border-transparent';
+            const dot = el.querySelector('.notif-unread-dot');
+            if (dot) dot.classList.add('hidden');
+            
+            try {
+                const stored = JSON.parse(localStorage.getItem('neu_read_notifs') || '[]');
+                if (!stored.includes(notifId)) {
+                    stored.push(notifId);
+                    localStorage.setItem('neu_read_notifs', JSON.stringify(stored));
+                }
+            } catch(err) {}
+            
+            const unreadItems = document.querySelectorAll('.notif-item[data-unread="true"]');
+            updateNotifBadgeCounters(unreadItems.length);
+        }
+    }
+
+    function dismissNotif(e, notifId) {
+        if (e) e.stopPropagation();
+        const el = document.getElementById(notifId);
+        if (!el) return;
+        
+        try {
+            const dismissed = JSON.parse(localStorage.getItem('neu_dismissed_notifs') || '[]');
+            if (!dismissed.includes(notifId)) {
+                dismissed.push(notifId);
+                localStorage.setItem('neu_dismissed_notifs', JSON.stringify(dismissed));
+            }
+        } catch(err) {}
+        
+        el.style.opacity = '0';
+        el.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            el.remove();
+            checkEmptyNotifs();
+        }, 150);
+    }
+
+    function clearAllNotifs() {
+        const notifList = document.getElementById('notifList');
+        if (notifList) notifList.innerHTML = '';
+        
+        try {
+            localStorage.setItem('neu_notifs_cleared', 'true');
+        } catch(err) {}
+        
+        updateNotifBadgeCounters(0);
+        checkEmptyNotifs();
+        
+        fetch('/api/notifications/clear', { method: 'POST' }).catch(()=>{});
+    }
+
+    function updateNotifBadgeCounters(count) {
+        const badge = document.getElementById('notifBadge');
+        const headerBadge = document.getElementById('notifHeaderBadge');
+        const headerCount = document.getElementById('notifHeaderCount');
+        const unreadCountEl = document.getElementById('notifFilterUnreadCount');
+        
+        if (badge) {
+            if (count > 0) {
+                badge.innerText = count;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+        if (headerBadge) {
+            if (count > 0) {
+                headerBadge.classList.remove('hidden');
+                if (headerCount) headerCount.innerText = count;
+            } else {
+                headerBadge.classList.add('hidden');
+            }
+        }
+        if (unreadCountEl) unreadCountEl.innerText = count;
+    }
+
+    function checkEmptyNotifs() {
+        const items = document.querySelectorAll('.notif-item');
+        const emptyState = document.getElementById('notifEmptyState');
+        const allCountEl = document.getElementById('notifFilterAllCount');
+        
+        const unreadCount = document.querySelectorAll('.notif-item[data-unread="true"]').length;
+        if (allCountEl) allCountEl.innerText = items.length;
+        updateNotifBadgeCounters(unreadCount);
+        
+        if (items.length === 0) {
+            if (emptyState) emptyState.classList.remove('hidden');
+        } else {
+            if (emptyState) emptyState.classList.add('hidden');
+        }
+    }
+
+    function restoreNotifsState() {
+        try {
+            if (localStorage.getItem('neu_notifs_cleared') === 'true') {
+                const notifList = document.getElementById('notifList');
+                if (notifList) notifList.innerHTML = '';
+                checkEmptyNotifs();
+                return;
+            }
+            
+            const dismissed = JSON.parse(localStorage.getItem('neu_dismissed_notifs') || '[]');
+            dismissed.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.remove();
+            });
+            
+            const readIds = JSON.parse(localStorage.getItem('neu_read_notifs') || '[]');
+            readIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.dataset.unread = 'false';
+                    el.className = 'notif-item group relative p-3 rounded-xl transition cursor-pointer hover:bg-slate-50 border border-transparent';
+                    const dot = el.querySelector('.notif-unread-dot');
+                    if (dot) dot.classList.add('hidden');
+                }
+            });
+            
+            checkEmptyNotifs();
+        } catch(err) {}
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        restoreNotifsState();
+    });
+
+    // User Dropdown toggling
+            // Theme Switcher Functions
+        function cycleTheme(event) {
+        if (event) {
+            event.stopPropagation();
+            event.preventDefault();
+        }
+        const currentTheme = localStorage.getItem('neu_theme') || 'light';
+        let nextTheme = 'dark';
+        if (currentTheme === 'light') nextTheme = 'dark';
+        else if (currentTheme === 'dark') nextTheme = 'nature';
+        else nextTheme = 'light';
+        setTheme(nextTheme);
+    }
+
+    function toggleThemeDropdown(event) {
+        if (event) {
+            event.stopPropagation();
+            event.preventDefault();
+        }
+        closeNotifDropdown();
+        closeUserDropdown();
+        const menu = document.getElementById('themeDropdownMenu');
+        if (menu) {
+            menu.classList.toggle('hidden');
+        }
+    }
+
+    function closeThemeDropdown() {
+        const menu = document.getElementById('themeDropdownMenu');
+        if (menu) menu.classList.add('hidden');
+    }
+
+    function setTheme(theme) {
+        if (!['light', 'dark', 'nature'].includes(theme)) theme = 'light';
+        localStorage.setItem('neu_theme', theme);
+        document.documentElement.setAttribute('data-theme', theme);
+        if (document.body) {
+            document.body.setAttribute('data-theme', theme);
+        }
+        updateThemeUI(theme);
+        closeThemeDropdown();
+    }
+
+    function updateThemeUI(theme) {
+        const currentIcon = document.getElementById('themeCurrentIcon');
+        const avatarIcon = document.getElementById('themeAvatarIcon');
+        
+        if (theme === 'dark') {
+            if (currentIcon) currentIcon.className = 'fa-solid fa-moon text-indigo-400 text-sm';
+            if (avatarIcon) avatarIcon.className = 'fa-solid fa-moon text-indigo-400 text-[8px]';
+        } else if (theme === 'nature') {
+            if (currentIcon) currentIcon.className = 'fa-solid fa-leaf text-emerald-500 text-sm';
+            if (avatarIcon) avatarIcon.className = 'fa-solid fa-leaf text-emerald-500 text-[8px]';
+        } else {
+            if (currentIcon) currentIcon.className = 'fa-solid fa-sun text-amber-500 text-sm';
+            if (avatarIcon) avatarIcon.className = 'fa-solid fa-sun text-amber-500 text-[8px]';
+        }
+
+        document.querySelectorAll('.theme-check').forEach(function(el) {
+            if (el.getAttribute('data-check') === theme) {
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
+        });
+    }
+
+    // Initialize Theme UI on DOM load
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentTheme = localStorage.getItem('neu_theme') || 'light';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        if (document.body) {
+            document.body.setAttribute('data-theme', currentTheme);
+        }
+        updateThemeUI(currentTheme);
+    });
+
+    // Close theme dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        const notifWrapper = document.getElementById('notifWrapper');
+        if (notifWrapper && !notifWrapper.contains(e.target)) {
+            closeNotifDropdown();
+        }
+        const userMenu = document.getElementById('userMenuWrapper');
+        if (userMenu && !userMenu.contains(e.target)) {
+            closeUserDropdown();
+        }
+        const wrapper = document.getElementById('themeMenuWrapper');
+        if (wrapper && !wrapper.contains(e.target)) {
+            closeThemeDropdown();
+        }
+    });
+
+    function toggleUserDropdown(event) {
+        closeNotifDropdown();
+        closeThemeDropdown();
+        if (event) event.stopPropagation();
+        const menu = document.getElementById('userDropdownMenu');
+        if (menu) menu.classList.toggle('hidden');
+    }
+
+    function closeUserDropdown() {
+        const menu = document.getElementById('userDropdownMenu');
+        if (menu) menu.classList.add('hidden');
+    }
+
+    // User Info Modal
+    function openUserInfoModal() {
+        closeUserDropdown(); closeThemeDropdown();
+        const modal = document.getElementById('userInfoModal');
+        if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeUserInfoModal() {
+        const modal = document.getElementById('userInfoModal');
+        if (modal) modal.classList.add('hidden');
+    }
+
+    // Logout Modal
     function openLogoutModal() {
-        document.getElementById('logoutConfirmModal').classList.remove('hidden');
+        closeUserDropdown(); closeThemeDropdown();
+        const modal = document.getElementById('logoutConfirmModal');
+        if (modal) modal.classList.remove('hidden');
     }
 
     function closeLogoutModal() {
-        document.getElementById('logoutConfirmModal').classList.add('hidden');
+        const modal = document.getElementById('logoutConfirmModal');
+        if (modal) modal.classList.add('hidden');
     }
 
+    // Change Password Modal
     function openChangePasswordModal() {
-        document.getElementById('changePasswordModal').classList.remove('hidden');
+        closeUserDropdown(); closeThemeDropdown();
+        const modal = document.getElementById('changePasswordModal');
+        if (modal) modal.classList.remove('hidden');
     }
 
     function closeChangePasswordModal() {
-        document.getElementById('changePasswordModal').classList.add('hidden');
+        const modal = document.getElementById('changePasswordModal');
+        if (modal) modal.classList.add('hidden');
+        ['oldPasswordInput', 'newPasswordInput', 'confirmPasswordInput'].forEach(function(id) {
+            const el = document.getElementById(id);
+            if (el) el.type = 'password';
+        });
+        document.querySelectorAll('#changePasswordModal i.fa-eye-slash').forEach(function(icon) {
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        });
     }
+
+    // Toggle password eye icon & input type
+    function togglePasswordVisibility(inputId, btn) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        const icon = btn.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            if (icon) {
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            }
+        } else {
+            input.type = 'password';
+            if (icon) {
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+    }
+
+    // Close user dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        const wrapper = document.getElementById('userMenuWrapper');
+        const menu = document.getElementById('userDropdownMenu');
+        if (wrapper && menu && !wrapper.contains(e.target)) {
+            menu.classList.add('hidden');
+        }
+    });
+
+    // Academic Period (Year & Semester) Dropdown Controller
+    const CURRENT_USER_ROLE = "{{ current_user.role }}";
+
+    function updateSemesterOptions(selectedYear, preserveSelection) {
+        const semSelect = document.getElementById('semesterSelect');
+        if (!semSelect) return;
+
+        semSelect.innerHTML = '';
+
+        // "Tất cả học kỳ" is available for all users
+        const allOpt = document.createElement('option');
+        allOpt.value = 'ALL';
+        allOpt.innerText = 'Tất cả học kỳ';
+        semSelect.appendChild(allOpt);
+
+        if (selectedYear === 'ALL') {
+            semSelect.value = 'ALL';
+            return;
+        }
+
+        let y1 = 2026, y2 = 2027;
+        if (selectedYear && selectedYear.includes('-')) {
+            const parts = selectedYear.split('-');
+            y1 = parseInt(parts[0], 10) || 2026;
+            y2 = parseInt(parts[1], 10) || (y1 + 1);
+        }
+
+        const semesters = [
+            { key: `Học kỳ Thu ${y1}`, label: `Học kỳ Thu ${y1}` },
+            { key: `Học kỳ Xuân ${y2}`, label: `Học kỳ Xuân ${y2}` },
+            { key: `Học kỳ Hè ${y2}`, label: `Học kỳ Hè ${y2}` }
+        ];
+
+        semesters.forEach(function(s) {
+            const opt = document.createElement('option');
+            opt.value = s.key;
+            opt.innerText = s.label;
+            semSelect.appendChild(opt);
+        });
+
+        if (preserveSelection && Array.from(semSelect.options).some(function(o) { return o.value === preserveSelection; })) {
+            semSelect.value = preserveSelection;
+        } else {
+            semSelect.value = 'ALL';
+        }
+    }
+
+    function navigateWithPeriod(yearVal, semVal) {
+        // Persist to session on server
+        fetch('/api/set-period', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ academic_year: yearVal, semester: semVal })
+        }).catch(() => {});
+
+        const filterablePaths = ['/events', '/my-events', '/organizer/events', '/analytics'];
+        const currentPath = window.location.pathname;
+        const isFilterablePage = filterablePaths.some(p => currentPath === p || currentPath.startsWith(p + '/'));
+
+        if (isFilterablePage) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('academic_year', yearVal);
+            url.searchParams.set('semester', semVal || 'ALL');
+            window.location.href = url.toString();
+        }
+    }
+
+    function onAcademicYearChange(yearVal) {
+        localStorage.setItem('neu_academic_year', yearVal);
+        const curSem = document.getElementById('semesterSelect') ? document.getElementById('semesterSelect').value : null;
+        updateSemesterOptions(yearVal, curSem);
+        const newSem = document.getElementById('semesterSelect') ? document.getElementById('semesterSelect').value : 'ALL';
+        localStorage.setItem('neu_semester', newSem);
+        window.dispatchEvent(new CustomEvent('academicPeriodChanged', { detail: { year: yearVal, semester: newSem } }));
+        navigateWithPeriod(yearVal, newSem);
+    }
+
+    function onSemesterChange(semVal) {
+        localStorage.setItem('neu_semester', semVal);
+        const curYear = document.getElementById('academicYearSelect') ? document.getElementById('academicYearSelect').value : '';
+        window.dispatchEvent(new CustomEvent('academicPeriodChanged', { detail: { year: curYear, semester: semVal } }));
+        navigateWithPeriod(curYear, semVal);
+    }
+
+    // Initialize period selectors on DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', function() {
+        const yrSelect = document.getElementById('academicYearSelect');
+        const semSelect = document.getElementById('semesterSelect');
+        if (!yrSelect || !semSelect) return;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlYear = urlParams.get('academic_year');
+        const urlSem = urlParams.get('semester');
+
+        const activeYear = urlYear || "{{ current_academic_year }}" || localStorage.getItem('neu_academic_year') || '2026-2027';
+        const activeSem = urlSem || "{{ current_semester }}" || localStorage.getItem('neu_semester') || 'ALL';
+
+        if (Array.from(yrSelect.options).some(function(o) { return o.value === activeYear; })) {
+            yrSelect.value = activeYear;
+        }
+        updateSemesterOptions(yrSelect.value, activeSem);
+
+        localStorage.setItem('neu_academic_year', yrSelect.value);
+        localStorage.setItem('neu_semester', semSelect.value);
+    });
 
     // Global Ticket Modal functions
     function showTicketModal(title, code, date, venue, name, mssv, dept, time, status) {
@@ -519,8 +2043,8 @@
             try {
                 new QRCode(qrContainer, {
                     text: qrData,
-                    width: 160,
-                    height: 160,
+                    width: 140,
+                    height: 140,
                     colorDark: "#0a2540",
                     colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.M
@@ -531,10 +2055,74 @@
             }
         }
         if (!rendered) {
-            qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&color=0a2540&data=${encodeURIComponent(qrData)}" alt="QR ${code}" class="w-40 h-40 object-contain mx-auto">`;
+            qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&color=0a2540&data=${encodeURIComponent(qrData)}" alt="QR ${code}" class="w-40 h-40 object-contain mx-auto">`;
         }
 
         modal.classList.remove('hidden');
+    }
+
+    function switchHelpTab(role) {
+        const roles = ['student', 'organizer', 'manager'];
+        roles.forEach(r => {
+            const btn = document.getElementById('helpTabBtn-' + r);
+            const content = document.getElementById('helpTabContent-' + r);
+            if (r === role) {
+                if (content) content.classList.remove('hidden');
+                if (btn) {
+                    btn.className = "flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer bg-white text-neu-700 shadow-sm border border-slate-200/80";
+                }
+            } else {
+                if (content) content.classList.add('hidden');
+                if (btn) {
+                    btn.className = "flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-white/50";
+                }
+            }
+        });
+    }
+
+    function switchTermsTab(role) {
+        const roles = ['student', 'organizer', 'manager'];
+        roles.forEach(r => {
+            const btn = document.getElementById('termsTabBtn-' + r);
+            const content = document.getElementById('termsTabContent-' + r);
+            if (r === role) {
+                if (content) content.classList.remove('hidden');
+                if (btn) {
+                    btn.className = "flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer bg-white text-neu-700 shadow-sm border border-slate-200/80";
+                }
+            } else {
+                if (content) content.classList.add('hidden');
+                if (btn) {
+                    btn.className = "flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-white/50";
+                }
+            }
+        });
+    }
+
+    function openTermsModal(initialTab) {
+        const modal = document.getElementById('termsModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            const defaultRole = initialTab || '{{ current_user.role|lower if current_user.is_authenticated else "student" }}';
+            if (defaultRole === 'organizer') switchTermsTab('organizer');
+            else if (defaultRole === 'manager') switchTermsTab('manager');
+            else switchTermsTab('student');
+        }
+    }
+
+    function closeTermsModal() {
+        const modal = document.getElementById('termsModal');
+        if (modal) modal.classList.add('hidden');
+    }
+
+    function openPrivacyModal() {
+        const modal = document.getElementById('privacyModal');
+        if (modal) modal.classList.remove('hidden');
+    }
+
+    function closePrivacyModal() {
+        const modal = document.getElementById('privacyModal');
+        if (modal) modal.classList.add('hidden');
     }
 
     function closeTicketModal() {
@@ -571,16 +2159,43 @@
         }
     }
 
-    // Modal listeners
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeTicketModal();
+    // Modal backdrop click listeners: Tapping or clicking outside the modal box closes the modal
+    const backdropModals = [
+        { id: 'changePasswordModal', closeFn: closeChangePasswordModal },
+        { id: 'userInfoModal', closeFn: closeUserInfoModal },
+        { id: 'logoutConfirmModal', closeFn: closeLogoutModal },
+        { id: 'ticketModal', closeFn: closeTicketModal },
+        { id: 'helpModal', closeFn: function() { const m = document.getElementById('helpModal'); if (m) m.classList.add('hidden'); } },
+        { id: 'termsModal', closeFn: closeTermsModal },
+        { id: 'privacyModal', closeFn: closePrivacyModal }
+    ];
+
+    backdropModals.forEach(function(item) {
+        const modalEl = document.getElementById(item.id);
+        if (modalEl) {
+            modalEl.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    item.closeFn();
+                }
+            });
+        }
     });
-    const ticketModalEl = document.getElementById('ticketModal');
-    if (ticketModalEl) {
-        ticketModalEl.addEventListener('click', function(e) {
-            if (e.target === this) closeTicketModal();
-        });
-    }
+
+    // Keyboard Escape listener to dismiss all active modals and dropdowns
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeNotifDropdown();
+            closeTicketModal();
+            closeChangePasswordModal();
+            closeUserInfoModal();
+            closeLogoutModal();
+            closeUserDropdown(); closeThemeDropdown();
+            closeTermsModal();
+            closePrivacyModal();
+            const helpModal = document.getElementById('helpModal');
+            if (helpModal) helpModal.classList.add('hidden');
+        }
+    });
 </script>
 
 </body>

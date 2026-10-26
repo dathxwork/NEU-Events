@@ -34,7 +34,7 @@
             </div>
             <div class="mt-4">
                 <div class="text-3xl font-extrabold text-slate-900">{{ stats.total }}</div>
-                <div class="text-[11px] text-slate-400 mt-1">Trong năm học {{ current_year }}–{{ current_year + 1 }}</div>
+                <div class="text-[11px] text-slate-400 mt-1">Năm học {{ current_academic_year }}{% if current_semester and current_semester != 'ALL' %} • {{ current_semester }}{% endif %}</div>
             </div>
         </div>
 
@@ -114,33 +114,33 @@
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <!-- TABS -->
                 <div class="flex items-center gap-1 overflow-x-auto text-xs font-medium no-scrollbar">
-                    <a href="{{ url_for('my_events', filter='all') }}" class="px-3 py-1.5 rounded-lg transition whitespace-nowrap {% if current_filter == 'all' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+                    <a href="{{ url_for('my_events', filter='all', academic_year=current_academic_year, semester=current_semester) }}" class="px-3 py-1.5 rounded-lg transition whitespace-nowrap {% if current_filter == 'all' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
                         Tất cả ({{ registrations|length }})
                     </a>
-                    <a href="{{ url_for('my_events', filter='upcoming') }}" class="px-3 py-1.5 rounded-lg transition whitespace-nowrap {% if current_filter == 'upcoming' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+                    <a href="{{ url_for('my_events', filter='upcoming', academic_year=current_academic_year, semester=current_semester) }}" class="px-3 py-1.5 rounded-lg transition whitespace-nowrap {% if current_filter == 'upcoming' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
                         Sắp / đang diễn ra ({{ stats.upcoming }})
                     </a>
-                    <a href="{{ url_for('my_events', filter='attended') }}" class="px-3 py-1.5 rounded-lg transition whitespace-nowrap {% if current_filter == 'attended' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+                    <a href="{{ url_for('my_events', filter='attended', academic_year=current_academic_year, semester=current_semester) }}" class="px-3 py-1.5 rounded-lg transition whitespace-nowrap {% if current_filter == 'attended' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
                         Đã tham dự ({{ stats.attended }})
                     </a>
-                    <a href="{{ url_for('my_events', filter='absent') }}" class="px-3 py-1.5 rounded-lg transition whitespace-nowrap {% if current_filter == 'absent' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+                    <a href="{{ url_for('my_events', filter='absent', academic_year=current_academic_year, semester=current_semester) }}" class="px-3 py-1.5 rounded-lg transition whitespace-nowrap {% if current_filter == 'absent' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
                         Vắng mặt ({{ stats.absent }})
                     </a>
-                    <a href="{{ url_for('my_events', filter='cancelled') }}" class="px-3 py-1.5 rounded-lg transition whitespace-nowrap {% if current_filter == 'cancelled' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
-                        Đã hủy (1)
+                    <a href="{{ url_for('my_events', filter='cancelled', academic_year=current_academic_year, semester=current_semester) }}" class="px-3 py-1.5 rounded-lg transition whitespace-nowrap {% if current_filter == 'cancelled' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+                        Đã hủy
                     </a>
                 </div>
 
-                <!-- SEARCH & SEMESTER -->
+                <!-- SEARCH & CURRENT PERIOD BADGE -->
                 <div class="flex items-center gap-3">
                     <div class="relative w-64">
                         <input type="text" id="regSearchInput" onkeyup="filterMyEventsTable()" placeholder="Tìm tên sự kiện hoặc mã đăng ký" class="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-neu-700">
                         <i class="fa-solid fa-magnifying-glass text-xs absolute left-2.5 top-2.5 text-slate-400"></i>
                     </div>
-                    <select class="px-3 py-1.5 text-xs rounded-xl border border-slate-300 bg-white text-slate-600 focus:outline-none focus:ring-2 focus:ring-neu-700">
-                        <option>Học kỳ I, 2026–2027</option>
-                        <option>Học kỳ II, 2025–2026</option>
-                    </select>
+                    <div class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 text-slate-700 border border-slate-200 flex items-center gap-1.5 whitespace-nowrap">
+                        <i class="fa-regular fa-calendar text-neu-700"></i>
+                        <span>{{ current_academic_year }}{% if current_semester and current_semester != 'ALL' %} ({{ current_semester }}){% endif %}</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -158,6 +158,17 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
+                    {% if registrations|length == 0 %}
+                    <tr>
+                        <td colspan="5" class="py-12 px-6 text-center">
+                            <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto text-xl mb-3">
+                                <i class="fa-regular fa-calendar-xmark"></i>
+                            </div>
+                            <p class="text-xs font-semibold text-slate-700">Chưa có lịch tham gia nào trong Năm học {{ current_academic_year }}{% if current_semester and current_semester != 'ALL' %} ({{ current_semester }}){% endif %}</p>
+                            <p class="text-[11px] text-slate-400 mt-1">Hãy chuyển sang năm học khác trên thanh điều hướng hoặc khám phá các sự kiện mới để đăng ký.</p>
+                        </td>
+                    </tr>
+                    {% endif %}
                     {% for reg in registrations %}
                     <tr class="hover:bg-slate-50/80 transition group">
                         <!-- EVENT TITLE & LOCATION -->

@@ -6,7 +6,7 @@
 {% block content %}
 <div class="space-y-6 max-w-7xl mx-auto">
     <!-- BREADCRUMBS -->
-    <div class="flex items-center gap-2 text-xs text-slate-400">
+    <div class="flex items-center gap-2 text-xs text-slate-500 font-medium">
         <a href="{{ url_for('events') }}" class="hover:text-slate-600">NEU Events</a>
         <span>/</span>
         <span class="text-slate-700 font-medium">Khám phá sự kiện</span>
@@ -55,13 +55,13 @@
 
     <!-- SEARCH & FILTER BAR -->
     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs">
-        <form method="GET" action="{{ url_for('events') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
+        <form method="GET" action="{{ url_for('events') }}#eventsSection" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
             <!-- KEYWORD SEARCH -->
             <div class="lg:col-span-4">
                 <label class="block text-xs font-semibold text-slate-700 mb-1">Tìm kiếm sự kiện</label>
                 <div class="relative">
                     <input type="text" name="q" value="{{ request.args.get('q', '') }}" placeholder="Tên sự kiện, đơn vị tổ chức..." class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-neu-700">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
                         <i class="fa-solid fa-magnifying-glass text-xs"></i>
                     </div>
                 </div>
@@ -72,7 +72,13 @@
                 <label class="block text-xs font-semibold text-slate-700 mb-1">Thời gian</label>
                 <select name="time_filter" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-neu-700">
                     <option value="">Tất cả thời gian</option>
-                    <option value="{{ current_month_year }}" {% if request.args.get('time_filter') == current_month_year %}selected{% endif %}>Tháng {{ current_month_year }}</option>
+                    {% if available_time_filters %}
+                        {% for tf in available_time_filters %}
+                        <option value="{{ tf.value }}" {% if request.args.get('time_filter') == tf.value %}selected{% endif %}>Tháng {{ tf.label }}</option>
+                        {% endfor %}
+                    {% else %}
+                        <option value="{{ current_month_year }}" {% if request.args.get('time_filter') == current_month_year %}selected{% endif %}>Tháng {{ current_month_year }}</option>
+                    {% endif %}
                 </select>
             </div>
 
@@ -110,29 +116,29 @@
     </div>
 
     <!-- STATUS TABS & SORT -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-3">
+    <div id="eventsSection" class="scroll-mt-24 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-3">
         <!-- STATUS TABS -->
         <div class="flex items-center gap-1 overflow-x-auto text-xs font-medium no-scrollbar">
-            <a href="{{ url_for('events', tab='all') }}" class="px-3 py-2 rounded-lg transition whitespace-nowrap {% if current_tab == 'all' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+            <a href="{{ tab_url('all') }}" class="px-3 py-2 rounded-lg transition whitespace-nowrap {% if current_tab == 'all' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
                 Tất cả sự kiện ({{ counts.all }})
             </a>
-            <a href="{{ url_for('events', tab='upcoming') }}" class="px-3 py-2 rounded-lg transition whitespace-nowrap {% if current_tab == 'upcoming' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+            <a href="{{ tab_url('upcoming') }}" class="px-3 py-2 rounded-lg transition whitespace-nowrap {% if current_tab == 'upcoming' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
                 Sắp diễn ra ({{ counts.upcoming }})
             </a>
-            <a href="{{ url_for('events', tab='active') }}" class="px-3 py-2 rounded-lg transition whitespace-nowrap {% if current_tab == 'active' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+            <a href="{{ tab_url('active') }}" class="px-3 py-2 rounded-lg transition whitespace-nowrap {% if current_tab == 'active' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
                 Đang diễn ra ({{ counts.active }})
             </a>
-            <a href="{{ url_for('events', tab='completed') }}" class="px-3 py-2 rounded-lg transition whitespace-nowrap {% if current_tab == 'completed' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+            <a href="{{ tab_url('completed') }}" class="px-3 py-2 rounded-lg transition whitespace-nowrap {% if current_tab == 'completed' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
                 Đã kết thúc ({{ counts.completed }})
             </a>
-            <a href="{{ url_for('events', tab='cancelled') }}" class="px-3 py-2 rounded-lg transition whitespace-nowrap {% if current_tab == 'cancelled' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+            <a href="{{ tab_url('cancelled') }}" class="px-3 py-2 rounded-lg transition whitespace-nowrap {% if current_tab == 'cancelled' %}bg-neu-50 text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-900{% endif %}">
                 Đã hủy ({{ counts.cancelled }})
             </a>
         </div>
 
         <!-- RESULT COUNT & SORT -->
         <div class="flex items-center gap-3 text-xs text-slate-500 justify-between sm:justify-end">
-            <span class="font-semibold text-slate-700">{{ events|length }} sự kiện phù hợp</span>
+            <span class="font-semibold text-slate-700">{{ total_events }} sự kiện phù hợp</span>
             <div class="flex items-center gap-1.5 cursor-pointer hover:text-slate-800">
                 <span>Sắp xếp: <strong>Nổi bật nhất</strong></span>
                 <i class="fa-solid fa-arrow-down-wide-short text-xs"></i>
@@ -140,44 +146,166 @@
         </div>
     </div>
 
-    <!-- CALENDAR VIEW (HIDDEN BY DEFAULT) -->
-    <div id="calendarView" class="hidden bg-white p-6 rounded-2xl border border-slate-200">
-        <h3 class="font-bold text-slate-800 mb-4">Lịch sự kiện NEU - Tháng 10/2026</h3>
-        <div class="grid grid-cols-7 gap-2 text-center text-xs">
-            <div class="font-bold text-slate-400 py-2">T2</div>
-            <div class="font-bold text-slate-400 py-2">T3</div>
-            <div class="font-bold text-slate-400 py-2">T4</div>
-            <div class="font-bold text-slate-400 py-2">T5</div>
-            <div class="font-bold text-slate-400 py-2">T6</div>
-            <div class="font-bold text-slate-400 py-2 text-blue-600">T7</div>
-            <div class="font-bold text-slate-400 py-2 text-rose-600">CN</div>
-            <!-- CALENDAR DAYS -->
-            {% for day in range(1, 32) %}
-            <div class="border rounded-xl p-2 min-h-[70px] flex flex-col justify-between text-left {% if day == 12 or day == 24 %}bg-neu-50 border-neu-200{% else %}border-slate-100{% endif %}">
-                <span class="font-bold text-slate-700">{{ day }}</span>
-                {% if day == 12 %}
-                <span class="text-[10px] bg-emerald-500 text-white px-1 py-0.5 rounded truncate">Ứng dụng AI</span>
-                {% elif day == 24 %}
-                <span class="text-[10px] bg-neu-700 text-white px-1 py-0.5 rounded truncate">Ngày hội việc làm</span>
-                {% elif day == 28 %}
-                <span class="text-[10px] bg-cyan-600 text-white px-1 py-0.5 rounded truncate">Diễn đàn Tài chính</span>
-                {% endif %}
+    <!-- CALENDAR VIEW (GIAO DIỆN LỊCH GỌN GÀNG, TÙY CHỌN THÁNG/NĂM/NGÀY CHUẨN GOOGLE FORM) -->
+    <div id="calendarView" class="hidden bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 scroll-mt-24 shadow-2xs space-y-5">
+        <!-- CALENDAR HEADER & PICKER TOOLBAR -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+            <!-- TITLE & MONTH SUMMARY -->
+            <div>
+                <h3 class="font-bold text-slate-800 text-base sm:text-lg flex items-center gap-2">
+                    <i class="fa-regular fa-calendar-days text-neu-700"></i>
+                    <span>Lịch sự kiện NEU</span>
+                    <span id="calCurrentMonthBadge" class="text-neu-700 font-extrabold ml-1"></span>
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5" id="calMonthSummaryText">
+                    Hiển thị các sự kiện diễn ra trong tháng
+                </p>
             </div>
-            {% endfor %}
+
+            <!-- CONTROLS: PREV/NEXT, MONTH SELECT, YEAR SELECT, GOOGLE FORM DATE PICKER, TODAY, GRID VIEW -->
+            <div class="flex flex-wrap items-center gap-2 sm:gap-2.5">
+                <!-- PREV MONTH -->
+                <button type="button" onclick="changeCalMonthRelative(-1)" title="Tháng trước"
+                        class="w-8 h-8 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 flex items-center justify-center text-xs transition shadow-2xs cursor-pointer">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+
+                <!-- MONTH SELECT -->
+                <div class="relative">
+                    <select id="calMonthSelect" onchange="onCalSelectChange()"
+                            class="text-xs font-semibold py-1.5 pl-2.5 pr-7 rounded-xl border border-slate-200 bg-white hover:border-neu-400 focus:outline-none focus:ring-2 focus:ring-neu-700 cursor-pointer shadow-2xs text-slate-800">
+                        <option value="1">Tháng 1</option>
+                        <option value="2">Tháng 2</option>
+                        <option value="3">Tháng 3</option>
+                        <option value="4">Tháng 4</option>
+                        <option value="5">Tháng 5</option>
+                        <option value="6">Tháng 6</option>
+                        <option value="7">Tháng 7</option>
+                        <option value="8">Tháng 8</option>
+                        <option value="9">Tháng 9</option>
+                        <option value="10">Tháng 10</option>
+                        <option value="11">Tháng 11</option>
+                        <option value="12">Tháng 12</option>
+                    </select>
+                </div>
+
+                <!-- YEAR SELECT -->
+                <div class="relative">
+                    <select id="calYearSelect" onchange="onCalSelectChange()"
+                            class="text-xs font-semibold py-1.5 pl-2.5 pr-7 rounded-xl border border-slate-200 bg-white hover:border-neu-400 focus:outline-none focus:ring-2 focus:ring-neu-700 cursor-pointer shadow-2xs text-slate-800">
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                        <option value="2028">2028</option>
+                        <option value="2029">2029</option>
+                        <option value="2030">2030</option>
+                    </select>
+                </div>
+
+                <!-- NEXT MONTH -->
+                <button type="button" onclick="changeCalMonthRelative(1)" title="Tháng sau"
+                        class="w-8 h-8 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 flex items-center justify-center text-xs transition shadow-2xs cursor-pointer">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+
+                <!-- GOOGLE FORM STYLE DATE PICKER (CHỌN THÁNG, NĂM, NGÀY BẰNG ICON LỊCH) -->
+                <div class="relative flex items-center pl-2 border-l border-slate-200" title="Bấm vào icon lịch để chọn ngày, tháng, năm như Google Form">
+                    <div class="relative flex items-center">
+                        <input type="date" id="calDatePicker" onchange="onDatePickerPicked(this.value)"
+                               class="text-xs font-medium py-1.5 pl-8 pr-2.5 rounded-xl border border-slate-200 bg-white hover:border-neu-400 focus:outline-none focus:ring-2 focus:ring-neu-700 cursor-pointer text-slate-700 shadow-2xs">
+                        <i class="fa-regular fa-calendar text-neu-700 text-xs absolute left-2.5 pointer-events-none"></i>
+                    </div>
+                </div>
+
+                <!-- BUTTON HÔM NAY / THÁNG HIỆN TẠI -->
+                <button type="button" onclick="goToTodayCal()" title="Quay về ngày và tháng hiện tại"
+                        class="px-3 py-1.5 bg-neu-50 hover:bg-neu-100 text-neu-700 border border-neu-200 rounded-xl text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1">
+                    <i class="fa-solid fa-calendar-day text-[11px]"></i>
+                    <span>Hôm nay</span>
+                </button>
+
+                <!-- SWITCH TO GRID VIEW -->
+                <button type="button" onclick="toggleCalendarView()"
+                        class="px-3 py-1.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold transition shadow-2xs cursor-pointer flex items-center gap-1.5">
+                    <i class="fa-solid fa-table-cells-large text-[11px]"></i>
+                    <span>Xem dạng lưới thẻ</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- CALENDAR DAY-OF-WEEK HEADERS -->
+        <div class="grid grid-cols-7 gap-1.5 sm:gap-2 text-center text-xs">
+            <div class="font-bold text-slate-400 py-2 text-[11px]">T2</div>
+            <div class="font-bold text-slate-400 py-2 text-[11px]">T3</div>
+            <div class="font-bold text-slate-400 py-2 text-[11px]">T4</div>
+            <div class="font-bold text-slate-400 py-2 text-[11px]">T5</div>
+            <div class="font-bold text-slate-400 py-2 text-[11px]">T6</div>
+            <div class="font-bold text-slate-400 py-2 text-[11px] text-blue-600">T7</div>
+            <div class="font-bold text-slate-400 py-2 text-[11px] text-rose-600">CN</div>
+        </div>
+
+        <!-- DAYS CONTAINER RENDERED DYNAMICALLY (CHỈ HIỆN 1 THÁNG DUY NHẤT) -->
+        <div id="calendarDaysGrid" class="grid grid-cols-7 gap-1.5 sm:gap-2 text-center text-xs">
+            <!-- Injected by JavaScript -->
+        </div>
+
+        <!-- SELECTED DAY EVENT DETAILS BANNER -->
+        <div id="selectedDayEventsBox" class="hidden p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+            <!-- Injected by JavaScript -->
         </div>
     </div>
 
     <!-- EVENTS GRID (MATCHING Danh sách sự kiện.jpg) -->
-    <div id="eventsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div id="eventsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 scroll-mt-24">
+        {% if events|length == 0 %}
+        <!-- REQ 2: EMPTY STATE KHI KHÔNG CÓ SỰ KIỆN Ở TRẠNG THÁI NÀY (VD: ĐÃ HỦY) -->
+        <div class="col-span-full py-16 px-6 text-center bg-white rounded-2xl border border-slate-200 shadow-2xs">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 text-slate-400 mb-3">
+                <i class="fa-regular fa-calendar-xmark text-2xl text-slate-400"></i>
+            </div>
+            <h4 class="font-bold text-slate-800 text-base">
+                {% if current_tab == 'cancelled' %}
+                Không có sự kiện đã hủy
+                {% elif current_tab == 'upcoming' %}
+                Không có sự kiện sắp diễn ra
+                {% elif current_tab == 'active' %}
+                Không có sự kiện đang diễn ra
+                {% elif current_tab == 'completed' %}
+                Không có sự kiện đã kết thúc
+                {% else %}
+                Không tìm thấy sự kiện nào
+                {% endif %}
+            </h4>
+            <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+                {% if current_tab == 'cancelled' %}
+                Hiện tại không có sự kiện nào ở trạng thái đã hủy.
+                {% else %}
+                Không có sự kiện nào phù hợp với bộ lọc tìm kiếm hiện tại.
+                {% endif %}
+            </p>
+            <div class="mt-4">
+                <a href="{{ tab_url('all') }}" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-neu-700 text-white text-xs font-semibold hover:bg-neu-800 transition shadow-2xs">
+                    <i class="fa-solid fa-rotate-left text-xs"></i>
+                    <span>Xem tất cả sự kiện</span>
+                </a>
+            </div>
+        </div>
+        {% endif %}
         {% for e in events %}
-        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs hover:shadow-md transition flex flex-col justify-between group">
+        <a href="{{ url_for('event_detail', event_id=e.id) }}" class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs hover:shadow-md hover:border-slate-300 transition-all duration-200 flex flex-col justify-between group cursor-pointer block select-none">
             <div>
-                <!-- THUMBNAIL WITH DATE BADGE OVERLAY -->
+                <!-- THUMBNAIL WITH DATE BADGE OVERLAY & UNION POINTS -->
                 <div class="relative h-48 w-full overflow-hidden bg-slate-100">
                     <img src="{{ e.cover_image_url or 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600' }}" alt="{{ e.title }}" class="w-full h-full object-cover group-hover:scale-103 transition duration-300">
                     <!-- DATE BADGE -->
                     <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-xs text-neu-700 font-black text-xs px-2.5 py-1.5 rounded-lg shadow-sm border border-slate-100">
                         {{ e.event_date.strftime('%d TH%m') }}
+                    </div>
+                    <!-- ĐIỂM ĐOÀN BADGE (GÓC DƯỚI BÊN PHẢI KHUNG BANNER) -->
+                    <div class="absolute bottom-3 right-3 bg-slate-900/85 backdrop-blur-xs text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow-md border border-white/20 flex items-center gap-1.5">
+                        <i class="fa-solid fa-award text-amber-400 text-xs"></i>
+                        <span>+{{ e.points or 5 }} điểm Đoàn</span>
                     </div>
                 </div>
 
@@ -221,11 +349,11 @@
                     <!-- DETAILS -->
                     <div class="space-y-1.5 text-xs text-slate-500">
                         <div class="flex items-center gap-2">
-                            <i class="fa-regular fa-clock w-4 text-slate-400"></i>
+                            <i class="fa-regular fa-clock w-4 text-slate-500"></i>
                             <span>{{ e.event_date.strftime('%d/%m/%Y') }} • {{ e.start_time.strftime('%H:%M') }}–{{ e.end_time.strftime('%H:%M') }}</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-location-dot w-4 text-slate-400"></i>
+                            <i class="fa-solid fa-location-dot w-4 text-slate-500"></i>
                             <span class="truncate">{{ e.location }}</span>
                         </div>
                     </div>
@@ -255,7 +383,7 @@
 
                 <!-- ACTION BUTTON -->
                 <div class="pt-2">
-                    <a href="{{ url_for('event_detail', event_id=e.id) }}" class="inline-flex items-center gap-1.5 text-xs font-bold text-neu-700 hover:text-neu-800 transition">
+                    <span class="inline-flex items-center gap-1.5 text-xs font-bold text-neu-700 group-hover:text-neu-800 transition">
                         {% if e.status == 'COMPLETED' %}
                             <span>Xem tổng kết</span>
                         {% elif e.status == 'CANCELLED' %}
@@ -263,41 +391,308 @@
                         {% else %}
                             <span>Xem chi tiết</span>
                         {% endif %}
-                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                    </a>
+                        <i class="fa-solid fa-arrow-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </span>
                 </div>
             </div>
-        </div>
+        </a>
         {% endfor %}
     </div>
 
     <!-- PAGINATION -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-slate-200 text-xs text-slate-500">
-        <div>Hiển thị 1–{{ events|length }} trong tổng số 24 sự kiện</div>
+    <div id="paginationSection" class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-slate-200 text-xs text-slate-500">
+        <div>
+            {% if total_events == 0 %}
+                Không có sự kiện nào phù hợp
+            {% else %}
+                Hiển thị {{ start_index }}–{{ end_index }} trong tổng số {{ total_events }} sự kiện
+            {% endif %}
+        </div>
         <div class="flex items-center gap-1.5">
-            <button class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 font-medium">Trước</button>
-            <button class="px-3 py-1.5 rounded-lg bg-neu-700 text-white font-bold">1</button>
-            <button class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 font-medium">2</button>
-            <button class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 font-medium">3</button>
-            <button class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 font-medium">Sau</button>
+            <!-- NÚT TRƯỚC -->
+            {% if page > 1 %}
+            <a href="{{ page_url(page - 1) }}" class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 font-medium text-slate-700 transition shadow-2xs">Trước</a>
+            {% else %}
+            <span class="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-300 font-medium cursor-not-allowed select-none">Trước</span>
+            {% endif %}
+
+            <!-- CÁC SỐ TRANG -->
+            {% for p in range(1, total_pages + 1) %}
+                {% if p == page %}
+                <span class="w-8 h-8 rounded-lg bg-neu-700 text-white font-bold flex items-center justify-center shadow-xs select-none">{{ p }}</span>
+                {% else %}
+                <a href="{{ page_url(p) }}" class="w-8 h-8 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold flex items-center justify-center transition shadow-2xs">{{ p }}</a>
+                {% endif %}
+            {% endfor %}
+
+            <!-- NÚT SAU -->
+            {% if page < total_pages %}
+            <a href="{{ page_url(page + 1) }}" class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 font-medium text-slate-700 transition shadow-2xs">Sau</a>
+            {% else %}
+            <span class="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-300 font-medium cursor-not-allowed select-none">Sau</span>
+            {% endif %}
         </div>
     </div>
 </div>
 
 <script>
+    // All events data for instant dynamic calendar rendering (Google Form style)
+    const calendarEventsData = [
+        {% for ev in all_events %}
+        {
+            id: {{ ev.id }},
+            title: {{ ev.title|tojson }},
+            dateStr: "{{ ev.event_date.strftime('%Y-%m-%d') }}",
+            year: {{ ev.event_date.year }},
+            month: {{ ev.event_date.month }},
+            day: {{ ev.event_date.day }},
+            time: "{{ ev.start_time.strftime('%H:%M') }}",
+            location: {{ ev.location|tojson }},
+            url: "{{ url_for('event_detail', event_id=ev.id) }}"
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    const todayYear = {{ today.year }};
+    const todayMonth = {{ today.month }};
+    const todayDay = {{ today.day }};
+
+    let activeCalYear = todayYear;
+    let activeCalMonth = todayMonth;
+    let selectedCalDay = null;
+
+    function renderCalendarGrid(year, month, highlightDay = null) {
+        activeCalYear = parseInt(year);
+        activeCalMonth = parseInt(month);
+        selectedCalDay = highlightDay ? parseInt(highlightDay) : null;
+
+        const monthSelect = document.getElementById('calMonthSelect');
+        const yearSelect = document.getElementById('calYearSelect');
+        const badge = document.getElementById('calCurrentMonthBadge');
+        const summary = document.getElementById('calMonthSummaryText');
+        const grid = document.getElementById('calendarDaysGrid');
+        const datePicker = document.getElementById('calDatePicker');
+
+        if (monthSelect) monthSelect.value = activeCalMonth;
+        if (yearSelect) yearSelect.value = activeCalYear;
+        if (datePicker) {
+            const mStr = String(activeCalMonth).padStart(2, '0');
+            const dStr = selectedCalDay ? String(selectedCalDay).padStart(2, '0') : (activeCalYear === todayYear && activeCalMonth === todayMonth ? String(todayDay).padStart(2, '0') : '01');
+            datePicker.value = `${activeCalYear}-${mStr}-${dStr}`;
+        }
+
+        if (badge) {
+            badge.innerText = `- Tháng ${String(activeCalMonth).padStart(2, '0')}/${activeCalYear}`;
+        }
+
+        // Filter events for this month
+        const monthEvents = calendarEventsData.filter(e => e.year === activeCalYear && e.month === activeCalMonth);
+        if (summary) {
+            if (monthEvents.length > 0) {
+                summary.innerHTML = `Có <strong>${monthEvents.length}</strong> sự kiện diễn ra trong Tháng ${activeCalMonth}/${activeCalYear}`;
+            } else {
+                summary.innerText = `Không có sự kiện nào diễn ra trong Tháng ${activeCalMonth}/${activeCalYear}`;
+            }
+        }
+
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        // Calculate start weekday (0 = Monday, 6 = Sunday)
+        const firstDayWeekday = new Date(activeCalYear, activeCalMonth - 1, 1).getDay();
+        const blankCount = (firstDayWeekday === 0) ? 6 : (firstDayWeekday - 1);
+        const daysInMonth = new Date(activeCalYear, activeCalMonth, 0).getDate();
+
+        // Add blank cells
+        for (let i = 0; i < blankCount; i++) {
+            const blank = document.createElement('div');
+            blank.className = "min-h-[64px] sm:min-h-[76px] rounded-xl bg-slate-50/40 border border-slate-100/40";
+            grid.appendChild(blank);
+        }
+
+        // Add day cells
+        for (let d = 1; d <= daysInMonth; d++) {
+            const isToday = (activeCalYear === todayYear && activeCalMonth === todayMonth && d === todayDay);
+            const isSelected = (selectedCalDay === d);
+            const dayEvents = monthEvents.filter(e => e.day === d);
+
+            const cell = document.createElement('div');
+            let borderBgClasses = "border-slate-100 bg-white hover:border-slate-300";
+            if (isSelected) {
+                borderBgClasses = "border-neu-700 bg-blue-50/90 ring-2 ring-neu-500 font-bold shadow-xs";
+            } else if (isToday) {
+                borderBgClasses = "border-neu-400 bg-blue-50/70 ring-1 ring-neu-400 font-bold";
+            } else if (dayEvents.length > 0) {
+                borderBgClasses = "border-neu-200 bg-neu-50/50 hover:bg-neu-50";
+            }
+
+            cell.className = `border rounded-xl p-1.5 sm:p-2 min-h-[64px] sm:min-h-[76px] flex flex-col justify-between text-left transition cursor-pointer ${borderBgClasses}`;
+            cell.onclick = () => selectCalendarDay(d, dayEvents);
+
+            // Day header
+            const headerDiv = document.createElement('div');
+            headerDiv.className = "flex items-center justify-between";
+            headerDiv.innerHTML = `
+                <span class="font-bold text-[11px] ${isToday ? 'text-neu-700' : (dayEvents.length > 0 ? 'text-slate-800' : 'text-slate-600')}">${d}</span>
+                ${isToday ? '<span class="text-[8px] bg-neu-700 text-white font-bold px-1 py-0.2 rounded">Hôm nay</span>' : ''}
+            `;
+            cell.appendChild(headerDiv);
+
+            // Events container
+            const eventsDiv = document.createElement('div');
+            eventsDiv.className = "space-y-1 mt-1";
+            dayEvents.forEach(ev => {
+                const evLink = document.createElement('a');
+                evLink.href = ev.url;
+                evLink.className = "block text-[10px] bg-neu-700 text-white px-1.5 py-0.5 rounded truncate hover:bg-neu-800 transition shadow-2xs font-medium";
+                evLink.title = `${ev.title} (${ev.time}) - ${ev.location}`;
+                evLink.innerText = ev.title;
+                evLink.onclick = (e) => e.stopPropagation();
+                eventsDiv.appendChild(evLink);
+            });
+            cell.appendChild(eventsDiv);
+
+            grid.appendChild(cell);
+        }
+
+        // If highlightDay, show selected box
+        if (selectedCalDay) {
+            const selectedEvents = monthEvents.filter(e => e.day === selectedCalDay);
+            selectCalendarDay(selectedCalDay, selectedEvents, false);
+        } else {
+            const box = document.getElementById('selectedDayEventsBox');
+            if (box) box.classList.add('hidden');
+        }
+    }
+
+    function selectCalendarDay(day, dayEvents, reRender = true) {
+        selectedCalDay = day;
+        const box = document.getElementById('selectedDayEventsBox');
+        if (!box) return;
+
+        const dateStr = `${String(day).padStart(2, '0')}/${String(activeCalMonth).padStart(2, '0')}/${activeCalYear}`;
+        if (dayEvents && dayEvents.length > 0) {
+            let html = `
+                <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200">
+                    <span class="font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-regular fa-calendar-check text-neu-700"></i>
+                        <span>Sự kiện ngày ${dateStr} (${dayEvents.length} sự kiện)</span>
+                    </span>
+                    <button type="button" onclick="document.getElementById('selectedDayEventsBox').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-xs cursor-pointer">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <div class="space-y-1.5">
+            `;
+            dayEvents.forEach(ev => {
+                html += `
+                    <div class="flex items-center justify-between p-2 rounded-lg bg-white border border-slate-200 hover:border-neu-300 transition">
+                        <div class="min-w-0 pr-3">
+                            <a href="${ev.url}" class="font-bold text-neu-700 hover:underline truncate block text-xs">${ev.title}</a>
+                            <div class="text-[11px] text-slate-500">${ev.time} • ${ev.location}</div>
+                        </div>
+                        <a href="${ev.url}" class="px-2.5 py-1 rounded-lg bg-neu-700 text-white font-semibold text-[10px] shrink-0 hover:bg-neu-800 transition">
+                            Chi tiết
+                        </a>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+            box.innerHTML = html;
+            box.classList.remove('hidden');
+        } else {
+            box.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-500">Ngày <strong>${dateStr}</strong> không có sự kiện nào.</span>
+                    <button type="button" onclick="document.getElementById('selectedDayEventsBox').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-xs cursor-pointer">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            `;
+            box.classList.remove('hidden');
+        }
+
+        if (reRender) {
+            renderCalendarGrid(activeCalYear, activeCalMonth, day);
+        }
+    }
+
+    function onCalSelectChange() {
+        const m = document.getElementById('calMonthSelect').value;
+        const y = document.getElementById('calYearSelect').value;
+        renderCalendarGrid(y, m);
+    }
+
+    function changeCalMonthRelative(offset) {
+        let m = activeCalMonth + offset;
+        let y = activeCalYear;
+        if (m < 1) {
+            m = 12;
+            y--;
+        } else if (m > 12) {
+            m = 1;
+            y++;
+        }
+        renderCalendarGrid(y, m);
+    }
+
+    function onDatePickerPicked(val) {
+        if (!val) return;
+        const parts = val.split('-');
+        if (parts.length === 3) {
+            const y = parseInt(parts[0]);
+            const m = parseInt(parts[1]);
+            const d = parseInt(parts[2]);
+            renderCalendarGrid(y, m, d);
+        }
+    }
+
+    function goToTodayCal() {
+        renderCalendarGrid(todayYear, todayMonth, todayDay);
+    }
+
     function toggleCalendarView() {
         const grid = document.getElementById('eventsGrid');
         const cal = document.getElementById('calendarView');
+        const pagination = document.getElementById('paginationSection');
         const text = document.getElementById('calendarToggleText');
+
         if (cal.classList.contains('hidden')) {
             cal.classList.remove('hidden');
-            grid.classList.add('hidden');
+            if (grid) grid.classList.add('hidden');
+            if (pagination) pagination.classList.add('hidden');
             text.innerText = "Dạng lưới thẻ";
+
+            // Render active month
+            renderCalendarGrid(activeCalYear, activeCalMonth);
+
+            setTimeout(function() {
+                cal.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 60);
         } else {
             cal.classList.add('hidden');
-            grid.classList.remove('hidden');
+            if (grid) grid.classList.remove('hidden');
+            if (pagination) pagination.classList.remove('hidden');
             text.innerText = "Lịch sự kiện";
+            setTimeout(function() {
+                if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 50);
         }
     }
+
+    // Initialize calendar on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        renderCalendarGrid(todayYear, todayMonth);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (window.location.hash === '#eventsSection' || urlParams.has('tab') || urlParams.has('page')) {
+            const section = document.getElementById('eventsSection');
+            if (section) {
+                setTimeout(function() {
+                    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 80);
+            }
+        }
+    });
 </script>
 {% endblock %}

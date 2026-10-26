@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo cáo Thống kê Sự kiện NEU - {{ export_time }}</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: white !important;
+                color: black !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .page-break {
+                page-break-after: always;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 15mm 12mm 15mm 12mm;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans p-4 sm:p-8 min-h-screen">
+
+    <!-- FLOATING TOP BAR (HIDDEN IN PRINT) -->
+    <div class="no-print max-w-5xl mx-auto mb-6 bg-white p-4 rounded-2xl border border-slate-200 shadow-md flex flex-wrap items-center justify-between gap-3 sticky top-4 z-50">
+        <div class="flex items-center gap-3">
+            <span class="w-9 h-9 rounded-xl bg-neu-100 text-neu-700 flex items-center justify-center text-base font-bold">
+                <i class="fa-solid fa-file-pdf text-rose-600"></i>
+            </span>
+            <div>
+                <h4 class="font-bold text-slate-900 text-sm">Xem trước Bản in & Xuất PDF</h4>
+                <p class="text-[11px] text-slate-500">Báo cáo chuẩn thể thức văn bản Đại học Kinh tế Quốc dân</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 flex-wrap">
+            <button type="button" onclick="window.print()" class="px-4 py-2 bg-neu-700 hover:bg-neu-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
+                <i class="fa-solid fa-print"></i>
+                <span>In / Lưu PDF</span>
+            </button>
+            <a href="{{ url_for('export_analytics', format='xlsx') }}" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-file-excel"></i>
+                <span>Tải Excel</span>
+            </a>
+            <a href="{{ url_for('export_analytics', format='csv') }}" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-file-csv"></i>
+                <span>Tải CSV</span>
+            </a>
+            <button type="button" onclick="window.close(); if(!window.closed) history.back();" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition cursor-pointer">
+                <span>Đóng</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- PRINTABLE PAPER (A4 CONTAINER) -->
+    <div class="max-w-5xl mx-auto bg-white p-8 sm:p-12 rounded-2xl shadow-sm border border-slate-200 print:border-none print:shadow-none print:p-0">
+        
+        <!-- HEADER LETTERHEAD -->
+        <div class="flex items-start justify-between border-b-2 border-slate-800 pb-5 mb-6 text-xs text-slate-800">
+            <div class="text-center font-bold space-y-1">
+                <div>BỘ GIÁO DỤC VÀ ĐÀO TẠO</div>
+                <div class="text-sm font-black tracking-wide text-neu-900">ĐẠI HỌC KINH TẾ QUỐC DÂN</div>
+                <div class="text-[11px] font-normal text-slate-600">Cổng Thông tin Quản lý Sự kiện NEU Events</div>
+            </div>
+            <div class="text-center space-y-1 font-bold">
+                <div>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+                <div class="font-bold underline underline-offset-4">Độc lập - Tự do - Hạnh phúc</div>
+                <div class="text-[11px] font-normal text-slate-500 italic mt-1">Hà Nội, {{ export_time }}</div>
+            </div>
+        </div>
+
+        <!-- REPORT TITLE -->
+        <div class="text-center my-6 space-y-2">
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tight">
+                BÁO CÁO TỔNG HỢP HIỆU QUẢ HOẠT ĐỘNG SỰ KIỆN
+            </h1>
+            <p class="text-xs text-slate-600 italic">
+                Thời gian xuất: {{ export_time }} • Người lập báo cáo: <strong>{{ current_user.full_name }}</strong> ({{ current_user.email }})
+            </p>
+            {% if academic_year or semester %}
+            <p class="text-xs text-slate-700 font-semibold">
+                Niên khóa: <span class="text-neu-700">{{ academic_year or 'Tất cả năm học' }}</span> | Học kỳ: <span class="text-neu-700">{{ semester or 'Tất cả học kỳ' }}</span>
+            </p>
+            {% endif %}
+        </div>
+
+        <!-- KPI SUMMARY CARDS -->
+        <div class="grid grid-cols-4 gap-3 my-6">
+            <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 text-center">
+                <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Tổng số sự kiện</div>
+                <div class="text-xl font-black text-slate-900 mt-1">{{ stats.events }}</div>
+            </div>
+            <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 text-center">
+                <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Tổng lượt đăng ký</div>
+                <div class="text-xl font-black text-blue-700 mt-1">{{ stats.registrations }}</div>
+            </div>
+            <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 text-center">
+                <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Tổng lượt tham dự</div>
+                <div class="text-xl font-black text-emerald-700 mt-1">{{ stats.attended }}</div>
+            </div>
+            <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 text-center">
+                <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Tỷ lệ tham dự chung</div>
+                <div class="text-xl font-black text-neu-700 mt-1">{{ stats.rate }}%</div>
+            </div>
+        </div>
+
+        <!-- DETAILED EVENTS TABLE -->
+        <div class="my-6">
+            <h3 class="font-bold text-slate-900 text-sm mb-2.5 uppercase tracking-wide flex items-center gap-2">
+                <span>Danh sách chi tiết hiệu quả từng sự kiện</span>
+                <span class="text-xs font-normal text-slate-500">({{ events|length }} sự kiện)</span>
+            </h3>
+            <table class="w-full text-xs text-left border-collapse border border-slate-300">
+                <thead>
+                    <tr class="bg-slate-100 text-slate-800 font-bold border-b border-slate-300">
+                        <th class="p-2 border border-slate-300 text-center w-8">STT</th>
+                        <th class="p-2 border border-slate-300 w-24">Mã sự kiện</th>
+                        <th class="p-2 border border-slate-300">Tên sự kiện & Đơn vị tổ chức</th>
+                        <th class="p-2 border border-slate-300 text-center w-20">Ngày tổ chức</th>
+                        <th class="p-2 border border-slate-300 text-right w-16">Đăng ký</th>
+                        <th class="p-2 border border-slate-300 text-right w-16">Tham dự</th>
+                        <th class="p-2 border border-slate-300 text-center w-16">Tỷ lệ</th>
+                        <th class="p-2 border border-slate-300 text-center w-16">Đánh giá</th>
+                        <th class="p-2 border border-slate-300 text-center w-24">Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    {% for ev in events %}
+                    <tr class="{% if loop.index % 2 == 0 %}bg-slate-50/50{% endif %}">
+                        <td class="p-2 border border-slate-300 text-center font-mono">{{ loop.index }}</td>
+                        <td class="p-2 border border-slate-300 font-mono text-[11px] font-bold text-slate-700">{{ ev.code }}</td>
+                        <td class="p-2 border border-slate-300">
+                            <div class="font-bold text-slate-900">{{ ev.title }}</div>
+                            <div class="text-[10px] text-slate-500">{{ ev.organizer_name }} • {{ ev.location }}</div>
+                        </td>
+                        <td class="p-2 border border-slate-300 text-center font-mono">{{ ev.event_date.strftime('%d/%m/%Y') }}</td>
+                        <td class="p-2 border border-slate-300 text-right font-mono">{{ ev.registered_seats }}</td>
+                        <td class="p-2 border border-slate-300 text-right font-mono">{{ ev.attended_seats if ev.event_date <= today else '—' }}</td>
+                        <td class="p-2 border border-slate-300 text-center font-bold text-slate-800">{{ ev.attendance_rate }}%</td>
+                        <td class="p-2 border border-slate-300 text-center font-semibold">
+                            {% if ev.average_rating %}{{ ev.average_rating }} ⭐{% else %}—{% endif %}
+                        </td>
+                        <td class="p-2 border border-slate-300 text-center">
+                            {% if ev.status == 'CANCELLED' %}
+                            <span class="text-rose-700 font-bold">Đã hủy</span>
+                            {% elif ev.status == 'COMPLETED' or ev.event_date < today %}
+                            <span class="text-slate-600 font-medium">Đã kết thúc</span>
+                            {% elif ev.event_date == today and ev.status == 'APPROVED' %}
+                            <span class="text-emerald-700 font-bold">Đang diễn ra</span>
+                            {% elif ev.status == 'PENDING' %}
+                            <span class="text-amber-700 font-bold">Chờ duyệt</span>
+                            {% else %}
+                            <span class="text-neu-700 font-bold">Sắp diễn ra</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- FOOTER SIGNATURES -->
+        <div class="mt-12 pt-6 border-t border-slate-200 grid grid-cols-2 text-center text-xs">
+            <div>
+                <div class="font-bold uppercase text-slate-800">Người lập biểu</div>
+                <div class="text-[10px] text-slate-500 italic mt-0.5">(Ký và ghi rõ họ tên)</div>
+                <div class="h-20"></div>
+                <div class="font-bold text-slate-900">{{ current_user.full_name }}</div>
+            </div>
+            <div>
+                <div class="font-bold uppercase text-slate-800">Đại diện Ban Giám hiệu / Đơn vị quản lý</div>
+                <div class="text-[10px] text-slate-500 italic mt-0.5">(Ký tên và đóng dấu)</div>
+                <div class="h-20"></div>
+                <div class="font-bold text-slate-900">PGS. TS. Bùi Huy Nhượng</div>
+            </div>
+        </div>
+
+        <!-- FOOTER NOTE -->
+        <div class="mt-8 text-center text-[10px] text-slate-400 italic">
+            Báo cáo được trích xuất tự động từ Cổng thông tin Quản lý Sự kiện NEU Events vào lúc {{ export_time }}.
+        </div>
+    </div>
+
+</body>
+</html>

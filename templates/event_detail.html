@@ -6,7 +6,7 @@
 {% block content %}
 <div class="space-y-6 max-w-7xl mx-auto">
     <!-- BREADCRUMBS -->
-    <div class="flex items-center gap-2 text-xs text-slate-400">
+    <div class="flex items-center gap-2 text-xs text-slate-500 font-medium">
         <a href="{{ url_for('events') }}" class="hover:text-slate-600">NEU Events</a>
         <span>/</span>
         <a href="{{ url_for('events') }}" class="hover:text-slate-600">Sự kiện</a>
@@ -30,13 +30,56 @@
     <div class="relative rounded-2xl overflow-hidden h-72 md:h-80 w-full shadow-sm bg-slate-900">
         <img src="{{ event.cover_image_url or 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200' }}" alt="{{ event.title }}" class="w-full h-full object-cover opacity-60">
         <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/40 to-transparent"></div>
-        <div class="absolute bottom-8 left-8 right-8 text-white space-y-2">
-            <div class="flex items-center gap-2">
-                <span class="bg-white/20 backdrop-blur-xs text-white text-xs font-bold px-3 py-1 rounded-md">{{ event.category.name }}</span>
-                <span class="bg-emerald-500/80 backdrop-blur-xs text-white text-xs font-bold px-3 py-1 rounded-md">Đã duyệt</span>
+
+        <div class="absolute bottom-6 left-6 right-6 md:bottom-8 md:left-8 md:right-8 text-white flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div class="space-y-2.5 max-w-2xl">
+                <div class="flex items-center gap-2">
+                    <span class="bg-white/20 backdrop-blur-xs text-white text-xs font-bold px-3 py-1 rounded-md">{{ event.category.name }}</span>
+                    {% set badge = event.current_status_badge %}
+                    <span class="{{ badge.class }} backdrop-blur-xs text-xs font-bold px-3 py-1 rounded-md flex items-center gap-1.5 shadow-xs">
+                        <span class="w-2 h-2 rounded-full {{ badge.dot }}"></span>
+                        <span>{{ badge.label }}</span>
+                    </span>
+                </div>
+                <h2 class="text-2xl md:text-4xl font-black tracking-tight text-white">{{ event.title }}</h2>
+                <p class="text-xs md:text-sm text-slate-200 font-light">{{ event.subtitle or event.description[:120] }}</p>
+
+                <!-- THỜI GIAN & ĐỊA ĐIỂM DIỄN RA TRÊN BANNER -->
+                <div class="flex flex-wrap items-center gap-2.5 pt-1 text-xs text-blue-100 font-medium">
+                    <div class="inline-flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/15 text-white">
+                        <i class="fa-regular fa-calendar text-amber-400"></i>
+                        <span class="font-bold">{{ event.event_date.strftime('%d/%m/%Y') }}</span>
+                    </div>
+                    <div class="inline-flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/15 text-white">
+                        <i class="fa-regular fa-clock text-blue-300"></i>
+                        <span>{{ event.start_time.strftime('%H:%M') }} – {{ event.end_time.strftime('%H:%M') }}</span>
+                    </div>
+                    <div class="inline-flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/15 text-white">
+                        <i class="fa-solid fa-location-dot text-rose-400"></i>
+                        <span class="truncate max-w-[220px] sm:max-w-none">{{ event.location }}</span>
+                    </div>
+                </div>
             </div>
-            <h2 class="text-2xl md:text-4xl font-black tracking-tight text-white">{{ event.title }}</h2>
-            <p class="text-xs md:text-sm text-slate-200 max-w-2xl font-light">{{ event.subtitle or event.description[:120] }}</p>
+
+            <!-- ĐIỂM ĐOÀN BADGE (GÓC DƯỚI BÊN PHẢI HERO BANNER) -->
+            <div class="shrink-0 self-end md:self-auto z-10">
+                <div class="bg-slate-900/85 backdrop-blur-md border border-white/20 px-3.5 py-2 md:px-4 md:py-2.5 rounded-xl text-white shadow-lg flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-amber-400/20 text-amber-400 flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-award text-lg"></i>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-slate-300 uppercase tracking-wider font-bold">Điểm Đoàn</div>
+                        <div class="text-sm font-black text-amber-300 flex items-center gap-1.5">
+                            <span>+{{ event.union_points_plus }} điểm</span>
+                            {% if event.union_points_minus and event.union_points_minus > 0 %}
+                            <span class="text-rose-300 text-xs font-normal bg-rose-500/30 px-1.5 py-0.2 rounded border border-rose-400/30">
+                                Trừ {{ event.union_points_minus }} nếu vắng
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -59,7 +102,7 @@
                         </div>
                         <div>
                             <div class="text-xs font-bold text-slate-800">50+ doanh nghiệp</div>
-                            <div class="text-[11px] text-slate-400">Tham gia tuyển dụng</div>
+                            <div class="text-[11px] text-slate-500 font-medium">Tham gia tuyển dụng</div>
                         </div>
                     </div>
                     <div class="p-4 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-3">
@@ -68,7 +111,7 @@
                         </div>
                         <div>
                             <div class="text-xs font-bold text-slate-800">{{ event.max_seats }} chỗ tham gia</div>
-                            <div class="text-[11px] text-slate-400">Giới hạn số lượng</div>
+                            <div class="text-[11px] text-slate-500 font-medium">Giới hạn số lượng</div>
                         </div>
                     </div>
                     <div class="p-4 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-3">
@@ -77,11 +120,44 @@
                         </div>
                         <div>
                             <div class="text-xs font-bold text-slate-800">Tư vấn nghề nghiệp</div>
-                            <div class="text-[11px] text-slate-400">CV & Phỏng vấn</div>
+                            <div class="text-[11px] text-slate-500 font-medium">CV & Phỏng vấn</div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- QUYỀN LỢI & QUÀ TẶNG TỪ NHÀ TÀI TRỢ (HIỂN THỊ CHI TIẾT SỰ KIỆN, KHÔNG HIỆN Ở BANNER) -->
+            {% if event.sponsor_benefits %}
+            <div class="bg-gradient-to-br from-amber-50/70 via-white to-blue-50/50 p-6 md:p-8 rounded-2xl border border-amber-200/90 shadow-2xs space-y-4">
+                <div class="flex items-center justify-between border-b border-amber-100 pb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center text-sm shadow-xs">
+                            <i class="fa-solid fa-gift"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold text-slate-900">Quyền lợi & Quà tặng từ Nhà tài trợ</h3>
+                            <p class="text-[11px] text-amber-800 font-medium">Đặc quyền dành riêng cho sinh viên đăng ký & tham dự sự kiện</p>
+                        </div>
+                    </div>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                        <i class="fa-solid fa-award text-[10px]"></i>
+                        <span>Đặc quyền sinh viên</span>
+                    </span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    {% for perk in event.sponsor_benefits_list %}
+                    <div class="p-3.5 rounded-xl bg-white/95 border border-amber-100 hover:border-amber-300 shadow-2xs flex items-start gap-3 transition">
+                        <div class="w-6 h-6 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 mt-0.5 text-xs">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <div class="text-xs font-semibold text-slate-800 leading-snug">
+                            {{ perk }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
 
             <!-- EVENT AGENDA (TIMELINE) -->
             <div class="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
@@ -91,34 +167,15 @@
                 </div>
 
                 <div class="divide-y divide-slate-100">
+                    {% for item in event.agenda_items %}
                     <div class="py-3 flex flex-col sm:flex-row sm:items-start gap-4">
-                        <div class="w-32 shrink-0 font-bold text-xs text-neu-700">08:00–08:30</div>
+                        <div class="w-32 shrink-0 font-bold text-xs text-neu-700">{{ item.time }}</div>
                         <div class="flex-1">
-                            <div class="text-xs font-bold text-slate-800">Đón tiếp và điểm danh</div>
-                            <div class="text-[11px] text-slate-500">Sảnh nhà A1</div>
+                            <div class="text-xs font-bold text-slate-800">{{ item.title }}</div>
+                            <div class="text-[11px] text-slate-500">{{ item.venue }}</div>
                         </div>
                     </div>
-                    <div class="py-3 flex flex-col sm:flex-row sm:items-start gap-4">
-                        <div class="w-32 shrink-0 font-bold text-xs text-neu-700">08:30–09:30</div>
-                        <div class="flex-1">
-                            <div class="text-xs font-bold text-slate-800">Khai mạc & đối thoại nghề nghiệp</div>
-                            <div class="text-[11px] text-slate-500">Hội trường A2</div>
-                        </div>
-                    </div>
-                    <div class="py-3 flex flex-col sm:flex-row sm:items-start gap-4">
-                        <div class="w-32 shrink-0 font-bold text-xs text-neu-700">09:30–15:30</div>
-                        <div class="flex-1">
-                            <div class="text-xs font-bold text-slate-800">Kết nối tuyển dụng và tư vấn hồ sơ</div>
-                            <div class="text-[11px] text-slate-500">Các gian hàng doanh nghiệp tại sảnh A1 & A2</div>
-                        </div>
-                    </div>
-                    <div class="py-3 flex flex-col sm:flex-row sm:items-start gap-4">
-                        <div class="w-32 shrink-0 font-bold text-xs text-neu-700">15:30–16:30</div>
-                        <div class="flex-1">
-                            <div class="text-xs font-bold text-slate-800">Chia sẻ kinh nghiệm & tổng kết</div>
-                            <div class="text-[11px] text-slate-500">Hội trường A2</div>
-                        </div>
-                    </div>
+                    {% endfor %}
                 </div>
             </div>
 
@@ -133,18 +190,24 @@
 
                 <!-- PDF DOWNLOAD CARD -->
                 <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
                         <div class="w-10 h-10 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
                             <i class="fa-regular fa-file-pdf text-lg"></i>
                         </div>
-                        <div>
-                            <div class="text-xs font-bold text-slate-800">{{ event.handbook_name }}</div>
-                            <div class="text-[11px] text-slate-400">Tài liệu PDF • 2.4 MB</div>
+                        <div class="min-w-0">
+                            <div class="text-xs font-bold text-slate-800 truncate">{{ event.handbook_name or 'Ấn phẩm sự kiện NEU.pdf' }}</div>
+                            <div class="text-[11px] text-slate-500 font-medium">Ấn phẩm & Cẩm nang chính thức</div>
                         </div>
                     </div>
-                    <a href="#" onclick="alert('Đang tải cẩm nang sự kiện...'); return false;" class="w-9 h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 flex items-center justify-center text-slate-600 transition">
+                    {% if event.handbook_url %}
+                    <a href="{{ event.handbook_url }}" target="_blank" download class="w-9 h-9 rounded-lg border border-neu-300 bg-neu-700 hover:bg-neu-800 flex items-center justify-center text-white transition shadow-2xs shrink-0" title="Tải ấn phẩm">
                         <i class="fa-solid fa-arrow-down text-xs"></i>
                     </a>
+                    {% else %}
+                    <a href="#" onclick="alert('Đang tải cẩm nang sự kiện: {{ event.handbook_name }}'); return false;" class="w-9 h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 flex items-center justify-center text-slate-600 transition shrink-0" title="Tải ấn phẩm">
+                        <i class="fa-solid fa-arrow-down text-xs"></i>
+                    </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -190,6 +253,18 @@
                         <div>
                             <div class="font-medium text-slate-400 text-[11px]">Phí tham gia</div>
                             <div class="font-bold text-emerald-600">{{ event.fee }}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <i class="fa-solid fa-award text-amber-500 mt-0.5"></i>
+                        <div>
+                            <div class="font-semibold text-slate-500 text-[11px]">Điểm Đoàn</div>
+                            <div class="font-bold text-amber-600">
+                                +{{ event.union_points_plus }} điểm khi tham dự
+                                {% if event.union_points_minus and event.union_points_minus > 0 %}
+                                <span class="text-rose-600 font-normal text-[11px] block mt-0.5">(-{{ event.union_points_minus }} điểm nếu vắng mặt)</span>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -251,7 +326,7 @@
                                     <span>Đăng ký tham gia</span>
                                 </button>
                             </form>
-                            <div class="text-[11px] text-slate-400 text-center">
+                            <div class="text-[11px] text-slate-500 font-medium text-center">
                                 Hạn đăng ký: {{ event.registration_deadline.strftime('%H:%M ngày %d/%m/%Y') }}.
                             </div>
                             {% else %}
@@ -311,8 +386,8 @@
                         </div>
                         <div class="text-xs">
                             <div class="font-bold text-slate-800">{{ event.organizer_name }}</div>
-                            <div class="text-slate-400 text-[11px]">{{ event.organizer_email }}</div>
-                            <div class="text-slate-400 text-[11px]">{{ event.organizer_phone }}</div>
+                            <div class="text-slate-500 font-medium text-[11px]">{{ event.organizer_email }}</div>
+                            <div class="text-slate-500 font-medium text-[11px]">{{ event.organizer_phone }}</div>
                         </div>
                     </div>
                 </div>
