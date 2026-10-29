@@ -30,6 +30,24 @@ class User(UserMixin, db.Model):
             return f"{self.student_id}@st.neu.edu.vn"
         return self.email
 
+    @property
+    def is_admin(self):
+        return self.role == 'ADMIN'
+
+    @property
+    def is_manager(self):
+        return self.role in ['MANAGER', 'ADMIN']
+
+    @property
+    def role_label(self):
+        labels = {
+            'ADMIN': 'Quản trị viên',
+            'MANAGER': 'Đơn vị quản lý',
+            'ORGANIZER': 'Ban tổ chức',
+            'STUDENT': 'Sinh viên'
+        }
+        return labels.get(self.role, self.role)
+
     # Relationships
     registrations = db.relationship('Registration', backref='user', lazy=True)
     organized_events = db.relationship('Event', backref='organizer', lazy=True)
@@ -102,6 +120,10 @@ class Event(db.Model):
     attendance_sessions = db.relationship('AttendanceSession', backref='event', lazy=True, cascade="all, delete-orphan")
     feedbacks = db.relationship('Feedback', backref='event', lazy=True, cascade="all, delete-orphan")
     approval_logs = db.relationship('ApprovalLog', backref='event', lazy=True, cascade="all, delete-orphan")
+
+    @property
+    def points(self):
+        return self.union_points_plus
 
     @property
     def remaining_seats(self):

@@ -26,22 +26,24 @@
 
     <!-- HERO BANNER (FEATURED EVENT) -->
     {% if featured_event %}
-    <div class="relative bg-neu-700 rounded-2xl overflow-hidden shadow-sm flex flex-col md:flex-row">
+    <div class="relative bg-neu-700 rounded-2xl overflow-hidden shadow-sm flex flex-col md:flex-row group">
         <!-- LEFT CONTENT -->
         <div class="p-8 md:p-10 text-white flex-1 flex flex-col justify-between z-10 space-y-6">
             <div class="space-y-3">
-                <div class="text-[11px] font-bold uppercase tracking-wider text-blue-200">SỰ KIỆN NỔI BẬT • THÁNG {{ current_month_year }}</div>
+                <div class="text-[11px] font-bold uppercase tracking-wider text-blue-200">
+                    SỰ KIỆN NỔI BẬT • THÁNG {{ featured_event.event_date.strftime('%m/%Y') }}
+                </div>
                 <h2 class="text-2xl md:text-3xl font-extrabold leading-tight">{{ featured_event.subtitle or featured_event.title }}</h2>
                 <p class="text-sm text-blue-100 max-w-xl">{{ featured_event.title }} • {{ featured_event.organizer_name }}</p>
             </div>
             <div class="flex flex-wrap items-center gap-4 pt-2">
-                <a href="{{ url_for('event_detail', event_id=featured_event.id) }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-neu-700 rounded-xl text-sm font-bold hover:bg-blue-50 transition shadow-sm">
+                <a href="{{ url_for('event_detail', event_id=featured_event.id) }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-neu-700 rounded-xl text-sm font-bold hover:bg-blue-50 transition shadow-sm cursor-pointer">
                     <i class="fa-solid fa-arrow-right text-xs"></i>
                     <span>Khám phá ngay</span>
                 </a>
                 <div class="text-xs text-blue-100 font-medium flex items-center gap-2">
                     <i class="fa-regular fa-clock"></i>
-                    <span>{{ featured_event.event_date.strftime('%d/%m') }} • {{ featured_event.location }}</span>
+                    <span>{{ featured_event.event_date.strftime('%d/%m/%Y') }}{% if featured_event.start_time %} ({{ featured_event.start_time.strftime('%H:%M') }}{% if featured_event.end_time %} - {{ featured_event.end_time.strftime('%H:%M') }}{% endif %}){% endif %} • {{ featured_event.location }}</span>
                 </div>
             </div>
         </div>
@@ -50,6 +52,14 @@
             <img src="{{ featured_event.cover_image_url or 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800' }}" alt="Featured Event" class="w-full h-full object-cover">
             <div class="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-neu-700 via-transparent to-transparent"></div>
         </div>
+
+        <!-- ĐIỂM ĐOÀN BADGE (GÓC DƯỚI BÊN PHẢI SỰ KIỆN NỔI BẬT) -->
+        {% if featured_event.union_points_plus and featured_event.union_points_plus > 0 %}
+        <div class="absolute bottom-4 right-4 z-20 bg-slate-900/85 backdrop-blur-md text-white font-bold text-xs sm:text-sm px-3.5 py-2 rounded-xl shadow-lg border border-white/20 flex items-center gap-2 select-none">
+            <i class="fa-solid fa-award text-amber-400 text-sm"></i>
+            <span>+{{ featured_event.union_points_plus }} điểm Đoàn</span>
+        </div>
+        {% endif %}
     </div>
     {% endif %}
 

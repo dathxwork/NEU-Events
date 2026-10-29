@@ -18,7 +18,19 @@ def seed_database(app):
         db.drop_all()
         db.create_all()
 
-        print("1. Creating 5 Core Users (Default password: '123')...")
+        print("1. Creating 6 Core Users (Default password: '123')...")
+
+        # 1.0 Admin (Quản trị viên Hệ thống)
+        admin = User(
+            username='admin@neu.edu.vn',
+            email='admin@neu.edu.vn',
+            full_name='Quản trị viên Hệ thống',
+            role='ADMIN',
+            department='Ban Quản trị Công nghệ & Hệ thống NEU',
+            phone='024 3628 0280 • 1001',
+            avatar_initials='ADM'
+        )
+        admin.set_password('123')
 
         # 1.1 Manager (Đơn vị Quản lý / Nhà trường)
         manager = User(
@@ -82,7 +94,7 @@ def seed_database(app):
         )
         student_anh.set_password('123')
 
-        db.session.add_all([manager, org_career, org_it, student_thu, student_anh])
+        db.session.add_all([admin, manager, org_career, org_it, student_thu, student_anh])
         db.session.commit()
 
         print("2. Creating Event Categories...")
@@ -267,7 +279,7 @@ def seed_database(app):
             union_points_plus=10,
             union_points_minus=2,
             status='APPROVED',
-            is_featured=False
+            is_featured=True
         )
 
         # EVENT 6: Tọa đàm Fintech 2027 (Năm học 2026-2027, Học kỳ Xuân 2027)
@@ -407,7 +419,7 @@ def seed_database(app):
             union_points_plus=5,
             union_points_minus=0,
             status='COMPLETED',
-            is_featured=False
+            is_featured=True
         )
 
         # EVENT 8: Hội nghị Nghiên cứu Khoa học Sinh viên Khoa CNTT 2026 (Năm học 2025-2026, Học kỳ Xuân 2026)
@@ -463,7 +475,7 @@ def seed_database(app):
             union_points_plus=10,
             union_points_minus=0,
             status='COMPLETED',
-            is_featured=False
+            is_featured=True
         )
 
         # EVENT 10: NEU Junior Code Camp 2025 (Năm học 2024-2025, Học kỳ Xuân 2025)

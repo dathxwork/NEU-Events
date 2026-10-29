@@ -13,6 +13,9 @@
         tailwind.config = {
             theme: {
                 extend: {
+                    fontSize: {
+                        'xs': ['0.8125rem', { lineHeight: '1.15rem' }],
+                    },
                     colors: {
                         neu: {
                             50: '#f0f7ff',
@@ -38,6 +41,18 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
+
+        /* TYPOGRAPHY: Tăng nhẹ kích cỡ chữ nhỏ nhất (8px, 9px, 10px -> 11.5px) và nhỏ nhì (11px -> 12.5px, xs -> 13px) */
+        .text-\[8px\], .text-\[9px\], .text-\[10px\], .sm\:text-\[10px\] {
+            font-size: 11.5px !important;
+        }
+        .text-\[11px\], .sm\:text-\[11px\] {
+            font-size: 12.5px !important;
+        }
+        .text-xs {
+            font-size: 0.8125rem !important; /* 13px */
+            line-height: 1.15rem !important;
+        }
     </style>
     <!-- THEME INITIALIZATION SCRIPT (Runs before render to prevent FOUC) -->
     <script>
@@ -328,6 +343,39 @@
                         </a>
                     </nav>
                 </div>
+
+                {% elif current_user.role == 'ADMIN' %}
+                <!-- QUẢN TRỊ VIÊN HỆ THỐNG (ADMIN) -->
+                <div>
+                    <div class="mb-2 px-3 flex justify-center text-center">
+                        <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 shadow-2xs">
+                            <i class="fa-solid fa-user-shield text-[11px]"></i>
+                            <span>Quản trị viên</span>
+                        </span>
+                    </div>
+                    <nav class="space-y-1">
+                        <a href="{{ url_for('admin_users') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {% if active_page == 'admin_users' %}bg-rose-50 text-rose-700 font-bold shadow-xs border-l-4 border-rose-600{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
+                            <i class="fa-solid fa-users-gear w-5 text-center text-base text-rose-600"></i>
+                            <span>Quản lý tài khoản</span>
+                        </a>
+                        <a href="{{ url_for('events') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {% if active_page == 'events' %}bg-neu-50 text-neu-700 font-semibold shadow-xs{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
+                            <i class="fa-regular fa-calendar-check w-5 text-center text-base"></i>
+                            <span>Sự kiện</span>
+                        </a>
+                        <a href="{{ url_for('moderation') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {% if active_page == 'moderation' %}bg-neu-50 text-neu-700 font-semibold shadow-xs{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
+                            <i class="fa-solid fa-shield-halved w-5 text-center text-base"></i>
+                            <span>Kiểm duyệt</span>
+                            {% set pending_count = get_pending_count() %}
+                            {% if pending_count > 0 %}
+                            <span class="ml-auto bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{{ pending_count }}</span>
+                            {% endif %}
+                        </a>
+                        <a href="{{ url_for('analytics') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {% if active_page == 'analytics' %}bg-neu-50 text-neu-700 font-semibold shadow-xs{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
+                            <i class="fa-solid fa-chart-simple w-5 text-center text-base"></i>
+                            <span>Báo cáo – thống kê</span>
+                        </a>
+                    </nav>
+                </div>
                 {% endif %}
             </div>
         </div>
@@ -550,7 +598,9 @@
                             class="flex items-center gap-3 p-1.5 rounded-xl hover:bg-slate-100 transition focus:outline-none cursor-pointer group text-left">
                         <!-- USER AVATAR -->
                         <div class="w-9 h-9 rounded-full bg-neu-100 text-neu-700 font-bold text-xs flex items-center justify-center border border-neu-200 shadow-2xs group-hover:scale-105 transition-transform">
-                            {% if current_user.role == 'MANAGER' %}
+                            {% if current_user.role == 'ADMIN' %}
+                                ADM
+                            {% elif current_user.role == 'MANAGER' %}
                                 QL
                             {% else %}
                                 {{ current_user.avatar_initials or 'NEU' }}
@@ -559,7 +609,9 @@
                         <div class="text-left text-xs hidden sm:block">
                             <div class="font-semibold text-slate-800 leading-snug flex items-center gap-1.5">
                                 <span>
-                                    {% if current_user.role == 'MANAGER' %}
+                                    {% if current_user.role == 'ADMIN' %}
+                                        Quản trị viên
+                                    {% elif current_user.role == 'MANAGER' %}
                                         Đơn vị quản lý
                                     {% else %}
                                         {{ current_user.full_name }}
@@ -568,7 +620,9 @@
                                 <i class="fa-solid fa-chevron-down text-[10px] text-slate-500 group-hover:text-slate-700 transition"></i>
                             </div>
                             <div class="text-[11px] text-slate-500 font-medium">
-                                {% if current_user.role == 'MANAGER' %}
+                                {% if current_user.role == 'ADMIN' %}
+                                    Toàn quyền hệ thống
+                                {% elif current_user.role == 'MANAGER' %}
                                     Cấp trường • Quản trị
                                 {% elif current_user.student_id %}
                                     MSSV: {{ current_user.student_id }}
@@ -588,6 +642,19 @@
                         </div>
 
                         <div class="py-1">
+                            {% if current_user.role == 'ADMIN' %}
+                            <!-- QUẢN TRỊ & PHÂN QUYỀN (ADMIN SHORTCUT) -->
+                            <a href="{{ url_for('admin_users') }}" class="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-rose-700 hover:bg-rose-50 transition text-left cursor-pointer">
+                                <span class="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 border border-rose-200">
+                                    <i class="fa-solid fa-users-gear text-xs"></i>
+                                </span>
+                                <div class="flex-1">
+                                    <div class="font-bold text-rose-800">Quản trị tài khoản & Cấp quyền</div>
+                                    <div class="text-[10px] text-rose-500">Phân quyền BTC, Quản lý, Sinh viên</div>
+                                </div>
+                            </a>
+                            {% endif %}
+
                             <!-- THÔNG TIN CÁ NHÂN -->
                             <button type="button" onclick="closeUserDropdown(); openUserInfoModal();" class="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-neu-700 transition text-left cursor-pointer">
                                 <span class="w-7 h-7 rounded-lg bg-blue-50 text-neu-700 flex items-center justify-center shrink-0">
@@ -743,7 +810,9 @@
                 </div>
                 <div>
                     <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-white/20 text-white backdrop-blur-xs mb-1">
-                        {% if current_user.role == 'ORGANIZER' %}
+                        {% if current_user.role == 'ADMIN' %}
+                        <i class="fa-solid fa-user-shield text-[10px]"></i> Quản trị viên hệ thống
+                        {% elif current_user.role == 'ORGANIZER' %}
                         <i class="fa-solid fa-briefcase text-[10px]"></i> Ban tổ chức sự kiện
                         {% elif current_user.role == 'MANAGER' %}
                         <i class="fa-solid fa-shield-halved text-[10px]"></i> Đơn vị quản lý hệ thống
@@ -753,7 +822,9 @@
                     </div>
                     <h3 class="text-lg font-bold text-white">Hướng dẫn sử dụng NEU Events</h3>
                     <p class="text-xs text-white/80">
-                        {% if current_user.role == 'ORGANIZER' %}
+                        {% if current_user.role == 'ADMIN' %}
+                        Quản trị tài khoản, phân quyền Đơn vị quản lý & Ban tổ chức, giám sát toàn hệ thống
+                        {% elif current_user.role == 'ORGANIZER' %}
                         Cẩm nang nghiệp vụ khởi tạo, điều hành và điểm danh sự kiện
                         {% elif current_user.role == 'MANAGER' %}
                         Nghiệp vụ thẩm định, phê duyệt và giám sát phong trào toàn trường
@@ -767,7 +838,46 @@
 
         <!-- CONTENTS BODY -->
         <div class="p-6 overflow-y-auto space-y-4 text-xs sm:text-sm text-slate-600 leading-relaxed flex-1">
-            {% if current_user.role == 'ORGANIZER' %}
+            {% if current_user.role == 'ADMIN' %}
+            <!-- 0. CONTENT QUẢN TRỊ VIÊN DUY NHẤT -->
+            <div id="helpTabContent-admin" class="space-y-4">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                    <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-user-shield text-rose-700"></i>
+                        <span>Cẩm nang Quản trị hệ thống & Phân quyền</span>
+                    </h4>
+                    <span class="text-[11px] font-semibold text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-md">Phân quyền Admin</span>
+                </div>
+                <div class="p-4 bg-rose-50/70 border border-rose-200/60 rounded-2xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-rose-700 text-white flex items-center justify-center text-sm shrink-0 font-bold">1</div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Quản lý Tài khoản & Cấp quyền người dùng</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Truy cập mục <strong>"Quản lý tài khoản"</strong> để xem toàn bộ danh sách tài khoản. Bấm <strong>"Phân quyền"</strong> để nâng cấp người dùng thành <strong>Đơn vị quản lý</strong>, <strong>Ban tổ chức</strong>, hoặc phân bổ tài khoản Sinh viên mới. Có thể đặt lại mật khẩu về mặc định <strong>123</strong> cho bất kỳ tài khoản nào.
+                        </p>
+                    </div>
+                </div>
+                <div class="p-4 bg-purple-50/70 border border-purple-200/60 rounded-2xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-purple-700 text-white flex items-center justify-center text-sm shrink-0 font-bold">2</div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Kiểm duyệt & Thẩm định sự kiện toàn trường</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Sở hữu toàn quyền của Đơn vị quản lý: Duyệt hoặc từ chối các hồ sơ sự kiện do Ban tổ chức gửi lên, kiểm soát định mức Điểm Đoàn và bảo đảm nội dung phong trào sinh viên.
+                        </p>
+                    </div>
+                </div>
+                <div class="p-4 bg-blue-50/70 border border-blue-200/60 rounded-2xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-neu-700 text-white flex items-center justify-center text-sm shrink-0 font-bold">3</div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Báo cáo, Thống kê KPI & Xuất dữ liệu</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Theo dõi các chỉ số KPI theo tuần, tháng, quý, năm và xuất báo cáo toàn trường dưới các định dạng Excel (.xlsx), CSV, và bản in ấn PDF chính quy.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {% elif current_user.role == 'ORGANIZER' %}
             <!-- 1. CONTENT BAN TỔ CHỨC DUY NHẤT -->
             <div id="helpTabContent-organizer" class="space-y-4">
                 <div class="flex items-center justify-between pb-2 border-b border-slate-100">
@@ -1239,7 +1349,9 @@
             </button>
             <div class="flex items-center gap-4">
                 <div class="w-14 h-14 rounded-2xl bg-white text-neu-700 font-black text-lg flex items-center justify-center border-2 border-white/20 shadow-md">
-                    {% if current_user.role == 'MANAGER' %}
+                    {% if current_user.role == 'ADMIN' %}
+                        ADM
+                    {% elif current_user.role == 'MANAGER' %}
                         QL
                     {% else %}
                         {{ current_user.avatar_initials or 'NEU' }}
@@ -1249,7 +1361,9 @@
                     <h3 class="text-lg font-bold text-white">{{ current_user.full_name }}</h3>
                     <div class="flex items-center gap-2 mt-1">
                         <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-white/15 text-white backdrop-blur-xs">
-                            {% if current_user.role == 'MANAGER' %}
+                            {% if current_user.role == 'ADMIN' %}
+                                <i class="fa-solid fa-user-shield text-[10px]"></i> Quản trị viên
+                            {% elif current_user.role == 'MANAGER' %}
                                 <i class="fa-solid fa-shield-halved text-[10px]"></i> Đơn vị quản lý
                             {% elif current_user.role == 'ORGANIZER' %}
                                 <i class="fa-solid fa-briefcase text-[10px]"></i> Ban tổ chức
@@ -1352,7 +1466,8 @@
                 <div>
                     <h3 class="text-base font-bold text-slate-900">Đổi mật khẩu tài khoản</h3>
                     <p class="text-xs text-slate-500">
-                        {% if current_user.role == 'MANAGER' %}Đơn vị quản lý
+                        {% if current_user.role == 'ADMIN' %}Quản trị viên
+                        {% elif current_user.role == 'MANAGER' %}Đơn vị quản lý
                         {% elif current_user.role == 'ORGANIZER' %}Ban tổ chức
                         {% else %}Sinh viên NEU{% endif %}
                     </p>

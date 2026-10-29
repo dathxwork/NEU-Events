@@ -64,12 +64,20 @@ class NeuEventsTestCase(unittest.TestCase):
         self.assertFalse(json_invalid['exists'])
 
     def test_03_event_discovery_page(self):
-        """Test event listing and keyword search"""
+        """Test event listing, academic period featured event, and union points badge"""
         self.login('11244035', '123')
         response = self.client.get('/events')
         self.assertEqual(response.status_code, 200)
         self.assertIn('Khám phá sự kiện'.encode('utf-8'), response.data)
-        self.assertIn(f'Ngày hội việc làm NEU {date.today().year}'.encode('utf-8'), response.data)
+        self.assertIn('điểm Đoàn'.encode('utf-8'), response.data)
+
+        # Test selecting academic year 2024-2025
+        res_2024 = self.client.get('/events?academic_year=2024-2025')
+        self.assertEqual(res_2024.status_code, 200)
+        self.assertIn('THÁNG 09/2024'.encode('utf-8'), res_2024.data)
+        self.assertIn('20/09/2024'.encode('utf-8'), res_2024.data)
+        self.assertIn('+10 điểm Đoàn'.encode('utf-8'), res_2024.data)
+
         self.logout()
 
     def test_04_event_detail_page(self):
@@ -1295,6 +1303,162 @@ class NeuEventsTestCase(unittest.TestCase):
 
         res_exp_csv = self.client.get('/analytics/export?format=csv&period=THIS_WEEK')
         self.assertEqual(res_exp_csv.status_code, 200)
+
+        self.logout()
+
+    def test_43_admin_role_and_management(self):
+        """Test Admin role: access, permissions parity with Manager, and full user management operations"""
+        # 1. Admin login
+        res_login = self.login('admin@neu.edu.vn', '123')
+        self.assertEqual(res_login.status_code, 200)
+        self.assertIn('Quản trị viên'.encode('utf-8'), res_login.data)
+
+        # 2. Admin access to events, moderation, and analytics
+        res_events = self.client.get('/events')
+        self.assertEqual(res_events.status_code, 200)
+
+        res_mod = self.client.get('/moderation')
+        self.assertEqual(res_mod.status_code, 200)
+        self.assertIn('Kiểm duyệt sự kiện'.encode('utf-8'), res_mod.data)
+
+        res_ana = self.client.get('/analytics')
+        self.assertEqual(res_ana.status_code, 200)
+        self.assertIn('Báo cáo – thống kê'.encode('utf-8'), res_ana.data)
+
+        # 3. Admin access to user management interface
+        res_admin = self.client.get('/admin/users')
+        self.assertEqual(res_admin.status_code, 200)
+        self.assertIn('Quản trị tài khoản & Phân quyền'.encode('utf-8'), res_admin.data)
+        self.assertIn('admin@neu.edu.vn'.encode('utf-8'), res_admin.data)
+        self.logout()
+
+        # 4. Verify non-admin roles (Student, Organizer, Manager) are blocked from /admin/users
+        # Student blocked
+        self.login('11244035', '123')
+        res_student_block = self.client.get('/admin/users', follow_redirects=True)
+        self.assertIn('Bạn không có quyền truy cập'.encode('utf-8'), res_student_block.data)
+        self.logout()
+
+        # Organizer blocked
+        self.login('vieclam@neu.edu.vn', '123')
+        res_org_block = self.client.get('/admin/users', follow_redirects=True)
+        self.assertIn('Bạn không có quyền truy cập'.encode('utf-8'), res_org_block.data)
+        self.logout()
+
+        # Manager blocked
+        self.login('quanly@neu.edu.vn', '123')
+        res_mgr_block = self.client.get('/admin/users', follow_redirects=True)
+        self.assertIn('Bạn không có quyền truy cập'.encode('utf-8'), res_mgr_block.data)
+        self.logout()
+
+        # 5. Admin creates a new Manager user and Organizer user
+        self.login('admin@neu.edu.vn', '123')
+
+        # Create Manager
+        res_create_mgr = self.client.post('/admin/users/create', data={
+            'full_name': 'Ban Quản trị Khảo thí',
+            'email': 'khaothi_mgr@neu.edu.vn',
+            'username': 'khaothi_mgr@neu.edu.vn',
+            'role': 'MANAGER',
+            'department': 'Phòng Khảo thí & ĐBCL',
+            'phone': '024 3628 0280',
+            'password': '123'
+        }, follow_redirects=True)
+        self.assertEqual(res_create_mgr.status_code, 200)
+        self.assertIn('Tạo thành công tài khoản'.encode('utf-8'), res_create_mgr.data)
+
+        # Verify created manager in DB
+        with app.app_context():
+            created_mgr = User.query.filter_by(email='khaothi_mgr@neu.edu.vn').first()
+            self.assertIsNotNone(created_mgr)
+            self.assertEqual(created_mgr.role, 'MANAGER')
+            self.assertTrue(created_mgr.check_password('123'))
+            mgr_id = created_mgr.id
+
+        # Create Organizer
+        res_create_org = self.client.post('/admin/users/create', data={
+            'full_name': 'CLB Nhà Kinh tế Trẻ',
+            'email': 'yec@neu.edu.vn',
+            'username': 'yec@neu.edu.vn',
+            'role': 'ORGANIZER',
+            'department': 'Đoàn Đại học',
+            'phone': '0988888888',
+            'password': '123'
+        }, follow_redirects=True)
+        self.assertEqual(res_create_org.status_code, 200)
+
+        with app.app_context():
+            created_org = User.query.filter_by(email='yec@neu.edu.vn').first()
+            self.assertIsNotNone(created_org)
+            self.assertEqual(created_org.role, 'ORGANIZER')
+            org_id = created_org.id
+
+        # 6. Admin updates role: Promote Organizer to Manager
+        res_update_role = self.client.post(f'/admin/users/{org_id}/update-role', data={
+            'role': 'MANAGER',
+            'department': 'Ban Chấp hành Đoàn Đại học'
+        }, follow_redirects=True)
+        self.assertEqual(res_update_role.status_code, 200)
+
+        with app.app_context():
+            updated_user = db.session.get(User, org_id)
+            self.assertEqual(updated_user.role, 'MANAGER')
+            self.assertEqual(updated_user.department, 'Ban Chấp hành Đoàn Đại học')
+
+        # 7. Admin edits user info
+        res_edit = self.client.post(f'/admin/users/{org_id}/edit', data={
+            'full_name': 'CLB Nhà Kinh tế Trẻ NEU (YEC)',
+            'email': 'yec_updated@neu.edu.vn',
+            'department': 'Đoàn Đại học Kinh tế Quốc dân',
+            'phone': '0912999888',
+            'role': 'ORGANIZER'
+        }, follow_redirects=True)
+        self.assertEqual(res_edit.status_code, 200)
+
+        with app.app_context():
+            reloaded_user = db.session.get(User, org_id)
+            self.assertEqual(reloaded_user.full_name, 'CLB Nhà Kinh tế Trẻ NEU (YEC)')
+            self.assertEqual(reloaded_user.email, 'yec_updated@neu.edu.vn')
+            self.assertEqual(reloaded_user.role, 'ORGANIZER')
+
+        # 8. Admin resets password
+        res_reset = self.client.post(f'/admin/users/{org_id}/reset-password', data={
+            'new_password': '123'
+        }, follow_redirects=True)
+        self.assertEqual(res_reset.status_code, 200)
+
+        with app.app_context():
+            pass_user = db.session.get(User, org_id)
+            self.assertTrue(pass_user.check_password('123'))
+
+        # 9. Admin deletes user
+        res_delete = self.client.post(f'/admin/users/{org_id}/delete', follow_redirects=True)
+        self.assertEqual(res_delete.status_code, 200)
+
+        with app.app_context():
+            deleted_user = db.session.get(User, org_id)
+            self.assertIsNone(deleted_user)
+
+            # Clean up test manager as well
+            test_mgr = db.session.get(User, mgr_id)
+            if test_mgr:
+                db.session.delete(test_mgr)
+                db.session.commit()
+
+        # 10. Self-protection tests
+        with app.app_context():
+            admin_user = User.query.filter_by(role='ADMIN').first()
+            admin_id = admin_user.id
+
+        # Attempt to demote self
+        res_self_demote = self.client.post(f'/admin/users/{admin_id}/update-role', data={
+            'role': 'STUDENT'
+        }, follow_redirects=True)
+        self.assertIn('Bạn không thể tự hạ quyền'.encode('utf-8'), res_self_demote.data)
+
+        # Attempt to delete self
+        res_self_delete = self.client.post(f'/admin/users/{admin_id}/delete', follow_redirects=True)
+        self.assertIn('Bạn không thể tự xóa tài khoản'.encode('utf-8'), res_self_delete.data)
 
         self.logout()
 
