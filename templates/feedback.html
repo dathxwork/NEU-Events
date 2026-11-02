@@ -30,10 +30,10 @@
     {# 1. GIAO DIỆN DÀNH CHO BAN TỔ CHỨC (ORGANIZER)                            #}
     {# ========================================================================= #}
     {% if current_user.role == 'ORGANIZER' %}
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
         <!-- CỘT TRÁI (4 CỘT): DANH SÁCH SỰ KIỆN CỦA BAN TỔ CHỨC -->
         <div class="lg:col-span-4 space-y-4">
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
+            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                     <div>
                         <h3 class="font-bold text-sm text-slate-900 uppercase tracking-wider">Sự kiện của đơn vị</h3>
@@ -83,7 +83,7 @@
         <div class="lg:col-span-8 space-y-6">
             {% if selected_event %}
             <!-- SUMMARY KPI CARD -->
-            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-6">
+            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-6">
                 <!-- EVENT HEADER IN DETAIL -->
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
                     <div class="space-y-1">
@@ -247,7 +247,7 @@
     {# ========================================================================= #}
     {% else %}
     <!-- KPI SUMMARY BAR FOR STUDENT -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <!-- TỔNG SỐ ĐÃ THAM DỰ -->
         <div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs flex items-center justify-between cursor-pointer hover:border-blue-300 transition" onclick="switchStudentFeedbackTab('all')">
             <div>
@@ -282,10 +282,10 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
         <!-- CỘT TRÁI (5 CỘT): FORM GỬI / CẬP NHẬT ĐÁNH GIÁ -->
         <div class="lg:col-span-5 space-y-6">
-            <div class="bg-white p-6 md:p-7 rounded-2xl border border-slate-200 shadow-2xs space-y-5 sticky top-24">
+            <div class="bg-white p-4 sm:p-6 md:p-7 rounded-2xl border border-slate-200 shadow-2xs space-y-5 lg:sticky lg:top-24">
                 <div class="border-b border-slate-100 pb-3 flex items-start justify-between gap-3">
                     <div>
                         <h3 class="font-bold text-base text-slate-900 flex items-center gap-2">
@@ -432,7 +432,7 @@
 
         <!-- CỘT PHẢI (7 CỘT): DANH SÁCH & LỊCH SỬ ĐÁNH GIÁ (CHƯA ĐÁNH GIÁ / ĐÃ ĐÁNH GIÁ) -->
         <div class="lg:col-span-7 space-y-4">
-            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
+            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
                     <div>
                         <h3 class="font-bold text-base text-slate-900">Lịch sử đánh giá sự kiện</h3>
@@ -441,7 +441,7 @@
                 </div>
 
                 <!-- TABS LỌC TRẠNG THÁI (TẤT CẢ / CHƯA ĐÁNH GIÁ / ĐÃ ĐÁNH GIÁ) -->
-                <div class="flex items-center gap-2 border-b border-slate-200 pb-2">
+                <div class="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto no-scrollbar">
                     <button type="button" onclick="switchStudentFeedbackTab('all')" id="tabBtn-all" class="student-fb-tab px-3.5 py-1.5 rounded-xl text-xs font-bold bg-neu-700 text-white transition shadow-2xs flex items-center gap-1.5">
                         <span>Tất cả</span>
                         <span class="px-1.5 py-0.2 rounded-full bg-white/20 text-white text-[10px]">{{ attended_events|length }}</span>

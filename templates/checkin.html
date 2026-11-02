@@ -123,10 +123,10 @@
     {# 1. GIAO DIỆN DÀNH CHO TÀI KHOẢN SINH VIÊN (STUDENT)                     #}
     {# ========================================================================= #}
     {% if current_user.role == 'STUDENT' %}
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
         <!-- LEFT COLUMN: QUÉT MÃ QR ĐIỂM DANH (7 CỘT) -->
         <div class="lg:col-span-7 space-y-6">
-            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-6">
+            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-6">
                 <!-- HEADER -->
                 <div class="flex items-center justify-between border-b border-slate-100 pb-4">
                     <div>
@@ -297,10 +297,10 @@
     {# 2. GIAO DIỆN DÀNH CHO BAN TỔ CHỨC & ĐƠN VỊ QUẢN LÝ (ORGANIZER / MANAGER) #}
     {# ========================================================================= #}
     {% else %}
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
         <!-- LEFT COLUMN: MÃ QR HỘI TRƯỜNG & THÔNG TIN PHIÊN (5 CỘT) -->
         <div class="lg:col-span-5 space-y-6">
-            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-5">
+            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-5">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                     <div>
                         <h3 class="font-bold text-base text-slate-900">Mã QR Điểm danh Hội trường</h3>
@@ -358,7 +358,7 @@
 
         <!-- RIGHT COLUMN: THEO DÕI SĨ SỐ & DANH SÁCH XÁC NHẬN (7 CỘT) -->
         <div class="lg:col-span-7 space-y-6">
-            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-5">
+            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-5">
                 <!-- HEADER & REFRESH TIME -->
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                     <div>
@@ -372,18 +372,18 @@
                 </div>
 
                 <!-- 3 LIVE COUNTERS -->
-                <div class="grid grid-cols-3 gap-3">
-                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-100 text-center">
-                        <div class="text-2xl font-black text-slate-800">{{ live_stats.registered }}</div>
-                        <div class="text-[11px] text-slate-400 mt-1">Đã đăng ký</div>
+                <div class="grid grid-cols-3 gap-2 sm:gap-3">
+                    <div class="p-2.5 sm:p-4 rounded-xl bg-slate-50 border border-slate-100 text-center">
+                        <div class="text-lg sm:text-2xl font-black text-slate-800">{{ live_stats.registered }}</div>
+                        <div class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 sm:mt-1">Đã đăng ký</div>
                     </div>
-                    <div class="p-4 rounded-xl bg-emerald-50/60 border border-emerald-100 text-center">
-                        <div class="text-2xl font-black text-emerald-600">{{ live_stats.attended }}</div>
-                        <div class="text-[11px] text-slate-500 mt-1">Đã tham dự</div>
+                    <div class="p-2.5 sm:p-4 rounded-xl bg-emerald-50/60 border border-emerald-100 text-center">
+                        <div class="text-lg sm:text-2xl font-black text-emerald-600">{{ live_stats.attended }}</div>
+                        <div class="text-[10px] sm:text-[11px] text-slate-500 mt-0.5 sm:mt-1">Đã tham dự</div>
                     </div>
-                    <div class="p-4 rounded-xl bg-amber-50/60 border border-amber-100 text-center">
-                        <div class="text-2xl font-black text-amber-600">{{ live_stats.not_yet }}</div>
-                        <div class="text-[11px] text-slate-500 mt-1">Chưa điểm danh</div>
+                    <div class="p-2.5 sm:p-4 rounded-xl bg-amber-50/60 border border-amber-100 text-center">
+                        <div class="text-lg sm:text-2xl font-black text-amber-600">{{ live_stats.not_yet }}</div>
+                        <div class="text-[10px] sm:text-[11px] text-slate-500 mt-0.5 sm:mt-1">Chưa điểm danh</div>
                     </div>
                 </div>
 

@@ -141,21 +141,21 @@
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
+            <table class="w-full text-left text-xs min-w-[700px]">
                 <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 uppercase tracking-wider text-[11px]">
                     <tr>
-                        <th class="py-3 px-5">Tài khoản & Người dùng</th>
-                        <th class="py-3 px-5">Email & Số điện thoại</th>
-                        <th class="py-3 px-5">Khoa / Ban / Đơn vị</th>
-                        <th class="py-3 px-5">Phân quyền hiện tại</th>
-                        <th class="py-3 px-5 text-center">Thao tác quản trị</th>
+                        <th class="py-3 px-4 sm:px-5">Tài khoản & Người dùng</th>
+                        <th class="py-3 px-4 sm:px-5">Email & Số điện thoại</th>
+                        <th class="py-3 px-4 sm:px-5">Khoa / Ban / Đơn vị</th>
+                        <th class="py-3 px-4 sm:px-5">Phân quyền hiện tại</th>
+                        <th class="py-3 px-4 sm:px-5 text-center">Thao tác quản trị</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     {% for u in users %}
                     <tr class="hover:bg-slate-50/80 transition">
                         <!-- USER INFO -->
-                        <td class="py-3.5 px-5">
+                        <td class="py-3.5 px-4 sm:px-5">
                             <div class="flex items-center gap-3">
                                 <div class="w-9 h-9 rounded-full shrink-0 flex items-center justify-center font-bold text-xs shadow-2xs border
                                     {% if u.role == 'ADMIN' %}bg-rose-100 text-rose-700 border-rose-200
@@ -179,19 +179,19 @@
                         </td>
 
                         <!-- EMAIL & PHONE -->
-                        <td class="py-3.5 px-5">
+                        <td class="py-3.5 px-4 sm:px-5">
                             <div class="font-medium text-slate-700">{{ u.email }}</div>
                             <div class="text-[11px] text-slate-400">{{ u.phone or 'Chưa cập nhật SĐT' }}</div>
                         </td>
 
                         <!-- DEPARTMENT -->
-                        <td class="py-3.5 px-5">
+                        <td class="py-3.5 px-4 sm:px-5">
                             <div class="text-slate-800 font-medium">{{ u.department or 'Đại học Kinh tế Quốc dân' }}</div>
                             <div class="text-[10px] text-slate-400">Tham gia: {{ u.created_at.strftime('%d/%m/%Y') if u.created_at else 'Ban đầu' }}</div>
                         </td>
 
                         <!-- ROLE BADGE -->
-                        <td class="py-3.5 px-5">
+                        <td class="py-3.5 px-4 sm:px-5">
                             {% if u.role == 'ADMIN' %}
                             <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 shadow-2xs">
                                 <i class="fa-solid fa-user-shield text-[10px]"></i>
@@ -216,7 +216,7 @@
                         </td>
 
                         <!-- ACTIONS -->
-                        <td class="py-3.5 px-5 text-center">
+                        <td class="py-3.5 px-4 sm:px-5 text-center">
                             <div class="inline-flex items-center gap-1.5 justify-center">
                                 <!-- NÚT CẤP QUYỀN / ĐỔI VAI TRÒ -->
                                 <button type="button" onclick="openUpdateRoleModal('{{ u.id }}', '{{ u.full_name|e }}', '{{ u.email|e }}', '{{ u.role }}', '{{ u.department|default('', true)|e }}')"
@@ -269,7 +269,7 @@
 
 <!-- 1. MODAL THÊM TÀI KHOẢN MỚI & CẤP QUYỀN -->
 <div id="createUserModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-100 space-y-4 max-h-[92vh] overflow-y-auto">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <div class="flex items-center gap-2 text-rose-700 font-bold text-base">
                 <i class="fa-solid fa-user-plus text-lg"></i>
@@ -287,7 +287,7 @@
                        class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-rose-500">
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1">Email <span class="text-rose-600">*</span></label>
                     <input type="email" name="email" required placeholder="VD: ctsv@neu.edu.vn"
@@ -312,7 +312,7 @@
                 </select>
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1">Khoa / Ban / Đơn vị</label>
                     <input type="text" name="department" placeholder="VD: Khoa Marketing, Phòng QLĐT..."
@@ -353,7 +353,7 @@
 
 <!-- 2. MODAL PHÂN QUYỀN / ĐỔI VAI TRÒ NHANH -->
 <div id="updateRoleModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-100 space-y-4 max-h-[92vh] overflow-y-auto">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <div class="flex items-center gap-2 text-neu-700 font-bold text-base">
                 <i class="fa-solid fa-user-gear text-lg"></i>
@@ -436,7 +436,7 @@
 
 <!-- 3. MODAL CHỈNH SỬA THÔNG TIN TÀI KHOẢN -->
 <div id="editUserModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-100 space-y-4 max-h-[92vh] overflow-y-auto">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <div class="flex items-center gap-2 text-slate-900 font-bold text-base">
                 <i class="fa-solid fa-pen-to-square text-neu-700"></i>
@@ -454,7 +454,7 @@
                        class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-neu-700">
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1">Email <span class="text-rose-600">*</span></label>
                     <input type="email" name="email" id="editEmail" required

@@ -234,22 +234,47 @@
         [data-theme="nature"] #themeDropdownMenu button:hover {
             background-color: #ecfdf5 !important;
         }
+
+        /* RESPONSIVE LAYOUT & TOUCH OPTIMIZATIONS */
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            .safe-bottom {
+                padding-bottom: calc(0.375rem + env(safe-area-inset-bottom));
+            }
+        }
+        .overflow-x-auto {
+            -webkit-overflow-scrolling: touch;
+        }
     </style>
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-800 antialiased">
+<body class="min-h-screen bg-slate-50 text-slate-800 antialiased overflow-x-hidden">
 
 <div class="min-h-screen flex">
-    <!-- SIDEBAR -->
-    <aside class="w-72 bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 select-none sticky top-0 h-screen overflow-y-auto z-20">
+    <!-- MOBILE SIDEBAR BACKDROP OVERLAY -->
+    <div id="mobileSidebarBackdrop" onclick="closeMobileSidebar()"
+         class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-40 hidden transition-opacity lg:hidden duration-300"></div>
+
+    <!-- SIDEBAR (RESPONSIVE OFF-CANVAS ON MOBILE/TABLET, STICKY ON DESKTOP) -->
+    <aside id="mainSidebar"
+           class="fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 select-none overflow-y-auto transform -translate-x-full transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:sticky lg:top-0 lg:h-screen lg:z-20 shadow-2xl lg:shadow-none">
         <div>
-            <!-- LOGO BRAND -->
-            <a href="{{ url_for('events') }}" class="group flex items-center gap-3.5 px-5 h-[72px] border-b border-slate-100 hover:bg-slate-50/80 transition">
-                <img src="{{ url_for('static', filename='img/logo_neu.webp') }}?v=2" alt="Logo NEU" class="w-14 h-14 object-contain shrink-0 drop-shadow-xs group-hover:scale-105 transition-transform">
-                <div class="min-w-0">
-                    <div class="text-[17px] font-black text-slate-900 leading-tight tracking-tight">NEU Events</div>
-                    <div class="text-[10px] uppercase font-bold text-slate-500 tracking-wider whitespace-nowrap">ĐẠI HỌC KINH TẾ QUỐC DÂN</div>
-                </div>
-            </a>
+            <!-- LOGO BRAND + MOBILE CLOSE BUTTON -->
+            <div class="flex items-center justify-between px-5 h-[72px] border-b border-slate-100">
+                <a href="{{ url_for('events') }}" onclick="closeMobileSidebar()" class="group flex items-center gap-3.5 hover:bg-slate-50/80 transition flex-1 min-w-0">
+                    <img src="{{ url_for('static', filename='img/logo_neu.webp') }}?v=2" alt="Logo NEU" class="w-14 h-14 object-contain shrink-0 drop-shadow-xs group-hover:scale-105 transition-transform">
+                    <div class="min-w-0">
+                        <div class="text-[17px] font-black text-slate-900 leading-tight tracking-tight">NEU Events</div>
+                        <div class="text-[10px] uppercase font-bold text-slate-500 tracking-wider whitespace-nowrap">ĐẠI HỌC KINH TẾ QUỐC DÂN</div>
+                    </div>
+                </a>
+                <button type="button" onclick="closeMobileSidebar()" class="lg:hidden p-2 -mr-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition focus:outline-none" aria-label="Đóng menu">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
 
             <!-- NAVIGATION GROUPS -->
             <div class="px-4 pt-2 pb-4 space-y-5">
@@ -399,15 +424,27 @@
     <!-- MAIN AREA -->
     <div class="flex-1 flex flex-col min-w-0">
         <!-- TOPBAR -->
-        <header class="h-[72px] bg-white border-b border-slate-200 px-8 flex items-center justify-between shrink-0 z-30 sticky top-0 shadow-2xs">
-            <!-- LEFT TOP: ACADEMIC YEAR & SEMESTER SELECTORS (MATCHING UI MOCKUP) + ROLE BADGE -->
-            <div class="flex items-center gap-3 sm:gap-4 flex-wrap">
+        <header class="min-h-[64px] sm:h-[72px] bg-white border-b border-slate-200 px-3 sm:px-6 lg:px-8 flex items-center justify-between shrink-0 z-30 sticky top-0 shadow-2xs gap-2 sm:gap-4">
+            <!-- LEFT TOP: HAMBURGER BUTTON (MOBILE) + ACADEMIC YEAR & SEMESTER SELECTORS -->
+            <div class="flex items-center gap-1.5 sm:gap-3 flex-wrap sm:flex-nowrap min-w-0">
+                <!-- MOBILE MENU TOGGLE BUTTON -->
+                <button type="button" id="mobileMenuBtn" onclick="toggleMobileSidebar()"
+                        class="lg:hidden p-2 -ml-1 rounded-xl text-slate-700 hover:bg-slate-100 hover:text-neu-700 transition focus:outline-none shrink-0 cursor-pointer"
+                        title="Mở menu điều hướng" aria-label="Mở menu">
+                    <i class="fa-solid fa-bars text-lg"></i>
+                </button>
+
+                <!-- COMPACT MOBILE LOGO (VISIBLE ONLY ON MOBILE) -->
+                <a href="{{ url_for('events') }}" class="lg:hidden flex items-center gap-1.5 mr-0.5 shrink-0" title="Trang chủ NEU Events">
+                    <img src="{{ url_for('static', filename='img/logo_neu.webp') }}?v=2" alt="Logo NEU" class="w-8 h-8 object-contain">
+                </a>
+
                 <!-- DROPDOWN NĂM HỌC -->
                 <div class="relative inline-flex items-center">
-                    <span class="absolute -top-1.5 left-3 px-1.5 bg-white text-[10px] font-semibold text-slate-500 z-10 leading-none pointer-events-none">Năm học</span>
+                    <span class="absolute -top-1.5 left-2.5 sm:left-3 px-1.5 bg-white text-[10px] font-semibold text-slate-500 z-10 leading-none pointer-events-none">Năm học</span>
                     <div class="relative">
                         <select id="academicYearSelect" onchange="onAcademicYearChange(this.value)"
-                                class="appearance-none h-9 pl-4 pr-8 bg-white border border-slate-300 hover:border-slate-400 focus:border-neu-700 focus:ring-1 focus:ring-neu-700 rounded-full text-xs font-bold text-slate-800 cursor-pointer outline-none transition shadow-2xs">
+                                class="appearance-none h-8 sm:h-9 pl-2.5 sm:pl-4 pr-6 sm:pr-8 bg-white border border-slate-300 hover:border-slate-400 focus:border-neu-700 focus:ring-1 focus:ring-neu-700 rounded-full text-[11px] sm:text-xs font-bold text-slate-800 cursor-pointer outline-none transition shadow-2xs max-w-[110px] xs:max-w-[130px] sm:max-w-none truncate">
                             {% if current_user.role == 'STUDENT' %}
                                 {# MSSV starts with 1124 -> 2024; maximum 6 academic years #}
                                 {% set start_cohort_year = 2024 %}
@@ -432,16 +469,16 @@
                                 <option value="2022-2023" {% if current_academic_year == '2022-2023' %}selected{% endif %}>2022-2023</option>
                             {% endif %}
                         </select>
-                        <i class="fa-solid fa-chevron-down text-[9px] text-slate-500 pointer-events-none absolute right-3 top-1/2 -translate-y-1/2"></i>
+                        <i class="fa-solid fa-chevron-down text-[9px] text-slate-500 pointer-events-none absolute right-2.5 sm:right-3 top-1/2 -translate-y-1/2"></i>
                     </div>
                 </div>
 
                 <!-- DROPDOWN HỌC KỲ -->
                 <div class="relative inline-flex items-center">
-                    <span class="absolute -top-1.5 left-3 px-1.5 bg-white text-[10px] font-semibold text-slate-500 z-10 leading-none pointer-events-none">Học kỳ</span>
+                    <span class="absolute -top-1.5 left-2.5 sm:left-3 px-1.5 bg-white text-[10px] font-semibold text-slate-500 z-10 leading-none pointer-events-none">Học kỳ</span>
                     <div class="relative">
                         <select id="semesterSelect" onchange="onSemesterChange(this.value)"
-                                class="appearance-none h-9 pl-4 pr-8 bg-white border border-slate-300 hover:border-slate-400 focus:border-neu-700 focus:ring-1 focus:ring-neu-700 rounded-full text-xs font-bold text-slate-800 cursor-pointer outline-none transition shadow-2xs min-w-[148px]">
+                                class="appearance-none h-8 sm:h-9 pl-2.5 sm:pl-4 pr-6 sm:pr-8 bg-white border border-slate-300 hover:border-slate-400 focus:border-neu-700 focus:ring-1 focus:ring-neu-700 rounded-full text-[11px] sm:text-xs font-bold text-slate-800 cursor-pointer outline-none transition shadow-2xs min-w-0 max-w-[125px] xs:max-w-[145px] sm:max-w-none sm:min-w-[148px] truncate">
                             <option value="ALL" {% if current_semester == 'ALL' %}selected{% endif %}>Tất cả học kỳ</option>
                             {% if current_academic_year and current_academic_year != 'ALL' and '-' in current_academic_year %}
                                 {% set sem_p = current_academic_year.split('-') %}
@@ -452,20 +489,18 @@
                                 <option value="Học kỳ Hè {{ sy2 }}" {% if current_semester == ('Học kỳ Hè ' ~ sy2) %}selected{% endif %}>Học kỳ Hè {{ sy2 }}</option>
                             {% endif %}
                         </select>
-                        <i class="fa-solid fa-chevron-down text-[9px] text-slate-500 pointer-events-none absolute right-3 top-1/2 -translate-y-1/2"></i>
+                        <i class="fa-solid fa-chevron-down text-[9px] text-slate-500 pointer-events-none absolute right-2.5 sm:right-3 top-1/2 -translate-y-1/2"></i>
                     </div>
                 </div>
-
-
             </div>
 
             <!-- RIGHT TOP: USER & NOTIFICATIONS -->
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 sm:gap-4 shrink-0">
                                 <!-- NOTIFICATION BELL & DROPDOWN COMPONENT -->
                 <div class="relative" id="notifWrapper">
                     <button type="button" id="notifBtn" onclick="toggleNotifDropdown(event)"
                             title="Thông báo hệ thống"
-                            class="relative w-9 h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 flex items-center justify-center transition shadow-2xs cursor-pointer focus:outline-none">
+                            class="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 flex items-center justify-center transition shadow-2xs cursor-pointer focus:outline-none">
                         <i class="fa-regular fa-bell text-slate-600 text-sm" id="notifBellIcon"></i>
                         <!-- UNREAD BADGE -->
                         <span id="notifBadge"
@@ -476,7 +511,7 @@
 
                     <!-- NOTIFICATION DROPDOWN MENU -->
                     <div id="notifDropdown"
-                         class="hidden absolute right-0 -right-16 sm:right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-50 animate-in fade-in slide-in-from-top-1 duration-150 flex flex-col max-h-[85vh]">
+                         class="hidden absolute right-0 sm:right-0 mt-2 w-[calc(100vw-24px)] max-w-sm sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-50 animate-in fade-in slide-in-from-top-1 duration-150 flex flex-col max-h-[85vh]">
                         <!-- HEADER -->
                         <div class="p-3.5 bg-gradient-to-r from-neu-900 via-neu-800 to-neu-700 text-white shrink-0 flex items-center justify-between">
                             <div class="flex items-center gap-2.5">
@@ -752,9 +787,9 @@
         <!-- FLASH NOTIFICATIONS -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-            <div class="px-8 pt-4">
+            <div class="px-3.5 sm:px-6 lg:px-8 pt-3 sm:pt-4">
                 {% for category, message in messages %}
-                <div class="p-4 rounded-xl text-sm font-medium flex items-center justify-between shadow-xs transition mb-2
+                <div class="p-3.5 sm:p-4 rounded-xl text-sm font-medium flex items-center justify-between shadow-xs transition mb-2
                     {% if category == 'success' %}bg-emerald-50 text-emerald-800 border border-emerald-200
                     {% elif category == 'danger' or category == 'error' %}bg-rose-50 text-rose-800 border border-rose-200
                     {% elif category == 'warning' %}bg-amber-50 text-amber-800 border border-amber-200
@@ -775,14 +810,14 @@
         {% endwith %}
 
         <!-- PAGE CONTENT -->
-        <main class="flex-1 p-8">
+        <main class="flex-1 p-3.5 sm:p-6 lg:p-8 pb-24 lg:pb-8 min-w-0">
             {% block content %}{% endblock %}
         </main>
 
         <!-- FOOTER -->
-        <footer class="bg-white border-t border-slate-200 px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600 font-medium shrink-0">
-            <div class="text-slate-700 font-semibold">© {{ current_year }} Đại học Kinh tế Quốc dân - Cổng thông tin sự kiện - NEU Events.</div>
-            <div class="flex items-center gap-5 sm:gap-6 text-slate-600">
+        <footer class="bg-white border-t border-slate-200 px-4 sm:px-8 py-4 sm:py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600 font-medium shrink-0 pb-20 lg:pb-5">
+            <div class="text-slate-700 font-semibold text-center sm:text-left">© {{ current_year }} Đại học Kinh tế Quốc dân - Cổng thông tin sự kiện - NEU Events.</div>
+            <div class="flex items-center gap-4 sm:gap-6 text-slate-600 flex-wrap justify-center sm:justify-end">
                 <button type="button" onclick="openTermsModal()" class="hover:text-neu-700 font-semibold transition cursor-pointer">Quy định sử dụng</button>
                 <span class="text-slate-300">•</span>
                 <button type="button" onclick="openPrivacyModal()" class="hover:text-neu-700 font-semibold transition cursor-pointer">Chính sách bảo mật</button>
@@ -2296,9 +2331,42 @@
         }
     });
 
+    // Mobile Sidebar Drawer Controller
+    function openMobileSidebar() {
+        const sidebar = document.getElementById('mainSidebar');
+        const backdrop = document.getElementById('mobileSidebarBackdrop');
+        if (sidebar && backdrop) {
+            sidebar.classList.remove('-translate-x-full');
+            sidebar.classList.add('translate-x-0');
+            backdrop.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden', 'lg:overflow-auto');
+        }
+    }
+
+    function closeMobileSidebar() {
+        const sidebar = document.getElementById('mainSidebar');
+        const backdrop = document.getElementById('mobileSidebarBackdrop');
+        if (sidebar && backdrop) {
+            sidebar.classList.add('-translate-x-full');
+            sidebar.classList.remove('translate-x-0');
+            backdrop.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden', 'lg:overflow-auto');
+        }
+    }
+
+    function toggleMobileSidebar() {
+        const sidebar = document.getElementById('mainSidebar');
+        if (sidebar && sidebar.classList.contains('-translate-x-full')) {
+            openMobileSidebar();
+        } else {
+            closeMobileSidebar();
+        }
+    }
+
     // Keyboard Escape listener to dismiss all active modals and dropdowns
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
+            closeMobileSidebar();
             closeNotifDropdown();
             closeTicketModal();
             closeChangePasswordModal();
@@ -2311,7 +2379,105 @@
             if (helpModal) helpModal.classList.add('hidden');
         }
     });
+
+    // Automatically close mobile sidebar on desktop breakpoint resize
+    window.addEventListener('resize', function() {
+        if (window.innerWidth >= 1024) {
+            closeMobileSidebar();
+        }
+    });
 </script>
+
+<!-- MOBILE BOTTOM NAVIGATION BAR (FIXED DƯỚI CÙNG MÀN HÌNH CHO SMARTPHONE & TABLET) -->
+<nav id="mobileBottomNav" class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-1 py-1.5 flex items-center justify-around shadow-[0_-4px_16px_rgba(0,0,0,0.06)] safe-bottom select-none">
+    <!-- Tab 1: Khám phá sự kiện (All roles) -->
+    <a href="{{ url_for('events') }}" class="flex flex-col items-center justify-center py-1 px-1.5 rounded-xl text-center transition flex-1 min-w-0 {% if active_page == 'events' %}text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-800{% endif %}">
+        <i class="fa-regular fa-calendar-check text-base mb-0.5"></i>
+        <span class="text-[10px] leading-tight truncate">Sự kiện</span>
+    </a>
+
+    {% if current_user.role == 'STUDENT' %}
+    <!-- Tab 2: Đã đăng ký -->
+    <a href="{{ url_for('my_events') }}" class="flex flex-col items-center justify-center py-1 px-1.5 rounded-xl text-center transition flex-1 min-w-0 {% if active_page == 'my_events' %}text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-800{% endif %}">
+        <i class="fa-solid fa-ticket text-base mb-0.5"></i>
+        <span class="text-[10px] leading-tight truncate">Vé của tôi</span>
+    </a>
+    <!-- Tab 3: Điểm danh QR -->
+    <a href="{{ url_for('checkin') }}" class="flex flex-col items-center justify-center py-1 px-1.5 rounded-xl text-center transition flex-1 min-w-0 {% if active_page == 'checkin' %}text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-800{% endif %}">
+        <i class="fa-solid fa-qrcode text-base mb-0.5"></i>
+        <span class="text-[10px] leading-tight truncate">Điểm danh</span>
+    </a>
+    <!-- Tab 4: Đánh giá -->
+    <a href="{{ url_for('feedback') }}" class="flex flex-col items-center justify-center py-1 px-1.5 rounded-xl text-center transition flex-1 min-w-0 {% if active_page == 'feedback' %}text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-800{% endif %}">
+        <i class="fa-regular fa-message text-base mb-0.5"></i>
+        <span class="text-[10px] leading-tight truncate">Đánh giá</span>
+    </a>
+
+    {% elif current_user.role == 'ORGANIZER' %}
+    <!-- Tab 2: Quản lý sự kiện -->
+    <a href="{{ url_for('organizer_events') }}" class="flex flex-col items-center justify-center py-1 px-1.5 rounded-xl text-center transition flex-1 min-w-0 {% if active_page == 'organizer_events' %}text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-800{% endif %}">
+        <i class="fa-solid fa-calendar-days text-base mb-0.5"></i>
+        <span class="text-[10px] leading-tight truncate">QL sự kiện</span>
+    </a>
+    <!-- Tab 3: Điểm danh -->
+    <a href="{{ url_for('checkin') }}" class="flex flex-col items-center justify-center py-1 px-1.5 rounded-xl text-center transition flex-1 min-w-0 {% if active_page == 'checkin' %}text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-800{% endif %}">
+        <i class="fa-solid fa-qrcode text-base mb-0.5"></i>
+        <span class="text-[10px] leading-tight truncate">Điểm danh</span>
+    </a>
+    <!-- Tab 4: Thống kê -->
+    <a href="{{ url_for('analytics') }}" class="flex flex-col items-center justify-center py-1 px-1.5 rounded-xl text-center transition flex-1 min-w-0 {% if active_page == 'analytics' %}text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-800{% endif %}">
+        <i class="fa-solid fa-chart-simple text-base mb-0.5"></i>
+        <span class="text-[10px] leading-tight truncate">Thống kê</span>
+    </a>
+
+    {% elif current_user.role == 'MANAGER' %}
+    <!-- Tab 2: Kiểm duyệt -->
+    <a href="{{ url_for('moderation') }}" class="relative flex flex-col items-center justify-center py-1 px-1.5 rounded-xl text-center transition flex-1 min-w-0 {% if active_page == 'moderation' %}text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-800{% endif %}">
+        <div class="relative">
+            <i class="fa-solid fa-shield-halved text-base mb-0.5"></i>
+            {% set pending_count = get_pending_count() %}
+            {% if pending_count > 0 %}
+            <span class="absolute -top-1 -right-2 bg-amber-500 text-white text-[9px] font-bold px-1 rounded-full leading-tight">{{ pending_count }}</span>
+            {% endif %}
+        </div>
+        <span class="text-[10px] leading-tight truncate">Kiểm duyệt</span>
+    </a>
+    <!-- Tab 3: Báo cáo - Thống kê -->
+    <a href="{{ url_for('analytics') }}" class="flex flex-col items-center justify-center py-1 px-1.5 rounded-xl text-center transition flex-1 min-w-0 {% if active_page == 'analytics' %}text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-800{% endif %}">
+        <i class="fa-solid fa-chart-simple text-base mb-0.5"></i>
+        <span class="text-[10px] leading-tight truncate">Thống kê</span>
+    </a>
+
+    {% elif current_user.role == 'ADMIN' %}
+    <!-- Tab 1: QL Tài khoản -->
+    <a href="{{ url_for('admin_users') }}" class="flex flex-col items-center justify-center py-1 px-1.5 rounded-xl text-center transition flex-1 min-w-0 {% if active_page == 'admin_users' %}text-rose-700 font-bold{% else %}text-slate-500 hover:text-slate-800{% endif %}">
+        <i class="fa-solid fa-users-gear text-base mb-0.5"></i>
+        <span class="text-[10px] leading-tight truncate">Tài khoản</span>
+    </a>
+    <!-- Tab 3: Kiểm duyệt -->
+    <a href="{{ url_for('moderation') }}" class="relative flex flex-col items-center justify-center py-1 px-1.5 rounded-xl text-center transition flex-1 min-w-0 {% if active_page == 'moderation' %}text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-800{% endif %}">
+        <div class="relative">
+            <i class="fa-solid fa-shield-halved text-base mb-0.5"></i>
+            {% set pending_count = get_pending_count() %}
+            {% if pending_count > 0 %}
+            <span class="absolute -top-1 -right-2 bg-amber-500 text-white text-[9px] font-bold px-1 rounded-full leading-tight">{{ pending_count }}</span>
+            {% endif %}
+        </div>
+        <span class="text-[10px] leading-tight truncate">Kiểm duyệt</span>
+    </a>
+    <!-- Tab 4: Thống kê -->
+    <a href="{{ url_for('analytics') }}" class="flex flex-col items-center justify-center py-1 px-1.5 rounded-xl text-center transition flex-1 min-w-0 {% if active_page == 'analytics' %}text-neu-700 font-bold{% else %}text-slate-500 hover:text-slate-800{% endif %}">
+        <i class="fa-solid fa-chart-simple text-base mb-0.5"></i>
+        <span class="text-[10px] leading-tight truncate">Thống kê</span>
+    </a>
+    {% endif %}
+
+    <!-- Tab Cuối: Menu (Mở ngăn kéo sidebar trên di động) -->
+    <button type="button" onclick="openMobileSidebar()" class="flex flex-col items-center justify-center py-1 px-1.5 rounded-xl text-center transition flex-1 min-w-0 text-slate-500 hover:text-slate-800 cursor-pointer" aria-label="Mở menu đầy đủ">
+        <i class="fa-solid fa-bars text-base mb-0.5"></i>
+        <span class="text-[10px] leading-tight truncate">Menu</span>
+    </button>
+</nav>
 
 </body>
 </html>

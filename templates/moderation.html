@@ -36,7 +36,7 @@
         {% if pending_events %}
         <div class="space-y-4">
             {% for ev in pending_events %}
-            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-2xs hover:shadow-md transition space-y-4">
+            <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-2xs hover:shadow-md transition space-y-4">
                 <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 pb-4">
                     <div class="space-y-1">
                         <div class="flex items-center gap-2">
@@ -59,12 +59,12 @@
                     <!-- ACTION BUTTONS -->
                     <div class="flex items-center gap-3 shrink-0">
                         <form method="POST" action="{{ url_for('approve_event', event_id=ev.id) }}">
-                            <button type="submit" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs">
+                            <button type="submit" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs cursor-pointer">
                                 <i class="fa-solid fa-check"></i>
                                 <span>Phê duyệt</span>
                             </button>
                         </form>
-                        <button type="button" onclick="openRejectModal('{{ ev.id }}', '{{ ev.title }}')" class="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition flex items-center gap-2">
+                        <button type="button" onclick="openRejectModal('{{ ev.id }}', '{{ ev.title }}')" class="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer">
                             <i class="fa-solid fa-xmark"></i>
                             <span>Từ chối</span>
                         </button>
@@ -76,7 +76,7 @@
                     <p class="leading-relaxed bg-slate-50 p-3.5 rounded-xl border border-slate-100">
                         <strong>Mục đích & Nội dung:</strong> {{ ev.description }}
                     </p>
-                    <div class="flex items-center gap-4 text-slate-500 text-[11px]">
+                    <div class="flex flex-wrap items-center gap-4 text-slate-500 text-[11px]">
                         <span>Đối tượng: <strong>{{ ev.target_audience }}</strong></span>
                         <span>•</span>
                         <span>Phí tham gia: <strong>{{ ev.fee }}</strong></span>
@@ -88,7 +88,7 @@
             {% endfor %}
         </div>
         {% else %}
-        <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3">
+        <div class="bg-white rounded-2xl border border-slate-200 p-8 sm:p-12 text-center space-y-3">
             <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-xl">
                 <i class="fa-solid fa-circle-check"></i>
             </div>
@@ -100,29 +100,29 @@
 
     <!-- APPROVED EVENTS OVERVIEW -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden mt-8">
-        <div class="p-6 border-b border-slate-100">
+        <div class="p-4 sm:p-6 border-b border-slate-100">
             <h3 class="font-bold text-base text-slate-900">Sự kiện đã được phê duyệt gần đây</h3>
             <p class="text-xs text-slate-400 mt-0.5">Các sự kiện đang hiển thị và hoạt động trên cổng thông tin NEU Events.</p>
         </div>
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
+            <table class="w-full text-left text-xs min-w-[620px]">
                 <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 uppercase tracking-wider text-[11px]">
                     <tr>
-                        <th class="py-3 px-6">Sự kiện</th>
-                        <th class="py-3 px-6">Đơn vị tổ chức</th>
-                        <th class="py-3 px-6">Thời gian</th>
-                        <th class="py-3 px-6">Địa điểm</th>
-                        <th class="py-3 px-6">Trạng thái</th>
+                        <th class="py-3 px-4 sm:px-6">Sự kiện</th>
+                        <th class="py-3 px-4 sm:px-6">Đơn vị tổ chức</th>
+                        <th class="py-3 px-4 sm:px-6">Thời gian</th>
+                        <th class="py-3 px-4 sm:px-6">Địa điểm</th>
+                        <th class="py-3 px-4 sm:px-6">Trạng thái</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     {% for ev in approved_events %}
                     <tr class="hover:bg-slate-50/70 transition">
-                        <td class="py-3.5 px-6 font-bold text-slate-900">{{ ev.title }}</td>
-                        <td class="py-3.5 px-6 text-slate-600">{{ ev.organizer_name }}</td>
-                        <td class="py-3.5 px-6 text-slate-600 font-mono">{{ ev.event_date.strftime('%d/%m/%Y') }}</td>
-                        <td class="py-3.5 px-6 text-slate-600">{{ ev.location }}</td>
-                        <td class="py-3.5 px-6">
+                        <td class="py-3.5 px-4 sm:px-6 font-bold text-slate-900">{{ ev.title }}</td>
+                        <td class="py-3.5 px-4 sm:px-6 text-slate-600">{{ ev.organizer_name }}</td>
+                        <td class="py-3.5 px-4 sm:px-6 text-slate-600 font-mono">{{ ev.event_date.strftime('%d/%m/%Y') }}</td>
+                        <td class="py-3.5 px-4 sm:px-6 text-slate-600">{{ ev.location }}</td>
+                        <td class="py-3.5 px-4 sm:px-6">
                             <span class="inline-block px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">Đã duyệt</span>
                         </td>
                     </tr>

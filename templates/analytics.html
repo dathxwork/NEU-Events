@@ -88,7 +88,7 @@
     </div>
 
     <!-- FILTER BAR -->
-    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs">
+    <div class="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs">
         <form method="GET" action="{{ url_for('analytics') }}" class="flex flex-col md:flex-row items-stretch md:items-end gap-3">
             <!-- TIME RANGE -->
             <div class="flex-1 min-w-[200px]">
@@ -149,51 +149,51 @@
     </div>
 
     <!-- 4 KEY KPI CARDS -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <!-- KPI 1 -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs flex flex-col justify-between">
+        <div class="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs flex flex-col justify-between">
             <div class="flex items-center justify-between text-slate-400">
                 <span class="text-xs font-semibold text-slate-600">Số sự kiện</span>
                 <i class="fa-regular fa-calendar-check text-slate-400 text-sm"></i>
             </div>
-            <div class="mt-4">
-                <div class="text-3xl font-black text-slate-900">{{ stats.events if stats else 4 }}</div>
+            <div class="mt-3 sm:mt-4">
+                <div class="text-2xl sm:text-3xl font-black text-slate-900">{{ stats.events if stats else 4 }}</div>
                 <div class="text-[11px] text-slate-400 mt-1">Cập nhật đến {{ today.strftime('%d/%m/%Y') }}</div>
             </div>
         </div>
 
         <!-- KPI 2 -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs flex flex-col justify-between">
+        <div class="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs flex flex-col justify-between">
             <div class="flex items-center justify-between text-slate-400">
                 <span class="text-xs font-semibold text-slate-600">Lượt đăng ký</span>
                 <i class="fa-solid fa-ticket text-slate-400 text-sm"></i>
             </div>
-            <div class="mt-4">
-                <div class="text-3xl font-black text-slate-900">{{ stats.registrations if stats else 3 }}</div>
+            <div class="mt-3 sm:mt-4">
+                <div class="text-2xl sm:text-3xl font-black text-slate-900">{{ stats.registrations if stats else 3 }}</div>
                 <div class="text-[11px] text-slate-400 mt-1">Tổng lượt đăng ký hợp lệ</div>
             </div>
         </div>
 
         <!-- KPI 3 -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs flex flex-col justify-between">
+        <div class="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs flex flex-col justify-between">
             <div class="flex items-center justify-between text-slate-400">
                 <span class="text-xs font-semibold text-slate-600">Lượt tham dự</span>
                 <i class="fa-solid fa-users text-slate-400 text-sm"></i>
             </div>
-            <div class="mt-4">
-                <div class="text-3xl font-black text-slate-900">{{ stats.attended if stats else 2 }}</div>
+            <div class="mt-3 sm:mt-4">
+                <div class="text-2xl sm:text-3xl font-black text-slate-900">{{ stats.attended if stats else 2 }}</div>
                 <div class="text-[11px] text-slate-400 mt-1">Đã hoàn thành điểm danh</div>
             </div>
         </div>
 
         <!-- KPI 4 -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs flex flex-col justify-between">
+        <div class="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs flex flex-col justify-between">
             <div class="flex items-center justify-between text-slate-400">
                 <span class="text-xs font-semibold text-slate-600">Tỷ lệ tham dự</span>
                 <i class="fa-solid fa-chart-line text-slate-400 text-sm"></i>
             </div>
-            <div class="mt-4">
-                <div class="text-3xl font-black text-neu-700">{{ stats.rate if stats else 66.7 }}%</div>
+            <div class="mt-3 sm:mt-4">
+                <div class="text-2xl sm:text-3xl font-black text-neu-700">{{ stats.rate if stats else 66.7 }}%</div>
                 <div class="text-[11px] text-slate-400 mt-1">Tỷ lệ tham gia thực tế</div>
             </div>
         </div>
@@ -309,9 +309,9 @@
     </div>
 
     <!-- CHARTS ROW -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
         <!-- GROUPED BAR / LINE CHART: REGISTRATION VS ATTENDANCE (8 COLUMNS) -->
-        <div class="lg:col-span-8 bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
+        <div class="lg:col-span-8 bg-white p-4 sm:p-6 md:p-8 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
                 <div>
                     <h3 class="font-bold text-base text-slate-900" id="barChartTitle">Đăng ký & tham dự</h3>
@@ -337,7 +337,7 @@
         </div>
 
         <!-- DONUT CHART: EVENT CATEGORY BREAKDOWN (4 COLUMNS) -->
-        <div class="lg:col-span-4 bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-2xs space-y-4 flex flex-col justify-between">
+        <div class="lg:col-span-4 bg-white p-4 sm:p-6 md:p-8 rounded-2xl border border-slate-200 shadow-2xs space-y-4 flex flex-col justify-between">
             <div class="border-b border-slate-100 pb-3">
                 <h3 class="font-bold text-base text-slate-900">Cơ cấu sự kiện</h3>
                 <p class="text-xs text-slate-400">Theo loại sự kiện • {{ category_data.total }} sự kiện</p>
@@ -370,7 +370,7 @@
 
     <!-- SECTION: EVENT EFFECTIVENESS TABLE -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
-        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+        <div class="p-4 sm:p-6 border-b border-slate-100 flex items-center justify-between">
             <div>
                 <h3 class="font-bold text-base text-slate-900">Hiệu quả theo sự kiện</h3>
                 <p class="text-xs text-slate-400 mt-0.5">Đối chiếu đăng ký, tham dự và mức độ hài lòng</p>
@@ -381,37 +381,37 @@
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
+            <table class="w-full text-left text-xs min-w-[620px]">
                 <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 uppercase tracking-wider text-[11px]">
                     <tr>
-                        <th class="py-3 px-6">Sự kiện</th>
-                        <th class="py-3 px-6">Đăng ký</th>
-                        <th class="py-3 px-6">Tham dự</th>
-                        <th class="py-3 px-6">Tỷ lệ</th>
-                        <th class="py-3 px-6">Đánh giá</th>
-                        <th class="py-3 px-6">Trạng thái</th>
+                        <th class="py-3 px-4 sm:px-6">Sự kiện</th>
+                        <th class="py-3 px-4 sm:px-6">Đăng ký</th>
+                        <th class="py-3 px-4 sm:px-6">Tham dự</th>
+                        <th class="py-3 px-4 sm:px-6">Tỷ lệ</th>
+                        <th class="py-3 px-4 sm:px-6">Đánh giá</th>
+                        <th class="py-3 px-4 sm:px-6">Trạng thái</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     {% for ev in events %}
                     <tr class="hover:bg-slate-50/70 transition">
-                        <td class="py-3.5 px-6 font-bold text-slate-900">
+                        <td class="py-3.5 px-4 sm:px-6 font-bold text-slate-900">
                             <div>{{ ev.title }}</div>
                             <div class="text-[11px] text-slate-400 font-normal">{{ ev.event_date.strftime('%d/%m/%Y') }} • {{ ev.organizer_name }}</div>
                         </td>
-                        <td class="py-3.5 px-6 font-mono text-slate-700">{{ ev.registered_seats }}</td>
-                        <td class="py-3.5 px-6 font-mono text-slate-700">{{ ev.attended_seats if ev.event_date <= today else '—' }}</td>
-                        <td class="py-3.5 px-6 font-bold {% if ev.attendance_rate >= 80 %}text-emerald-700{% elif ev.attendance_rate > 0 %}text-neu-700{% else %}text-slate-400{% endif %}">
+                        <td class="py-3.5 px-4 sm:px-6 font-mono text-slate-700">{{ ev.registered_seats }}</td>
+                        <td class="py-3.5 px-4 sm:px-6 font-mono text-slate-700">{{ ev.attended_seats if ev.event_date <= today else '—' }}</td>
+                        <td class="py-3.5 px-4 sm:px-6 font-bold {% if ev.attendance_rate >= 80 %}text-emerald-700{% elif ev.attendance_rate > 0 %}text-neu-700{% else %}text-slate-400{% endif %}">
                             {{ ev.attendance_rate }}%
                         </td>
-                        <td class="py-3.5 px-6 font-bold {% if ev.average_rating %}text-amber-500{% else %}text-slate-400{% endif %}">
+                        <td class="py-3.5 px-4 sm:px-6 font-bold {% if ev.average_rating %}text-amber-500{% else %}text-slate-400{% endif %}">
                             {% if ev.average_rating %}
                                 {{ ev.average_rating }} / 5 ⭐
                             {% else %}
                                 Chưa có
                             {% endif %}
                         </td>
-                        <td class="py-3.5 px-6">
+                        <td class="py-3.5 px-4 sm:px-6">
                             {% if ev.status == 'CANCELLED' %}
                             <span class="inline-block px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-100">Đã hủy</span>
                             {% elif ev.status == 'COMPLETED' or ev.event_date < today %}
